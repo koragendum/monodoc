@@ -1,0 +1,1055 @@
+#! /usr/bin/python
+
+import re
+from re import Match as MatchObject
+from typing import Optional
+
+INDENTSIZE = 1.0    # size of each indent step in em
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# These standard features are supported:
+#   headings
+#   paragraph breaking
+#   lists
+#   tables
+#   code blocks
+#   italic styling
+#   bold styling
+#   inline code
+#   links
+#
+# as well as these nonstandard features:
+#   anchors
+#   subscripts
+#   variables
+#   indents
+#   substitutions
+#
+# Text is first broken into paragraphs, lists, tables, and code blocks, and
+# then other transformations are performed within each paragraph, list item,
+# and table cell.
+#
+# Paragraphs are separated by empty lines. Lists, tables, and code blocks that
+# aren't preceded by an empty line will be spaced more tightly above, and if
+# they aren't followed by an empty line will be spaced more tightly below.
+#
+# The following CSS classes may be added to some elements:
+#
+#   class       elements    typical styling
+#   ──────────  ──────────  ────────────────────────────────────────────────
+#   gap-afore   *           margin-top: 1rem;
+#   gap-after   *           margin-bottom: 1rem;
+#   quote       div         ...
+#   anchor      span        ...
+#   var         span        font-style: italic;
+#   small       sub         ...
+#   deitalic    span        font-style: normal;
+#   left        th, td      text-align: left;
+#   center      th, td      text-align: center;
+#   right       th, td      text-align: right;
+
+ELEMENTS = {
+    'html'       , 'base'       , 'head'       , 'link'       , 'meta'       ,
+    'style'      , 'title'      , 'body'       , 'address'    , 'article'    ,
+    'aside'      , 'footer'     , 'header'     , 'h1'         , 'h2'         ,
+    'h3'         , 'h4'         , 'h5'         , 'h6'         , 'hgroup'     ,
+    'main'       , 'nav'        , 'section'    , 'search'     , 'blockquote' ,
+    'dd'         , 'div'        , 'dl'         , 'dt'         , 'figcaption' ,
+    'figure'     , 'hr'         , 'li'         , 'menu'       , 'ol'         ,
+    'p'          , 'pre'        , 'ul'         , 'a'          , 'abbr'       ,
+    'b'          , 'bdi'        , 'bdo'        , 'br'         , 'cite'       ,
+    'code'       , 'data'       , 'dfn'        , 'em'         , 'i'          ,
+    'kbd'        , 'mark'       , 'q'          , 'rp'         , 'rt'         ,
+    'ruby'       , 's'          , 'samp'       , 'small'      , 'span'       ,
+    'strong'     , 'sub'        , 'sup'        , 'time'       , 'u'          ,
+    'var'        , 'wbr'        , 'area'       , 'audio'      , 'img'        ,
+    'map'        , 'track'      , 'video'      , 'embed'      , 'fencedframe',
+    'iframe'     , 'object'     , 'picture'    , 'portal'     , 'source'     ,
+    'svg'        , 'math'       , 'canvas'     , 'noscript'   , 'script'     ,
+    'del'        , 'ins'        , 'caption'    , 'col'        , 'colgroup'   ,
+    'table'      , 'tbody'      , 'td'         , 'tfoot'      , 'th'         ,
+    'thead'      , 'tr'         , 'button'     , 'datalist'   , 'fieldset'   ,
+    'form'       , 'input'      , 'label'      , 'legend'     , 'meter'      ,
+    'optgroup'   , 'option'     , 'output'     , 'progress'   , 'select'     ,
+    'textarea'   , 'details'    , 'dialog'     , 'summary'    , 'slot'       ,
+    'template'
+}
+
+BREAKING = {
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'div', 'p', 'pre', 'ol', 'ul', 'table'
+}
+
+
+def parsetag(text : str, offset : int = 0) -> Optional[tuple[str, str, str, int, int]]:
+    # Returns a quintuple of
+    #   – 'open' or 'close'
+    #   – the element name
+    #   – the tag attributes
+    #   – the index of the start of the tag
+    #   – the index of the start of the remainder
+    # or None if no tag was found.
+    #
+    # Given the those two indices, tag and rem,
+    #   – text[   :tag] is the text before the first tag
+    #   – text[tag:rem] is the text of the first tag verbatim
+    #   – text[rem:   ] is the text following the first tag
+    #
+    # Note that the text following the tag may (or may not) include
+    #   – any corresponding closing tag
+    #   – the contents of the HTML element created by the tag
+    #   – the contents of any HTML element (as for "<br>")
+    #   – additional text after the HTML element
+    while True:
+        try:
+            start = text.index('<', offset)
+        except ValueError:
+            return None
+        index = start + 1
+        length = len(text)
+
+        # Closing tags don’t include attributes,
+        #   so this case is straightforward.
+        if index < length and text[index] == '/':
+            try:
+                end = text.index('>', start+2)
+            except ValueError:
+                offset += 1
+                continue
+            name = text[start+2:end].strip()
+            if name not in ELEMENTS:
+                # This isn’t an HTML tag,
+                #   although it looks like one.
+                offset += 1
+                continue
+            return ('close', name, '', start, end+1)
+
+        # Opening tags might include attributes, and
+        #   in particular, may contain quoted text.
+        delim = None
+        while index < length:
+            char = text[index]
+            if delim is not None:
+                if char == delim:
+                    delim = None
+                index += 1
+                continue
+            if char in ("'", '"'):
+                delim = char
+                index += 1
+                continue
+            if char == '<':
+                break
+            if char == '>':
+                parts = text[start+1:index].split(maxsplit=1)
+                if len(parts) == 0:
+                    break
+                name = parts[0]
+                if name not in ELEMENTS:
+                    # This isn’t an HTML tag,
+                    #   although it looks like one.
+                    break
+                attrs = (parts[1] if len(parts) > 1 else '')
+                return ('open', name, attrs, start, index+1)
+            index += 1
+
+        # This “<” isn’t the start of a valid opening
+        #   tag, so skip over it and check again.
+        offset += 1
+
+
+def tagpair(
+    element : str,
+    ga : bool,
+    gb : bool,
+    extra : Optional[str] = None
+) -> tuple[str, str]:
+    # ga = gap above
+    # gb = gap below
+    if (not ga) and (not gb) and extra is None:
+        return (f'<{element}>', f'</{element}>')
+    classes = []
+    if extra is not None: classes.append(extra)
+    if ga: classes.append('gap-afore')
+    if gb: classes.append('gap-after')
+    classes = " ".join(classes)
+    return (f'<{element} class="{classes}">', f'</{element}>')
+
+
+ESCAPE = {
+    r'\<': '&lt;',
+    r'\>': '&gt;',
+    r'\&': '&amp;',
+    r'\#': '&num;',
+    r'\`': '&#x60;',
+    r'\_': '&#x5F;',
+    r'\*': '&ast;',
+}
+
+# This matches [$a]($b) where $a is any sequences of characters that aren't
+#   brackets and $b is any sequence of characters that aren't parentheses.
+HYPERLINK = re.compile(r'\[([^\[\]]+?)\]\(([^()]+?)\)')
+
+ANCHOR = re.compile(r'\{#\s*([a-zA-Z0-9_+-]*)\s*\}')
+
+VARIABLE = re.compile(r'@[a-zA-Z]+')
+
+DELIMITER = re.compile(r'(\uf005)?([' + re.escape('()[]{}') + r'])(\uf005)?')
+
+SMALLCAPS = re.compile(r'\{!([^{}]+?)\}')
+
+SCRIPT = re.compile(r'(?<=\S)(\^|_|__)(\d+|\uf004|\{[^{}]*\})')
+
+ABBREVIATION = {
+    '>=': '≥',
+    '<=': '≤',
+    '!=': '≠',
+   r'\-': '&minus;',
+   r'\x': '&times;',
+    '->': '→',
+    '<-': '←',
+   '...': '<span style="letter-spacing: 0.125em;">...</span>',
+#  r'\~': '<span style="letter-spacing: 0.125em;">···</span>',
+   r'\~': '<span style="letter-spacing: 0.125em; position: relative; bottom: 0.5ex;">...</span>',
+}
+
+HYPHENMINUS = re.compile(r'(\s*)(-+)(\s*)')
+
+# This matches a single underscore or any number of asterisks, or
+#   the Unicode scalar values that start or end a formatting context.
+FORMATTER = re.compile(r'_|\*+|\uf008|\uf009')
+
+
+def replacelist(text : str, sentinel : str, replacements : list[str]) -> str:
+    # NOTE sentinel must be a single character
+    # TODO use re.sub instead
+    offset, parts = 0, []
+    for r in replacements:
+        index = text.index(sentinel, offset)
+        if offset < index:
+            parts.append(text[offset:index])
+        parts.append(r)
+        offset = index+1
+    if offset < len(text):
+        rem = text[offset:]
+        assert sentinel not in rem
+        parts.append(rem)
+    return ''.join(parts)
+
+
+def render(text : str, escape : bool = True) -> str:
+    # This routine is responsible for inline styling, including
+    #   inline code, links, substitutions, italic, and bold.
+
+    # Step 1. Escape Sequences
+
+    if escape:
+        if r'\\' in text:
+            text = text.replace(r'\\', '&#x5C;')
+
+        for pattern, replacement in ESCAPE.items():
+            if pattern in text:
+                text = text.replace(pattern, replacement)
+
+    # Step 2. Ensure we don't disrupt HTML tags
+
+    tags = []
+    next_tag = parsetag(text)
+    if next_tag is not None:
+        offset, parts = 0, []
+        while next_tag is not None:
+            _, _, _, tag_start, rem_start = next_tag
+            if offset < tag_start:
+                parts.append(text[offset:tag_start])
+            parts.append('\uf000')
+            tags.append(text[tag_start:rem_start])
+            offset = rem_start
+            next_tag = parsetag(text, offset)
+        if offset < len(text):
+            parts.append(text[offset:])
+        text = ''.join(parts)
+
+    # Step 3. Inline code
+
+    code = []
+    try: code_start = text.index('`')
+    except ValueError: code_start = None
+    if code_start is not None:
+        offset, parts = 0, []
+        while code_start is not None:
+            if offset < code_start:
+                parts.append(text[offset:code_start])
+            try: code_end = text.index('`', code_start+1)
+            except ValueError:
+                parts.append('\uf001')
+                code.append(text[code_start+1:])
+                offset = len(text)
+                break
+            parts.append('\uf001')
+            code.append(text[code_start+1:code_end])
+            offset = code_end+1
+            try: code_start = text.index('`', offset)
+            except ValueError: code_start = None
+        if offset < len(text):
+            parts.append(text[offset:])
+        text = ''.join(parts)
+        code = [f'<code>{s}</code>' for s in code]
+
+    # Step 4. Hyperlinks
+    #   These have the form [displayed](url) with any amount of space in the
+    #     brackets or in the parentheses.
+    #   NOTE we ought to actually parse the text and match delimiters properly,
+    #     but we assume cases where the displayed markdown or HTML includes
+    #     brackets or the URL includes parentheses are rare enough that we can
+    #     ask users to type out the HTML by hand.
+
+    lnks = []
+    def linkreplacement(match : MatchObject) -> str:
+        displayed, url = match[1], match[2]
+        lnks.append(f'<a href="{url}">')
+        lnks.append('</a>')
+        return f'\uf002\uf008{displayed}\uf009\uf002'
+    text = HYPERLINK.sub(linkreplacement, text)
+
+    # Step 5. Anchors
+    #   {#xxx}  becomes  <span id="xxx" class="anchor"></span>
+
+    ancs = []
+    def anchorreplacement(match : MatchObject) -> str:
+        ancs.append(f'<span id="{match[1]}" class="anchor"></span>')
+        return '\uf003'
+    text = ANCHOR.sub(anchorreplacement, text)
+
+    # Step 6. Variables
+
+    RIGHT_ASCENDER = ('d', 'f', 'i', 'j', 'l')
+    LEFT_DESCENDER = ('g', 'j', 'p', 'y')
+
+    vari = []
+    def varreplacement(match : MatchObject) -> str:
+        name = match[0][1:]
+        vari.append(f'<span class="var">{name}</span>')
+        lhs = '\uf005' if name[ 0] in LEFT_DESCENDER else ''
+        rhs = '\uf005' if name[-1] in RIGHT_ASCENDER else ''
+        return f'{lhs}\uf004{rhs}'
+    text = VARIABLE.sub(varreplacement, text)
+
+    if len(vari) > 0:
+        def delimreplacement(match : MatchObject) -> str:
+            delim = match[2]
+            style = []
+            if match[1] is not None:
+                style.append(f'margin-left: 1px;')
+            if match[3] is not None:
+                style.append(f'margin-right: 1px;')
+            if len(style) == 0:
+                return delim
+            style = " ".join(style)
+            return f'<span style="{style}">{delim}</span>'
+        text = DELIMITER.sub(delimreplacement, text)
+        text = text.replace('\uf005', '')
+
+    # Step 8. Superscripts and Subscripts
+    #   These must be preceded by a non-whitespace character.
+    #
+    #    ^num  or   ^@xxx  or   ^{xxx}  becomes  <sup>...</sup>
+    #    _num  or   _@xxx  or   _{xxx}  becomes  <sub>...</sub>
+    #   __num  or  __@xxx  or  __{xxx}  becomes  <sub class="small">...</sub>
+
+    scps = []
+    def scriptreplacement(match : MatchObject) -> str:
+        mark, content = match[1], match[2]
+        name = 'sup' if mark[0] == '^' else 'sub'
+        attr = ' class="small"' if len(mark) > 1 else ''
+        opening, closing = f'<{name}{attr}>', f'</{name}>'
+        if content[0] != '{':
+            scps.append(f'{opening}{content}{closing}')
+            return '\uf006'
+        content = content[1:-1].strip()
+        scps.append(opening)
+        scps.append(closing)
+        return f'\uf006\uf008{content}\uf009\uf006'
+    text = SCRIPT.sub(scriptreplacement, text)
+
+    # Step 8. Small Capitals
+
+    smcp = []
+    def smcpreplacement(match : MatchObject) -> str:
+        smcp.append(f'<span class="sc">')
+        smcp.append('</span>')
+        return f'\uf007\uf008{match[1]}\uf009\uf007'
+    text = SMALLCAPS.sub(smcpreplacement, text)
+
+    # Step 9. Substitutions
+
+    for pattern, replacement in ABBREVIATION.items():
+        if pattern in text:
+            text = text.replace(pattern, replacement)
+
+    def hyphenreplacement(match : MatchObject) -> str:
+        count = len(match[2])
+        if count == 1:
+            if len(match[1]) == 0: return match[0]
+            dash = '&ndash;' if len(match[3]) > 0 else '&minus;'
+            return match[1] + dash + match[3]
+        if count == 2: return match[1] + '&ndash;' + match[3]
+        if count == 3: return match[1] + '&mdash;' + match[3]
+        return match[0]
+    text = HYPHENMINUS.sub(hyphenreplacement, text)
+
+    # Step 9. Italic and Bold
+    #   The markdown "***fst** snd*" should become "<i><b>fst</b> snd</i>"
+    #     and not "<b><i>fst</b> snd</i>".
+    #   Similarly, "***fst* snd**" should become "<b><i>fst</i> snd</b>"
+    #     and not "<i><b>fst</i> snd</b>".
+    #   This is impossible to decide correctly without lookahead,
+    #     so we simply ignore three or more contiguous asterisks.
+
+    italic = False
+
+    def fmtopen(sigil : str) -> str:
+        nonlocal italic
+        if sigil == '**':
+            return '<b>'
+        italic = not italic
+        return '<i>' if italic else '<span class="deitalic">'
+
+    def fmtclose(sigil : str) -> str:
+        nonlocal italic
+        if sigil == '**':
+            return '</b>'
+        closing = '</i>' if italic else '</span>'
+        italic = not italic
+        return closing
+
+    fmtstacks = [[]]
+
+    def fmtreplacement(match : MatchObject) -> str:
+        nonlocal italic
+        sigil = match[0]
+        # \uf008 begins a new stack and \uf009 ends it
+        if sigil == '\uf008':
+            fmtstacks.append([])
+            return ''
+        if sigil == '\uf009':
+            stack = fmtstacks.pop()
+            if len(stack) == 0:
+                return ''
+            return ''.join(fmtclose(excess) for excess in reversed(stack))
+        if len(sigil) > 2:
+            return sigil
+        stack = fmtstacks[-1]
+        if sigil in stack:
+            if stack[-1] != sigil:
+                return sigil
+            stack.pop()
+            return fmtclose(sigil)
+        stack.append(sigil)
+        return fmtopen(sigil)
+
+    text = FORMATTER.sub(fmtreplacement, text)
+
+    stack = fmtstacks[-1]
+    if len(stack) > 0:
+        text = text + ''.join(fmtclose(sigil) for sigil in reversed(stack))
+
+    # Step 10. Substitute everything back in, and we're done!
+
+    #                                           \uf009   itbf
+    #                                           \uf008   itbf
+    if len(smcp) > 0: text = replacelist(text, '\uf007', smcp)
+    if len(scps) > 0: text = replacelist(text, '\uf006', scps)
+    #                                           \uf005   vari
+    if len(vari) > 0: text = replacelist(text, '\uf004', vari)
+    if len(ancs) > 0: text = replacelist(text, '\uf003', ancs)
+    if len(lnks) > 0: text = replacelist(text, '\uf002', lnks)
+    if len(code) > 0: text = replacelist(text, '\uf001', code)
+    if len(tags) > 0: text = replacelist(text, '\uf000', tags)
+    return text
+
+#  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+# These subroutines create different HTML elements.
+
+INDENT = re.compile(r'\s*\|(\d)>')
+
+ALIGNMENT = re.compile(r' *\|(?: *(?::? *-+ *:? *)\|)+ *')
+
+
+def makehead(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+    assert len(lines) == 1
+    woprefix = lines[0].lstrip('#')
+    level = len(lines[0]) - len(woprefix)
+    assert 6 >= level >= 1
+    mgn = ' ' * margin
+    opening, closing = tagpair(f'h{level}', ga, gb)
+    html = render(woprefix.strip())
+    return f'{mgn}{opening}{html}{closing}'
+
+
+def makepara(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+
+    lines = [*lines]
+
+    # Step 1. Escape Sequences
+
+    for idx in range(len(lines)):
+        ln = lines[idx]
+        if r'\\' in ln:
+            ln = ln.replace(r'\\', '&#x5C;')
+        for pattern, replacement in ESCAPE.items():
+            if pattern in ln:
+                ln = ln.replace(pattern, replacement)
+        lines[idx] = ln
+
+    # Step 2. Perform line transformations.
+
+    for idx in range(len(lines)):
+        ln = lines[idx]
+        match = INDENT.match(ln)
+        if match is None: continue
+        length = round(int(match.group(1)) * INDENTSIZE, 3)
+        body = ln[match.end():].strip()
+        style = f'display: block; margin-left: {length}em;'
+        lines[idx] = (f'<span style="{style}">{body}</span>')
+
+    # Step 3. Break the text at elements that are likely to be block-level.
+
+    ENCLOSED   = 0  # render and enclose in a paragraph tag
+    UNENCLOSED = 1  # render
+    VERBATIM   = 2
+
+    # This is a list of (int, str) where the integer indicates whether we need
+    #   to enclose the content in a paragraph tag or emit the text verbatim.
+    parts = []
+
+    text = '\n'.join(lines)
+    # emitted   everything before this index has been written to parts
+    # offset    everything at or after this index has not been examined
+    emitted, offset = 0, 0
+    stack = []
+    while (next_tag := parsetag(text, offset)) is not None:
+        action, name, attrs, tag_start, rem_start = next_tag
+        offset = rem_start
+        if name not in BREAKING:
+            continue
+
+        if action == 'open':
+            if len(stack) == 0:
+                content = text[emitted:tag_start].strip()
+                if len(content) > 0:
+                    parts.append((ENCLOSED, content))
+                emitted = tag_start
+                stack.append(name)
+                continue
+            # We make a reasonable simplifying assumption: a div can contain
+            #   anything and a list can contain a list; otherwise, we auto-
+            #   matically close the previous tag.
+            nest = (
+                stack[-1] == 'div'
+                or (stack[-1] == 'li' and name in ('ol', 'ul', 'dl'))
+            )
+            if not nest:
+                stack.pop()
+            stack.append(name)
+
+        if action == 'close':
+            if len(stack) > 0 and stack[-1] == name:
+                stack.pop()
+                if len(stack) > 0:
+                    continue
+            # If this is a closing tag that we just popped off the stack and
+            #   the stack is now empty as a result, we've seen the outermost
+            #   element in its entirety.
+            # If this is an unexpected closing tag, we can't be sure, but
+            #   the content probably belongs to a handwritten element.
+            kind = VERBATIM if name == 'pre' else UNENCLOSED
+            parts.append((kind, text[emitted:rem_start]))
+            emitted = rem_start
+
+    content = text[emitted:].strip()
+    if len(stack) == 0:
+        if len(content) > 0:
+            parts.append((ENCLOSED, content))
+    else:
+        kind = VERBATIM if 'pre' in stack else UNENCLOSED
+        parts.append((kind, content))
+
+    # Step 4. Render!
+
+    num_parts = len(parts)
+    assert num_parts > 0
+
+    # Optimize the common case (when the paragraph didn't need to be broken up).
+    if num_parts == 1:
+        kind, fragment = parts[0]
+        if kind == VERBATIM:
+            return fragment
+        html = render(fragment, escape=False)
+        if kind == ENCLOSED:
+            opening, closing = tagpair('p', ga, gb)
+            html = f'{opening}{html}{closing}'
+        if margin > 0:
+            fst = ' ' * margin
+            rst = fst + '  '
+            html = "\n".join(
+                (fst if idx == 0 else rst) + ln if len(ln) > 0 else ln
+                for idx, ln in enumerate(html.split("\n"))
+            )
+        return html
+
+    # Now we handle the general case.
+    total_html = []
+    L = num_parts - 1
+    for index, (kind, fragment) in enumerate(parts):
+        if kind == VERBATIM:
+            total_html.append(fragment)
+            continue
+        html = render(fragment, escape=False)
+        if kind == ENCLOSED:
+            op, cl = tagpair('p', ga and index == 0, gb and index == L)
+            html = f'{op}{html}{cl}'
+        if margin > 0:
+            fst = ' ' * margin
+            rst = fst + '  '
+            html = "\n".join(
+                (fst if idx == 0 else rst) + ln if len(ln) > 0 else ln
+                for ln in html.split("\n")
+            )
+        total_html.append(html)
+
+    return '\n'.join(total_html)
+
+
+def makelist(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+    mgn = ' ' * margin
+    opening, closing = tagpair('ul', ga, gb)
+    html_lines = [mgn + opening]
+    stack = []  # list of (indent, bullet) pairs
+    for ln in lines:
+        lstripped = ln.lstrip()
+        indent = len(ln) - len(lstripped)
+        bullet = lstripped[0]
+        content = lstripped[1:].strip()
+        html = render(content)
+
+        if len(stack) == 0:
+            # This is the first line.
+            html_lines.append(f'{mgn}  <li>{html}</li>')
+            stack.append((indent, bullet))
+            continue
+
+        while indent < stack[-1][0]:
+            stack.pop()
+            if len(stack) == 0:
+                return makecode(lines, ga, gb, margin)
+            if indent != stack[-1][0]:
+                return makecode(lines, ga, gb, margin)
+            # Finish the list.
+            leftskip = '  ' * len(stack)
+            html_lines.append(f'{mgn}{leftskip}</ul></li>')
+
+        if indent == stack[-1][0]:
+            if bullet != stack[-1][1]:
+                return makecode(lines, ga, gb, margin)
+            # Continue the current list.
+            leftskip = '  ' * len(stack)
+            html_lines.append(f'{mgn}{leftskip}<li>{html}</li>')
+            continue
+
+        # Start a new list.
+        leftskip = '  ' * len(stack)
+        html_lines.append(f'{mgn}{leftskip}<li style="list-style: none;"><ul>')
+        html_lines.append(f'{mgn}{leftskip}  <li>{html}</li>')
+        stack.append((indent, bullet))
+
+    # Finish the list.
+    while len(stack) > 1:
+        stack.pop()
+        leftskip = '  ' * len(stack)
+        html_lines.append(f'{mgn}{leftskip}</ul></li>')
+
+    html_lines.append(mgn + closing)
+    return '\n'.join(html_lines)
+
+
+def maketabl(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+    bottomup = []
+    header, alignment = None, None
+    for ln in reversed(lines):
+        if ALIGNMENT.fullmatch(ln):
+            if alignment is not None:
+                return makecode(lines, ga, gb, margin)
+            alignment = []
+            ln = ln.strip().removeprefix('|').removesuffix('|')
+            for column in ln.split('|'):
+                column = column.strip()
+                L = column[ 0] == ':'
+                R = column[-1] == ':'
+                if L and R: alignment.append('center')
+                elif L:     alignment.append('left')
+                elif R:     alignment.append('right')
+                else:       alignment.append(None)
+            continue
+        row = []
+        ln = ln.replace(r'\|', '&#x7C')
+        ln = ln.strip().removeprefix('|').removesuffix('|')
+        for cell in ln.split('|'):
+            row.append(render(cell.strip()))
+        if alignment is None:
+            bottomup.append(row)
+            continue
+        if header is None:
+            header = row
+            continue
+        return makecode(lines, ga, gb, margin)
+
+    num_columns = [len(row) for row in bottomup]
+    if alignment is not None:
+        num_columns.append(len(alignment))
+    if header is not None:
+        num_columns.append(len(header))
+
+    support = min(num_columns)
+    if support != max(num_columns):
+        return makecode(lines, ga, gb, margin)
+
+    if alignment is None:
+        alignment = [''] * support
+    else:
+        alignment = [
+            ('' if align is None else f' class="{align}"')
+            for align in alignment
+        ]
+
+    mgn = ' ' * margin
+    opening, closing = tagpair('table', ga, gb)
+    html_lines = [mgn + opening]
+
+    if header is not None:
+        html_lines.append(f'{mgn}  <thead>')
+        html_lines.append(f'{mgn}    <tr>')
+        for idx, cell in enumerate(header):
+            html_lines.append(f'{mgn}      <th{alignment[idx]}>{cell}</th>')
+        html_lines.append(f'{mgn}    </tr>')
+        html_lines.append(f'{mgn}  </thead>')
+
+    html_lines.append(f'{mgn}  <tbody>')
+    for row in reversed(bottomup):
+        html_lines.append(f'{mgn}    <tr>')
+        for idx, cell in enumerate(row):
+            html_lines.append(f'{mgn}      <td{alignment[idx]}>{cell}</td>')
+        html_lines.append(f'{mgn}    </tr>')
+    html_lines.append(f'{mgn}  </tbody>')
+
+    html_lines.append(mgn + closing)
+    return '\n'.join(html_lines)
+
+
+LANG = re.compile(r'[a-zA-Z]+')
+
+
+def makecode(
+    lines : list[str],
+    ga : bool,
+    gb : bool,
+    margin : int,
+    lang : str = None
+) -> str:
+    # We don’t do anything with lang yet.
+    opening, closing = tagpair('pre', ga, gb)
+    inner = '\n'.join(lines)
+    html = opening + inner + closing
+    # ↓↓↓ TEMPORARY ↓↓↓
+    if lang is not None:
+        margin += 2
+    # ↑↑↑ TEMPORARY ↑↑↑
+    if margin > 0:
+        mgn = ' ' * margin
+        html = '\n'.join([
+            mgn + '<!-- ↓↓↓ PREFORMATTED ↓↓↓ -->',
+            html,
+            mgn + '<!-- ↑↑↑ PREFORMATTED ↑↑↑ -->',
+        ])
+    # ↓↓↓ TEMPORARY ↓↓↓
+    if lang is not None:
+        margin -= 2
+        mgn = ' ' * margin
+        style = 'position: absolute; right: 0.375rem;' \
+                ' font-style: italic; opacity: 12.5%;'
+        html = '\n'.join([
+            mgn + '<div style="position: relative;">',
+            mgn + f'  <span style="{style}">{lang}</span>',
+            html,
+            mgn + '</div>',
+        ])
+    # ↑↑↑ TEMPORARY ↑↑↑
+    return html
+
+
+def makequot(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+    leftskip = min(
+        len(ln) - len(ln.lstrip())
+        for ln in lines
+    )
+    lines = [ln[leftskip:] for ln in lines]
+    inner = _convert(lines, margin+2)
+    mgn = ' ' * margin
+    opening, closing = tagpair('div', ga, gb, 'quote')
+    return f'{mgn}{opening}\n{inner}\n{mgn}{closing}'
+
+
+def bulleted(stripped : str) -> bool:
+    return any(
+        stripped.startswith(bullet)
+        for bullet in ('* ', '- ', '+ ')
+    )
+
+
+def notindent(ln : str) -> bool:
+    return INDENT.match(ln) is None
+
+
+def _convert(md_lines : str, margin : int) -> str:
+
+    # This is a list of "gap" or (kind, [line]) pairs
+    #   where kind is "head", "para", "list", "table", or "code".
+    blocks = []
+
+    block_kind = None
+    block_lines = []
+    block_extra = None
+
+    def finish() -> None:
+        nonlocal block_kind, block_lines, block_extra
+        if len(block_lines) == 0:
+            block_kind = None
+            block_extra = None
+            return
+        assert block_kind is not None
+        blocks.append((block_kind, block_lines, block_extra))
+        block_kind = None
+        block_lines = []
+        block_extra = None
+
+    todo = list(reversed(md_lines))
+
+    while len(todo) > 0:
+        line = todo.pop()
+        stripped = line.strip()
+
+        if block_kind == 'code':
+            if '```' not in line:
+                block_lines.append(line)
+                continue
+            start = line.index('```')
+            pre = line[:start]
+            post = line[start+3:]
+            if len(pre.strip()) > 0:
+                block_lines.append(pre)
+            finish()
+            if len(post.strip()) > 0:
+                todo.append(post)
+            continue
+
+        if len(stripped) == 0:
+            finish()
+            blocks.append('gap')
+            continue
+
+        if stripped.startswith('//'):
+            # In addition to <!-- multiline --> style comments, we support
+            #   single line comments with // (at the start of a line).
+            continue
+
+        if stripped.startswith('>'):
+            start = line.index('>')
+            rhs = line[start+1:]
+            if block_kind == 'quot':
+                block_lines.append(rhs)
+                continue
+            finish()
+            block_kind = 'quot'
+            block_lines.append(rhs)
+            continue
+        elif block_kind == 'quot':
+            finish()
+
+        if stripped.startswith('#'):
+            assert '```' not in line
+            finish()
+            block_kind = 'head'
+            block_lines.append(line)
+            finish()
+            continue
+
+        if stripped.startswith('|') and notindent(line):
+            assert '```' not in line
+            if block_kind == 'tabl':
+                block_lines.append(line)
+                continue
+            finish()
+            block_kind = 'tabl'
+            block_lines.append(line)
+            continue
+        elif block_kind == 'tabl':
+            finish()
+
+        if bulleted(stripped):
+            assert '```' not in line
+            if block_kind == 'list':
+                block_lines.append(line)
+                continue
+            finish()
+            block_kind = 'list'
+            block_lines.append(line)
+            continue
+        elif block_kind == 'list':
+            finish()
+
+        if stripped.startswith('```'):
+            finish()
+            block_kind = 'code'
+            start = line.index('```')
+            post = line[start+3:]
+            ps = post.strip()
+            if len(ps) > 0:
+                if LANG.fullmatch(ps):
+                    block_extra = ps
+                else:
+                    todo.append(post)
+            continue
+
+        if '```' in line:
+            start = line.index('```')
+            pre = line[:start]
+            rem = line[start:]
+            line = pre
+            todo.append(rem)
+
+        if block_kind is None:
+            assert len(block_lines) == 0
+            block_kind = 'para'
+        else:
+            assert block_kind == 'para'
+
+        block_lines.append(line)
+
+    finish()
+
+    # Before iterating over the blocks,
+    #   we deduplicate gaps and join adjacent lists.
+
+    filtered = []
+    gap_above = False
+    for item in blocks:
+        if item == 'gap':
+            gap_above = True
+            continue
+        if len(filtered) == 0:
+            filtered.append(item)
+            gap_above = False
+            continue
+        kind, lines, _ = item
+        prev = filtered[-1]
+        if kind == 'list' and prev != 'gap' and prev[0] == 'list':
+            prev[1].extend(lines)
+            gap_above = False
+            continue
+        if gap_above:
+            filtered.append('gap')
+            gap_above = False
+        filtered.append(item)
+
+    blocks = filtered
+
+    # Now we can finally render each block
+    #   and join them to produce output!
+
+    total_html = list()
+
+    L = len(blocks) - 1
+    for index, item in enumerate(blocks):
+        if item == 'gap':
+            continue
+        gap_above = index > 0 and blocks[index-1] == 'gap'
+        gap_below = index < L and blocks[index+1] == 'gap'
+        kind, lines, extra = item
+        if   kind == 'para': html = makepara(lines, gap_above, gap_below, margin)
+        elif kind == 'code': html = makecode(lines, gap_above, gap_below, margin, extra)
+        elif kind == 'list': html = makelist(lines, gap_above, gap_below, margin)
+        elif kind == 'tabl': html = maketabl(lines, gap_above, gap_below, margin)
+        elif kind == 'head': html = makehead(lines, gap_above, gap_below, margin)
+        elif kind == 'quot': html = makequot(lines, gap_above, gap_below, margin)
+        total_html.append(html)
+
+    return '\n'.join(total_html)
+
+#  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+# This routine converts any fragment of markdown.
+
+def convert(markdown : str, margin : int = 0) -> str:
+    # This routine is responsible for:
+    #   headings, paragraphs, lists, tables, code blocks
+
+    # HTML comments are not nestable.
+    parts = []
+    index = 0
+    while True:
+        try: comment_start = markdown.index('<!--', index)
+        except ValueError: break
+        try: comment_end = markdown.index('-->', comment_start+4)
+        except ValueError: break
+        parts.append(markdown[index:comment_start])
+        index = comment_end+3
+    if index > 0:
+        if index < len(markdown):
+            parts.append(markdown[index:])
+        markdown = ''.join(parts)
+
+    return _convert(markdown.splitlines(), margin)
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+if __name__ == '__main__':
+    from os import path
+    from sys import argv, exit, stderr
+
+    args = argv[1:]
+    if len(args) == 0 or '-h' in args or '--help' in args:
+        print(f'usage: {argv[0]} <file-path> [<file-path> ...]', file=stderr)
+
+    css = []
+    with open('preview.css') as fh:
+        for ln in fh:
+            ln = ln.rstrip()
+            css.append('  ' + ln if len(ln) > 0 else ln)
+    css = "\n".join(css)
+
+    def preview(title : str, body : str) -> str:
+        return (
+            '<!DOCTYPE html>\n'
+            '<meta charset="utf-8">\n'
+            '<meta name="viewport"'
+            ' content="width=device-width,'
+            ' height=device-height,'
+            ' initial-scale=1.0">\n'
+           f'<title>{title}</title>\n'
+            '<style>\n'
+           f'{css}\n'
+            '</style>\n'
+            '<div id="chase">\n'
+            '  <div id="block">\n'
+           f'{body}\n'
+            '  </div>\n'
+            '</div>\n'
+        )
+
+    for fn in argv[1:]:
+        with open(fn) as fh:
+            md = fh.read()
+        html = convert(md, 4)
+        _, base = path.split(fn)
+        base, _ = path.splitext(base)
+        html = preview(base, html)
+        with open(f'{base}.html', 'w') as fh:
+            print(html, file=fh)

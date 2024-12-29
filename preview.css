@@ -1,0 +1,257 @@
+html {
+  --body-bg:  rgb(  0,   0,   0);
+  --body-fg:  rgb(224, 224, 224);
+  --chase-bg: rgb( 20,  20,  20);
+  --pre-bg:   rgb( 16,  16,  16);
+  --table-bd: rgb( 64,  64,  64);
+  --hr-bd:    rgb(224, 224, 224);
+  --quote-bd: rgb( 64,  64,  64);
+
+  --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
+  --chase-img: radial-gradient(rgb(24, 24, 24) 1px, transparent 0);
+
+  --a-fg:  rgba(176, 128, 255);
+  --a-dec: rgba(224, 224, 224, 25%);
+
+  --src-bd: rgb(255,  64,  64);
+  --fmt-bd: rgb( 96,  96, 192);
+}
+
+html {
+  font-family: "FiraGO", "Fira Sans", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  width:      100dvw;
+  max-width:  100%;
+  margin:  0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background-color: var(--body-bg);
+  background-image: var(--body-img);
+  background-size: 1rem 1rem;
+  color: var(--body-fg);
+}
+
+#chase {
+  box-sizing: border-box;
+  max-width: min(48rem, 100%);
+  padding: 2rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+
+  background-color: var(--chase-bg);
+}
+
+#block {
+  width: 40rem;
+  max-width: 100%;
+}
+
+#block > :nth-child(1)      { margin-top:    0; }
+#block > :nth-last-child(1) { margin-bottom: 0; }
+
+.gap-afore { margin-top:    0.75rem; }
+.gap-after { margin-bottom: 0.75rem; }
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 550;
+}
+h1.gap-afore {
+  margin-top: 1.5rem;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 550;
+}
+h2.gap-afore {
+  margin-top: 1.5rem;
+}
+
+h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 550;
+}
+h3.gap-afore {
+  margin-top: 1.5rem;
+}
+
+h4, h5, h6 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  list-style-type: "•\2002";
+}
+
+li > ul {
+  margin: 0;
+  list-style-type: "‣\2002";
+}
+
+li {
+  margin: 0.25rem 0 0.25rem;
+}
+
+.center { text-align: center; }
+.left   { text-align: left;   }
+.right  { text-align: right;  }
+
+table {
+  margin: 0;
+  border: none;
+  padding: 0;
+  border-collapse: collapse;
+}
+
+tr {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--table-bd);
+}
+
+tbody tr:nth-last-child(1) {
+  border-bottom: none;
+}
+
+th {
+  padding: 0.25rem 1rem 0.25rem;
+  text-align: left;
+  font-weight: 550;
+}
+
+td {
+  padding: 0.25rem 1rem 0.25rem;
+  text-align: left;
+}
+
+pre {
+  font-family: "Fira Mono", "Fira Code", monospace;
+  margin: 0 0 0 -0.5rem;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0 0.25rem 0.5rem;
+  background-color: var(--pre-bg);
+}
+
+hr {
+  border-width: 1px 0 0;
+  border-style: solid;
+  border-color: var(--hr-bd);
+  margin: 1rem 0 1rem;
+}
+
+.quote {
+  border-left-width: 0.25rem;
+  border-left-style: solid;
+  border-left-color: var(--quote-bd);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.src {
+  border-left-width: 0.25rem;
+  border-left-style: solid;
+  border-left-color: var(--src-bd);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.fmt {
+  border-left-width: 0.25rem;
+  border-left-style: solid;
+  border-left-color: var(--fmt-bd);
+  padding-top: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.src pre {
+  background-color: inherit;
+}
+
+code {
+  font-family: "Fira Mono", "Fira Code", monospace;
+}
+
+a {
+  color: var(--a-fg);
+}
+
+a:link, a:visited {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--a-dec);
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.125rem;
+}
+
+a:link:hover, a:visited:hover {
+  text-decoration-style: solid;
+}
+
+.var {
+  font-style: italic;
+}
+
+sup {
+  line-height: 0;
+}
+
+sub {
+  line-height: 0;
+  vertical-align: sub;
+  font-size: 0.8125rem;
+  margin-right: 1px;
+}
+
+sub.small {
+  font-size: 0.6875rem;
+  margin-left: 1px;
+  margin-right: 2px;
+}
+
+b {
+  font-weight: 550;
+}
+
+i {
+  font-style: italic;
+}
+
+.deitalic {
+  font-style: normal;
+}
+
+.sc {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.03125rem;
+}
