@@ -6,47 +6,7 @@ from typing import Optional
 
 INDENTSIZE = 1.0    # size of each indent step in em
 
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# These standard features are supported:
-#   headings
-#   paragraph breaking
-#   lists
-#   tables
-#   code blocks
-#   italic styling
-#   bold styling
-#   inline code
-#   links
-#
-# as well as these nonstandard features:
-#   anchors
-#   subscripts
-#   variables
-#   indents
-#   substitutions
-#
-# Text is first broken into paragraphs, lists, tables, and code blocks, and
-# then other transformations are performed within each paragraph, list item,
-# and table cell.
-#
-# Paragraphs are separated by empty lines. Lists, tables, and code blocks that
-# aren't preceded by an empty line will be spaced more tightly above, and if
-# they aren't followed by an empty line will be spaced more tightly below.
-#
-# The following CSS classes may be added to some elements:
-#
-#   class       elements    typical styling
-#   ──────────  ──────────  ────────────────────────────────────────────────
-#   gap-afore   *           margin-top: 1rem;
-#   gap-after   *           margin-bottom: 1rem;
-#   quote       div         ...
-#   anchor      span        ...
-#   var         span        font-style: italic;
-#   small       sub         ...
-#   deitalic    span        font-style: normal;
-#   left        th, td      text-align: left;
-#   center      th, td      text-align: center;
-#   right       th, td      text-align: right;
+# See guide.md and guide.html for a description of the supported features.
 
 ELEMENTS = {
     'html'       , 'base'       , 'head'       , 'link'       , 'meta'       ,
@@ -785,6 +745,7 @@ def makecode(
     # ↑↑↑ TEMPORARY ↑↑↑
     return html
 
+#  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
 
 def makequot(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
     leftskip = min(
@@ -1008,7 +969,7 @@ def convert(markdown : str, margin : int = 0) -> str:
 
     return _convert(markdown.splitlines(), margin)
 
-#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+#  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
 
 if __name__ == '__main__':
     from os import path
