@@ -1,5 +1,6 @@
 html {
   --body-bg:  rgb(  0,   0,   0);
+  --body-fn:  rgb( 48,  48,  48);
   --body-fg:  rgb(224, 224, 224);
   --chase-bg: rgb( 20,  20,  20);
   --pre-bg:   rgb( 16,  16,  16);
@@ -159,6 +160,7 @@ pre {
   border-radius: 0.25rem;
   padding: 0.25rem 0 0.25rem 0.5rem;
   background-color: var(--pre-bg);
+  overflow-x: auto;
 }
 
 hr {

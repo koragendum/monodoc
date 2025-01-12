@@ -5,6 +5,7 @@
 <style>
   html {
     --body-bg:  rgb(  0,   0,   0);
+    --body-fn:  rgb( 48,  48,  48);
     --body-fg:  rgb(224, 224, 224);
     --chase-bg: rgb( 20,  20,  20);
     --pre-bg:   rgb( 16,  16,  16);
@@ -164,6 +165,7 @@
     border-radius: 0.25rem;
     padding: 0.25rem 0 0.25rem 0.5rem;
     background-color: var(--pre-bg);
+    overflow-x: auto;
   }
 
   hr {
@@ -589,7 +591,7 @@ or it can be written in &grave;&grave;&grave;the middle&grave;&grave;&grave; of 
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
     <p class="gap-after">of a paragraph.</p>
     <div style="position: relative;">
-      <span style="position: absolute; right: 0.375rem; font-style: italic; opacity: 12.5%;">markdown</span>
+      <span style="position: absolute; right: 0.375rem; font-style: italic; color: var(--body-fn); background: var(--pre-bg); border-radius: 0.375rem; padding-left: 0.375rem; padding-bottom: 0.375rem;">markdown</span>
       <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
 <pre class="gap-afore">(Note that, currently, monodoc itself
   doesn’t do any syntax highlighting.)</pre>

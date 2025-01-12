@@ -734,8 +734,12 @@ def makecode(
     if lang is not None:
         margin -= 2
         mgn = ' ' * margin
-        style = 'position: absolute; right: 0.375rem;' \
-                ' font-style: italic; opacity: 12.5%;'
+        style = (
+            'position: absolute; right: 0.375rem;'
+            ' font-style: italic; color: var(--body-fn);'
+            ' background: var(--pre-bg); border-radius: 0.375rem;'
+            ' padding-left: 0.375rem; padding-bottom: 0.375rem;'
+        )
         html = '\n'.join([
             mgn + '<div style="position: relative;">',
             mgn + f'  <span style="{style}">{lang}</span>',
