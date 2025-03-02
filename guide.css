@@ -1,0 +1,23 @@
+.src {
+  border-left-width: 0.25rem;
+  border-left-style: solid;
+  border-left-color: rgb(255, 64, 64);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.fmt {
+  border-left-width: 0.25rem;
+  border-left-style: solid;
+  border-left-color: rgb( 96,  96, 192);
+  padding-top: 0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.src pre {
+  background-color: inherit;
+  margin: 0;
+  padding: 0;
+}

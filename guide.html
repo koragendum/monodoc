@@ -5,33 +5,24 @@
 <style>
   html {
     --body-bg:  rgb(  0,   0,   0);
-    --body-fn:  rgb( 48,  48,  48);
     --body-fg:  rgb(224, 224, 224);
-    --chase-bg: rgb( 20,  20,  20);
-    --pre-bg:   rgb( 16,  16,  16);
+    --chase-bg: rgb( 12,  12,  12);
+    --pre-bg:   rgb(  8,   8,   8);
     --table-bd: rgb( 64,  64,  64);
     --hr-bd:    rgb(224, 224, 224);
     --quote-bd: rgb( 64,  64,  64);
-
     --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
-    --chase-img: radial-gradient(rgb(24, 24, 24) 1px, transparent 0);
-
     --a-fg:  rgba(176, 128, 255);
     --a-dec: rgba(224, 224, 224, 25%);
-
-    --src-bd: rgb(255,  64,  64);
-    --fmt-bd: rgb( 96,  96, 192);
   }
-
   html {
     font-family: "FiraGO", "Fira Sans", sans-serif;
     font-size: 16px;
     font-weight: 400;
-    line-height: 1.5rem;
+    line-height: 1.625rem;
     margin: 0;
     padding: 0;
   }
-
   body {
     box-sizing: border-box;
     min-height: 100dvh;
@@ -39,180 +30,133 @@
     max-width:  100%;
     margin:  0;
     padding: 0;
-
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
     background-color: var(--body-bg);
     background-image: var(--body-img);
     background-size: 1rem 1rem;
     color: var(--body-fg);
   }
-
   #chase {
     box-sizing: border-box;
-    max-width: min(48rem, 100%);
+    max-width: min(46rem, 100%);
     padding: 2rem;
-
     display: flex;
     flex-direction: column;
     justify-content: start;
     align-items: center;
-
     background-color: var(--chase-bg);
   }
-
   #block {
-    width: 40rem;
+    width: 38rem;
     max-width: 100%;
   }
-
   #block > :nth-child(1)      { margin-top:    0; }
   #block > :nth-last-child(1) { margin-bottom: 0; }
-
-  .gap-afore { margin-top:    0.75rem; }
-  .gap-after { margin-bottom: 0.75rem; }
-
+  .gt { margin-top:    0.75rem; }
+  .gb { margin-bottom: 0.75rem; }
   h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 550;
-  }
-  h1.gap-afore {
-    margin-top: 1.5rem;
-  }
-
-  h2 {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 550;
   }
-  h2.gap-afore {
+  h1.gt {
     margin-top: 1.5rem;
   }
-
-  h3 {
+  h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 1.25rem;
     font-weight: 550;
   }
-  h3.gap-afore {
+  h2.gt {
     margin-top: 1.5rem;
   }
-
-  h4, h5, h6 {
+  h3 {
     margin: 0;
-    font-size: inherit;
-    font-weight: 700;
+    font-size: 1.125rem;
+    font-weight: 550;
   }
-
+  h3.gt {
+    margin-top: 1.5rem;
+  }
   p {
     margin: 0;
   }
-
   ul {
     margin: 0;
     padding: 0 0 0 1.5rem;
     list-style-type: "•\2002";
   }
-
   li > ul {
     margin: 0;
     list-style-type: "‣\2002";
   }
-
   li {
     margin: 0.25rem 0 0.25rem;
   }
-
   .center { text-align: center; }
   .left   { text-align: left;   }
   .right  { text-align: right;  }
-
   table {
     margin: 0;
     border: none;
     padding: 0;
     border-collapse: collapse;
   }
-
   tr {
     border-bottom-width: 1px;
     border-bottom-style: solid;
     border-bottom-color: var(--table-bd);
   }
-
   tbody tr:nth-last-child(1) {
     border-bottom: none;
   }
-
   th {
     padding: 0.25rem 1rem 0.25rem;
     text-align: left;
     font-weight: 550;
   }
-
   td {
     padding: 0.25rem 1rem 0.25rem;
     text-align: left;
   }
-
   pre {
     font-family: "Fira Mono", "Fira Code", monospace;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
     margin: 0 0 0 -0.5rem;
     border-radius: 0.25rem;
-    padding: 0.25rem 0 0.25rem 0.5rem;
+    padding: 0.5rem 0 0.5rem 0.5rem;
     background-color: var(--pre-bg);
     overflow-x: auto;
   }
-
   hr {
     border-width: 1px 0 0;
     border-style: solid;
     border-color: var(--hr-bd);
     margin: 1rem 0 1rem;
   }
-
-  .quote {
+  blockquote {
+    margin: 0;
+    border-top: none;
     border-left-width: 0.25rem;
     border-left-style: solid;
     border-left-color: var(--quote-bd);
+    border-right: none;
+    border-bottom: none;
+    padding-top: 0;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+    padding-bottom: 0;
   }
-
-  .src {
-    border-left-width: 0.25rem;
-    border-left-style: solid;
-    border-left-color: var(--src-bd);
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-
-  .fmt {
-    border-left-width: 0.25rem;
-    border-left-style: solid;
-    border-left-color: var(--fmt-bd);
-    padding-top: 0.5rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .src pre {
-    background-color: inherit;
-  }
-
   code {
     font-family: "Fira Mono", "Fira Code", monospace;
   }
-
   a {
     color: var(--a-fg);
   }
-
   a:link, a:visited {
     text-decoration-line: underline;
     text-decoration-style: dotted;
@@ -220,59 +164,72 @@
     text-decoration-thickness: 0.125rem;
     text-underline-offset: 0.125rem;
   }
-
   a:link:hover, a:visited:hover {
     text-decoration-style: solid;
   }
-
   .var {
     font-style: italic;
   }
-
   sup {
     line-height: 0;
   }
-
   sub {
     line-height: 0;
     vertical-align: sub;
     font-size: 0.8125rem;
-    margin-right: 1px;
+    margin-right: 0.0625rem;
   }
-
-  sub.small {
+  sub.sm {
     font-size: 0.6875rem;
-    margin-left: 1px;
-    margin-right: 2px;
+    margin-left: 0.0625rem;
+    margin-right: 0.125rem;
   }
-
   b {
     font-weight: 550;
   }
-
   i {
     font-style: italic;
   }
-
-  .deitalic {
+  .ni {
     font-style: normal;
   }
-
   .sc {
     font-variant-caps: small-caps;
+    font-variant-numeric: oldstyle-nums;
     letter-spacing: 0.03125rem;
+  }
+  .src {
+    border-left-width: 0.25rem;
+    border-left-style: solid;
+    border-left-color: rgb(255, 64, 64);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .fmt {
+    border-left-width: 0.25rem;
+    border-left-style: solid;
+    border-left-color: rgb( 96,  96, 192);
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .src pre {
+    background-color: inherit;
+    margin: 0;
+    padding: 0;
   }
 </style>
 <div id="chase">
   <div id="block">
-    <h1 class="gap-after">Monodoc</h1>
-    <p class="gap-afore gap-after">This file can be regenerated by running</p>
+    <h1 class="gb">Monodoc</h1>
+    <p class="gt gb">This file can be regenerated by running</p>
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-afore gap-after">./monodoc guide.md</pre>
+<pre class="gt gb">./monodoc -i base.css -i guide.css guide.md</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
-    <h2 class="gap-afore gap-after">Table of Contents</h2>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 0.0em;"><a href="#introduction">Introduction</a></span>
-      <span style="display: block; margin-left: 0.0em;"><a href="#block-level-elements">Block-level Elements</a></span>
+    <h2 class="gt gb">Table of Contents</h2>
+    <p class="gt gb"><span style="display: block;"><a href="#introduction">Introduction</a></span>
+      <span style="display: block;"><a href="#block-level-elements">Block-level Elements</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#headings">Headings</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#paragraphs">Paragraphs</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#block-quotes">Block Quotes</a></span>
@@ -280,32 +237,53 @@
       <span style="display: block; margin-left: 1.0em;"><a href="#tables">Tables</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#code-blocks">Code Blocks</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#spacing">Spacing</a></span>
-      <span style="display: block; margin-left: 0.0em;"><a href="#inline-elements">Inline Elements</a></span>
+      <span style="display: block;"><a href="#inline-elements">Inline Elements</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#escape-sequences">Escape Sequences</a></span>
-      <span style="display: block; margin-left: 1.0em;"><a href="#hyperlinks-and-anchors">Hyperlinks and Anchors</a></span>
+      <span style="display: block; margin-left: 1.0em;"><a href="#hyperlinks">Hyperlinks</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#variables">Variables</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#superscripts-and-subscripts">Superscripts and Subscripts</a></span>
-      <span style="display: block; margin-left: 1.0em;"><a href="#abbreviations">Abbreviations</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#small-caps">Small Caps</a></span>
       <span style="display: block; margin-left: 1.0em;"><a href="#italic-and-bold">Italic and Bold</a></span>
-      <span style="display: block; margin-left: 0.0em;"><a href="#css-classes">CSS Classes</a></span></p>
-    <h2 class="gap-afore gap-after"><span id="introduction" class="anchor"></span> <a href="#introduction">#</a> Introduction</h2>
-    <p class="gap-afore gap-after">A markdown page or fragment is first broken into block-level elements which
+      <span style="display: block;"><a href="#css-classes">CSS Classes</a></span></p>
+    <h2 id="introduction" class="gt gb"><a href="#introduction">#</a> Introduction</h2>
+    <p class="gt gb">A markdown page or fragment is first broken into block-level elements which
       are then individually rendered and then concatenated.</p>
-    <p class="gap-afore gap-after">You can mix markdown and <span class="sc">html</span>, since the markdown parser preserves <span class="sc">html</span>
+    <p class="gt gb">You can mix markdown and <span class="sc">html</span>, since the markdown parser preserves <span class="sc">html</span>
       tags.</p>
-    <p class="gap-afore gap-after">Monodoc uses U+F000 through U+F009 internally to mark locations as it
+    <p class="gt gb">Monodoc uses <span class="sc">u&plus;f000</span> through <span class="sc">u&plus;f009</span> internally to mark locations as it
       manipulates text, so unfortunately your document can’t use these scalar values.</p>
-    <h2 class="gap-afore gap-after"><span id="block-level-elements" class="anchor"></span> <a href="#block-level-elements">#</a> Block-level Elements</h2>
-    <h3 class="gap-afore gap-after"><span id="headings" class="anchor"></span> <a href="#headings">#</a> Headings</h3>
-    <p class="gap-afore gap-after">Lines that start with one or more <code>#</code> followed by a space are headings. The
+    <h2 id="block-level-elements" class="gt gb"><a href="#block-level-elements">#</a> Block-level Elements</h2>
+    <h3 id="headings" class="gt gb"><a href="#headings">#</a> Headings</h3>
+    <p class="gt gb">Lines that start with one or more <code>#</code> followed by a space are headings. The
       number of <code>#</code> indicates the heading level.</p>
-    <h3 class="gap-afore gap-after"><span id="paragraphs" class="anchor"></span> <a href="#paragraphs">#</a> Paragraphs</h3>
-    <p class="gap-afore gap-after">Anything that’s not one of the other block-level elements is a paragraph.
+    <p class="gt gb">A heading can be given an <span class="sc">id</span> (so that it can be the target of a hyperlink)
+      by writing</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>{</code> <span class="var">label</span> <code>}</code></span></p>
+    <p class="gt gb">after the <code>#</code> marks, where <span class="var">label</span> is the name or <span class="sc">id</span>. Only letters, numbers,
+      and the characters
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5F; + -</code></span>
+      are allowed in <span class="var">label</span>. Although it cannot <i>contain</i> whitespace, there may
+      whitespace before or after.</p>
+    <p class="gt gb">A permalink can also be inserted by writing</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>{#</code> <span class="var">label</span> <code>}</code></span></p>
+    <div class="src">
+    <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
+<pre>### `h3` Heading
+### {h3-heading} `h3` Heading
+### {#h3-heading} `h3` Heading</pre>
+    <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
+      </div>
+      <div class="fmt">
+    <h3><code>h3</code> Heading</h3>
+    <h3 id="h3-heading"><code>h3</code> Heading</h3>
+    <h3 id="h3-heading"><a href="#h3-heading">#</a> <code>h3</code> Heading</h3>
+    </div>
+    <h3 id="paragraphs" class="gt gb"><a href="#paragraphs">#</a> Paragraphs</h3>
+    <p class="gt gb">Anything that’s not one of the other block-level elements is a paragraph.
       A paragraph is ended by an empty line, the start of another block-level element,
       or (if you’re mixing markdown and <span class="sc">html</span>) one of the following <span class="sc">html</span> tags:</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>h1 h2 h3 h4 h5 h6 div p pre ol ul table</code></span></p>
-    <p class="gap-afore gap-after">Within paragraphs (but not the other block-level elements) you can indent lines
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>h1 h2 h3 h4 h5 h6 div p pre ol ul table</code></span></p>
+    <p class="gt gb">Within paragraphs (but not the other block-level elements) you can indent lines
       using <span style="display: inline-block;"><code>|</code><span class="var">n</span><code>&gt;</code></span>, where <span class="var">n</span> indicates
       how far to indent the line.</p>
     <div class="src">
@@ -322,10 +300,10 @@
       <span style="display: block; margin-left: 1.0em;">if the line begins with <code>|1&gt;</code> it’s indented once;</span>
       <span style="display: block; margin-left: 2.0em;">if <code>|2&gt;</code> then it’s indented twice</span>
       <span style="display: block; margin-left: 2.0em;">(regardless of the indentation in the source);</span>
-      <span style="display: block; margin-left: 0.0em;">and so on for <code>|</code><span class="var">n</span><code>&gt;</code> from <span class="var">n</span> = 0 up to <span class="var">n</span> = 9.</span>
+      <span style="display: block;">and so on for <code>|</code><span class="var">n</span><code>&gt;</code> from <span class="var">n</span> = 0 up to <span class="var">n</span> = 9.</span>
       </div>
-    <h3 class="gap-afore gap-after"><span id="block-quotes" class="anchor"></span> <a href="#block-quotes">#</a> Block Quotes</h3>
-    <p class="gap-afore gap-after">Lines that start with <code>&gt;</code> are enclosed by <code>&lt;div class="quote"&gt;</code> and
+    <h3 id="block-quotes" class="gt gb"><a href="#block-quotes">#</a> Block Quotes</h3>
+    <p class="gt gb">Lines that start with <code>&gt;</code> are enclosed by <code>&lt;div class="quote"&gt;</code> and
       <code>&lt;/div&gt;</code> tags.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
@@ -344,21 +322,21 @@
       </div>
       <div class="fmt">
       A block quote ends the previous item and
-    <div class="quote">
-      <p class="gap-after">begins a section set in a <code>div</code> element.</p>
-      <p class="gap-afore">It can include multiple paragraphs</p>
-      <div class="quote gap-after">
+    <blockquote>
+      <p class="gb">begins a section set in a <code>div</code> element.</p>
+      <p class="gt">It can include multiple paragraphs</p>
+      <blockquote class="gb">
         <p>and even nest.</p>
-      </div>
-      <p class="gap-afore">You can also include code blocks,</p>
+      </blockquote>
+      <p class="gt">You can also include code blocks,</p>
       <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
 <pre> like
    so<i>!</i></pre>
       <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
+    </blockquote>
     </div>
-    </div>
-    <h3 class="gap-afore gap-after"><span id="lists" class="anchor"></span> <a href="#lists">#</a> Lists</h3>
-    <p class="gap-afore gap-after">Lines that start with <code>*</code>, <code>-</code>, or <code>+</code> followed by a space are list items.
+    <h3 id="lists" class="gt gb"><a href="#lists">#</a> Lists</h3>
+    <p class="gt gb">Lines that start with <code>*</code>, <code>-</code>, or <code>+</code> followed by a space are list items.
       When a list is invalid (because of mismatching bullets or mismatched
       indentation), the list is printed as a code block.</p>
     <div class="src">
@@ -391,7 +369,7 @@ And this:
       </div>
       <div class="fmt">
       This is an okay list:
-    <ul class="gap-after">
+    <ul class="gb">
       <li>item a</li>
       <li style="list-style: none;"><ul>
         <li>with a sub-item</li>
@@ -399,8 +377,8 @@ And this:
       <li>item b</li>
       <li>item c</li>
     </ul>
-    <p class="gap-afore">This is also okay:</p>
-    <ul class="gap-after">
+    <p class="gt">This is also okay:</p>
+    <ul class="gb">
       <li>item d</li>
       <li style="list-style: none;"><ul>
         <li>with a sub-item</li>
@@ -409,25 +387,25 @@ And this:
         </ul></li>
       </ul></li>
     </ul>
-    <p class="gap-afore">But this is broken:</p>
+    <p class="gt">But this is broken:</p>
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-after">- item e
+<pre class="gb">- item e
 * item f</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
-    <p class="gap-afore">And so is this:</p>
+    <p class="gt">And so is this:</p>
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-after">  - item g
+<pre class="gb">  - item g
 - item h</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
-    <p class="gap-afore">And this:</p>
+    <p class="gt">And this:</p>
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
 <pre>- item i
     - item j
   - item k</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
     </div>
-    <h3 class="gap-afore gap-after"><span id="tables" class="anchor"></span> <a href="#tables">#</a> Tables</h3>
-    <p class="gap-afore gap-after">Lines that start with <code>|</code> are table rows, and <code>|</code> is used to further separate
+    <h3 id="tables" class="gt gb"><a href="#tables">#</a> Tables</h3>
+    <p class="gt gb">Lines that start with <code>|</code> are table rows, and <code>|</code> is used to further separate
       cells in the row. Tables can optionally have a row that indicates column
       alignment, and if they have an alignment row, they can also optionally have
       a header. When a table is invalid (because the rows don’t have the same number
@@ -444,7 +422,7 @@ And so are these:
 |:--------|:----------:| ----------: | ---       |
 | in this | example we | specify the | alignment |
 | _left_ | _center_ | _right_ | _default_ (left) |
-| note | we don’t | have to | line up \\|s in the source |
+| note | we don’t | have to | line up \|s in the source |
 | (but it’s ||| nice to do so)|
 
 |               | Column 1    | Column 2       |
@@ -471,7 +449,7 @@ But these are broken:
       </div>
       <div class="fmt">
       This table is okay:
-    <table class="gap-after">
+    <table class="gb">
       <tbody>
         <tr>
           <td>this</td>
@@ -485,8 +463,8 @@ But these are broken:
         </tr>
       </tbody>
     </table>
-    <p class="gap-afore gap-after">And so are these:</p>
-    <table class="gap-afore gap-after">
+    <p class="gt gb">And so are these:</p>
+    <table class="gt gb">
       <tbody>
         <tr>
           <td class="left">in this</td>
@@ -514,7 +492,7 @@ But these are broken:
         </tr>
       </tbody>
     </table>
-    <table class="gap-afore gap-after">
+    <table class="gt gb">
       <thead>
         <tr>
           <th></th>
@@ -540,28 +518,28 @@ But these are broken:
         </tr>
       </tbody>
     </table>
-    <p class="gap-afore gap-after">But these are broken:</p>
+    <p class="gt gb">But these are broken:</p>
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-afore gap-after">| 1 | 2 | 3 |
+<pre class="gt gb">| 1 | 2 | 3 |
 | 4 | 5 | 6 | 7 |</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-afore gap-after">| a | b | c |
+<pre class="gt gb">| a | b | c |
 |---|:-:|---|
 | g | h | i |
 |---|:-:|---|</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-afore">| a | b | c |
+<pre class="gt">| a | b | c |
 | d | e | f |
 |---|---|---|
 | g | h | i |</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
     </div>
-    <h3 class="gap-afore gap-after"><span id="code-blocks" class="anchor"></span> <a href="#code-blocks">#</a> Code Blocks</h3>
-    <p class="gap-afore gap-after">Code blocks start and end with <code>&#x60;&#x60;&#x60;</code>, which can appear at the
+    <h3 id="code-blocks" class="gt gb"><a href="#code-blocks">#</a> Code Blocks</h3>
+    <p class="gt gb">Code blocks start and end with <code>&#x60;&#x60;&#x60;</code>, which can appear at the
       start of a line or within a paragraph.</p>
-    <p class="gap-afore gap-after">If a code block begins with <code>&#x60;&#x60;&#x60;xxx&#x5C;n</code>, then <code>xxx</code> is taken to
+    <p class="gt gb">If a code block begins with <code>&#x60;&#x60;&#x60;xxx&#x5C;n</code>, then <code>xxx</code> is taken to
       be the name of the language (for syntax highlighting, for example).</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
@@ -582,24 +560,21 @@ or it can be written in &grave;&grave;&grave;the middle&grave;&grave;&grave; of 
       <div class="fmt">
       A code block can begin at the start of a line
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-after">like so
+<pre class="gb">like so
   (note that whitespace is respected)</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
-    <p class="gap-afore">or it can be written in</p>
+    <p class="gt">or it can be written in</p>
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
 <pre>the middle</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
-    <p class="gap-after">of a paragraph.</p>
-    <div style="position: relative;">
-      <span style="position: absolute; right: 0.375rem; font-style: italic; color: var(--body-fn); background: var(--pre-bg); border-radius: 0.375rem; padding-left: 0.375rem; padding-bottom: 0.375rem;">markdown</span>
-      <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre class="gap-afore">(Note that, currently, monodoc itself
+    <p class="gb">of a paragraph.</p>
+    <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
+<pre class="gt">(Note that, currently, monodoc itself
   doesn’t do any syntax highlighting.)</pre>
-      <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
+    <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
     </div>
-    </div>
-    <h3 class="gap-afore gap-after"><span id="spacing" class="anchor"></span> <a href="#spacing">#</a> Spacing</h3>
-    <p class="gap-afore gap-after">Empty lines add space between block-level elements.</p>
+    <h3 id="spacing" class="gt gb"><a href="#spacing">#</a> Spacing</h3>
+    <p class="gt gb">Empty lines add space between block-level elements.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
 <pre>There will be space after this paragraph before the list.
@@ -619,40 +594,40 @@ There won’t be space after this paragraph
       </div>
       <div class="fmt">
       There will be additional space after this paragraph before the list.
-    <ul class="gap-afore gap-after">
+    <ul class="gt gb">
       <li>item a</li>
       <li>item b</li>
     </ul>
-    <p class="gap-afore">There won’t be space after <i>this</i> paragraph, however,</p>
-    <ul class="gap-after">
+    <p class="gt">There won’t be space after <i>this</i> paragraph, however,</p>
+    <ul class="gb">
       <li>item c</li>
       <li>item d</li>
     </ul>
-    <p class="gap-afore">There won’t be space after this paragraph</p>
+    <p class="gt">There won’t be space after this paragraph</p>
     <ul>
       <li>item e</li>
       <li>item f</li>
     </ul>
     <i>or</i> after the list (before this paragraph).
       </div>
-    <h2 class="gap-afore gap-after"><span id="inline-elements" class="anchor"></span> <a href="#inline-elements">#</a> Inline Elements</h2>
-    <p class="gap-afore gap-after">These can be used in every block-level element besides code blocks.
+    <h2 id="inline-elements" class="gt gb"><a href="#inline-elements">#</a> Inline Elements</h2>
+    <p class="gt gb">These can be used in every block-level element besides code blocks.
       Each heading, paragraph, list item, and table cell is rendered separately.</p>
-    <h3 class="gap-afore gap-after"><span id="escape-sequences" class="anchor"></span> <a href="#escape-sequences">#</a> Escape Sequences</h3>
-    <p class="gap-afore gap-after">If you need a literal
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5C; &lt; &gt; &amp; &num; &#x60; &#x5F; &ast;</code></span>
+    <h3 id="escape-sequences" class="gt gb"><a href="#escape-sequences">#</a> Escape Sequences</h3>
+    <p class="gt gb">If you need a literal
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5C; &lt; &gt; &amp; &num; &ast; &#x5F; &#x60; &#x7C; &#x5E; &#x25;</code></span>
       in a place where it’d be interpreted as markdown or <span class="sc">html</span> syntax, you can
       escape the character by typing a backslash first:
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5C;&#x5C; &#x5C;&lt; &#x5C;&gt; &#x5C;&amp; &#x5C;&num; &#x5C;&#x60; &#x5C;&#x5F; &#x5C;&ast;</code></span></p>
-    <p class="gap-afore gap-after">(You could also write <code>&amp;lt;</code> or <code>&amp;#x3C;</code> instead of <code>&#x5C;&lt;</code>. The backslash
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5C;&#x5C; &#x5C;&lt; &#x5C;&gt; &#x5C;&amp; &#x5C;&num; &#x5C;&ast; &#x5C;&#x5F; &#x5C;&#x60; &#x5C;&#x7C; &#x5C;&#x5E; &#x5C;&#x25;</code></span></p>
+    <p class="gt gb">(You could also write <code>&amp;lt;</code> or <code>&amp;#x3C;</code> instead of <code>&#x5C;&lt;</code>. The backslash
       sequences are provided for convenience.)</p>
-    <h3 class="gap-afore gap-after"><span id="inline-code" class="anchor"></span> <a href="#inline-code">#</a> Inline Code</h3>
-    <p class="gap-afore gap-after">Text between pairs of <code>&#x60;</code> is rendered as inline code.</p>
+    <h3 id="inline-code" class="gt gb"><a href="#inline-code">#</a> Inline Code</h3>
+    <p class="gt gb">Text between pairs of <code>&#x60;</code> is rendered as inline code.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
 <pre>Inline code is set in a `fixed-width` face.
 
-{!Html} tags are not escaped automatically;
+%Html tags are not escaped automatically;
 |1&gt; `the middle &lt;i&gt;words of&lt;/i&gt; this line`
 are rendered in italic using `\&lt;i\&gt;`.</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
@@ -663,246 +638,88 @@ are rendered in italic using `\&lt;i\&gt;`.</pre>
       <span style="display: block; margin-left: 1.0em;"><code>the middle <i>words of</i> this line</code></span>
       are rendered in italic using <code>&lt;i&gt;</code>.
       </div>
-    <h3 class="gap-afore gap-after"><span id="hyperlinks-and-anchors" class="anchor"></span> <a href="#hyperlinks-and-anchors">#</a> Hyperlinks and Anchors</h3>
-    <p class="gap-afore gap-after">Links can be created by typing</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>[</code> <span class="var">displayed</span> <code>](</code> <span class="var">target</span> <code>)</code></span></p>
-    <p class="gap-afore gap-after">where <span class="var">displayed</span> is the text that’s shown for the link and <span class="var">target</span> is the
+    <h3 id="hyperlinks" class="gt gb"><a href="#hyperlinks">#</a> Hyperlinks</h3>
+    <p class="gt gb">Links can be created by typing</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>[</code> <span class="var">displayed</span> <code>](</code> <span class="var">target</span> <code>)</code></span></p>
+    <p class="gt gb">where <span class="var">displayed</span> is the text that’s shown for the link and <span class="var">target</span> is the
       destination.</p>
-    <p class="gap-afore">The target can be anything that the <code>href</code> attribute of an <code>&lt;a&gt;</code> tag can be.
+    <p class="gt">The target can be anything that the <code>href</code> attribute of an <code>&lt;a&gt;</code> tag can be.
       For example,</p>
-    <ul class="gap-after">
+    <ul class="gb">
       <li>it can be an entire URL (like <code>https://site.com</code>),</li>
       <li>a relative path (like <code>../page.html</code>), or</li>
       <li>an anchor on the current page (like <a href="#label"><code>#label</code></a>).</li>
     </ul>
-    <p class="gap-afore gap-after">Markdown syntax can be used within <span class="var">displayed</span> (which is how the link above is
+    <p class="gt gb">Markdown syntax can be used within <span class="var">displayed</span> (which is how the link above is
       set in a fixed-width face).</p>
-    <p class="gap-afore gap-after">Anchors marking a particular location on the page can be created with</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>{#</code> <span class="var">label</span> <code>}</code></span></p>
-    <p class="gap-afore gap-after">where <span class="var">label</span> is the name or <span class="sc">id</span>. Only letters, numbers, and the characters
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F; + -</code></span>
-      are allowed in <span class="var">label</span>. Although it cannot <i>contain</i> whitespace, there may
-      whitespace before or after.</p>
-    <p class="gap-afore gap-after">Anchors themselves are not visible by default (they are empty <code>span</code> elements).</p>
-    <div class="src">
-    <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre>{#label} The start of this paragraph has an anchor, and there’s also
-an anchor {# here } at this start of this phrase.
-
-The anchor {# bad anchor } here though is malformed.</pre>
-    <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
-      </div>
-      <div class="fmt">
-      <span id="label" class="anchor"></span> The start of this paragraph has an anchor, and there’s also
-      an anchor <span id="here" class="anchor"></span> at this start of this phrase.
-    The anchor {# bad anchor } here though is malformed.
-      </div>
-    <h3 class="gap-afore gap-after"><span id="variables" class="anchor"></span> <a href="#variables">#</a> Variables</h3>
-    <p class="gap-afore gap-after">A letter or word can be marked as a variable by writing <code>@</code> before the letter
+    <h3 id="variables" class="gt gb"><a href="#variables">#</a> Variables</h3>
+    <p class="gt gb">A letter or word can be marked as a variable by writing <code>@</code> before the letter
       or word. Variable names can only consist of upper- and lowercase letters.</p>
-    <p class="gap-afore gap-after">Extra space is selectively placed around delimiters when they are adjacent to
+    <p class="gt gb">Extra space is selectively placed around delimiters when they are adjacent to
       variables under the assumption that variables are set in a typical italic face.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre>For @i = 0, 1, ..., @n\-1,
+<pre>For @i = 0, 1, ..., @n−1,
 |1> @x = @inp[@i]
 |1> @x = @f(@x)
-|1> @out[@i] <- encode[@x],
-where @inp is a byte array (of length @n),
-@f is an arbitrary function from byte to byte,
-and “encode” is a byte array of length 256.
+|1> @out[@i] ← encode(@x),
+where @inp is a byte array (of length @n)
+and @f is byte transformation.
 
 The righthand side of *i* is cramped in [*i*] _vs_ in [@i];
 &lt;br&gt;also compare [*j*] _vs_ [@j] and *f*(*x*) _vs_ @f(@x).</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
       </div>
       <div class="fmt">
-      For <span class="var">i</span> = 0, 1, <span style="letter-spacing: 0.125em;">...</span>, <span class="var">n</span>&minus;1,
-      <span style="display: block; margin-left: 1.0em;"><span class="var">x</span> = <span class="var">inp</span>[<span class="var">i</span><span style="margin-left: 1px;">]</span></span>
-      <span style="display: block; margin-left: 1.0em;"><span class="var">x</span> = <span class="var">f</span><span style="margin-left: 1px;">(</span><span class="var">x</span>)</span>
-      <span style="display: block; margin-left: 1.0em;"><span class="var">out</span>[<span class="var">i</span><span style="margin-left: 1px;">]</span> ← encode[<span class="var">x</span>],</span>
-      where <span class="var">inp</span> is a byte array (of length <span class="var">n</span>),
-      <span class="var">f</span> is an arbitrary function from byte to byte,
-      and “encode” is a byte array of length 256.
-    <p class="gap-afore gap-after">The righthand side of <i>i</i> is cramped in [<i>i</i>] <i>vs</i> in [<span class="var">i</span><span style="margin-left: 1px;">]</span>;
-      <br>also compare [<i>j</i>] <i>vs</i> <span style="margin-right: 1px;">[</span><span class="var">j</span><span style="margin-left: 1px;">]</span> and <i>f</i>(<i>x</i>) <i>vs</i> <span class="var">f</span><span style="margin-left: 1px;">(</span><span class="var">x</span>).</p>
+      For <span class="var">i</span> = 0, 1, <span style="letter-spacing: 0.125em;">...</span>, <span class="var">n</span><span style="margin-left: 0.125em; margin-right: 0.125em;">−</span>1,
+      <span style="display: block; margin-left: 1.0em;"><span class="var">x</span> = <span class="var">inp</span><span style="margin-left: 0.0625em;">[</span><span class="var">i</span><span style="margin-left: 0.0625em;">]</span></span>
+      <span style="display: block; margin-left: 1.0em;"><span class="var">x</span> = <span class="var">f</span><span style="margin-left: 0.0625em;">(</span><span class="var">x</span>)</span>
+      <span style="display: block; margin-left: 1.0em;"><span class="var">out</span><span style="margin-left: 0.0625em;">[</span><span class="var">i</span><span style="margin-left: 0.0625em;">]</span> <- encode<span style="margin-left: 0.0625em;">(</span><span class="var">x</span>),</span>
+      where <span class="var">inp</span> is a byte array (of length <span class="var">n</span>)
+      and <span class="var">f</span> is a byte transformation.
+    <p class="gt gb">The righthand side of <i>i</i> is cramped in [<i>i</i>] <i>vs</i> in [<span class="var">i</span><span style="margin-left: 0.0625em;">]</span>;
+      <br>also compare [<i>j</i>] <i>vs</i> <span style="margin-right: 0.0625em;">[</span><span class="var">j</span><span style="margin-left: 0.0625em;">]</span> and <i>f</i>(<i>x</i>) <i>vs</i> <span class="var">f</span><span style="margin-left: 0.0625em;">(</span><span class="var">x</span>).</p>
     </div>
-    <h3 class="gap-afore gap-after"><span id="superscripts-and-subscripts" class="anchor"></span> <a href="#superscripts-and-subscripts">#</a> Superscripts and Subscripts</h3>
-    <p class="gap-afore gap-after">Superscripts and subscripts are written with</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>^</code><span class="var">nnn</span></span>
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;</code><span class="var">nnn</span></span></p>
-    <p class="gap-afore gap-after">for one or more digits <span class="var">nnn</span> or</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>^@</code><span class="var">vvv</span></span>
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;@</code><span class="var">vvv</span></span></p>
-    <p class="gap-afore gap-after">for some variable <span class="var">vvv</span> or</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>^{</code> <span class="var">xxx</span> <code>}</code></span>
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;{</code> <span class="var">xxx</span> <code>}</code></span></p>
-    <p class="gap-afore gap-after">for any <span class="var">xxx</span> (so long as <span class="var">xxx</span> doesn’t include braces).</p>
-    <p class="gap-afore gap-after">Subscripts can be made smaller by doubling the underscore.</p>
+    <h3 id="superscripts-and-subscripts" class="gt gb"><a href="#superscripts-and-subscripts">#</a> Superscripts and Subscripts</h3>
+    <p class="gt gb">Superscripts and subscripts are written with</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>^</code><span class="var">num</span></span>
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;</code><span class="var">num</span></span></p>
+    <p class="gt gb">for one or more digits <span class="var">num</span> or</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>^@</code><span class="var">var</span></span>
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;@</code><span class="var">var</span></span></p>
+    <p class="gt gb">for some variable <span class="var">var</span> or</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>^{</code> <span class="var">text</span> <code>}</code></span>
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;{</code> <span class="var">text</span> <code>}</code></span></p>
+    <p class="gt gb">for any <span class="var">text</span> (so long as <span class="var">text</span> doesn’t include braces).</p>
+    <p class="gt gb">Subscripts can be made smaller by doubling the underscore.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre>@x_1, ..., @x_{@n\-1}, @x_@n are all of type `usize`,
+<pre>@x_1, ..., @x_{@n−1}, @x_@n are all of type `usize`,
 and the maximum value of `usize` is 2^64 &amp;minus; 1.</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
       </div>
       <div class="fmt">
-      <span class="var">x</span><sub>1</sub>, <span style="letter-spacing: 0.125em;">...</span>, <span class="var">x</span><sub><span class="var">n</span>&minus;1</sub>, <span class="var">x</span><sub><span class="var">n</span></sub> are all of type <code>usize</code>,
+      <span class="var">x</span><sub>1</sub>, <span style="letter-spacing: 0.125em;">...</span>, <span class="var">x</span><sub><span class="var">n</span><span style="margin-left: 0.125em; margin-right: 0.125em;">−</span>1</sub>, <span class="var">x</span><sub><span class="var">n</span></sub> are all of type <code>usize</code>,
       and the maximum value of <code>usize</code> is 2<sup>64</sup> &minus; 1.
       </div>
-    <h3 class="gap-afore gap-after"><span id="abbreviations" class="anchor"></span> <a href="#abbreviations">#</a> Abbreviations</h3>
-    <p class="gap-afore gap-after">There are a few abbreviations provided for convenience:</p>
-    <table class="gap-afore gap-after">
-      <thead>
-        <tr>
-          <th class="center">Text</th>
-          <th class="center">Replacement</th>
-          <th class="left"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="center"><code>>=</code></td>
-          <td class="center">≥</td>
-          <td class="left">greater-than or equal to</td>
-        </tr>
-        <tr>
-          <td class="center"><code><=</code></td>
-          <td class="center">≤</td>
-          <td class="left">less-than or equal to</td>
-        </tr>
-        <tr>
-          <td class="center"><code>!=</code></td>
-          <td class="center">≠</td>
-          <td class="left">not equal to</td>
-        </tr>
-        <tr>
-          <td class="center"><code>-></code></td>
-          <td class="center">→</td>
-          <td class="left">right arrow</td>
-        </tr>
-        <tr>
-          <td class="center"><code><-</code></td>
-          <td class="center">←</td>
-          <td class="left">left arrow</td>
-        </tr>
-        <tr>
-          <td class="center"><code>\x</code></td>
-          <td class="center">&times;</td>
-          <td class="left">multiplication sign</td>
-        </tr>
-        <tr>
-          <td class="center"><code>\-</code></td>
-          <td class="center">&minus;</td>
-          <td class="left">minus sign</td>
-        </tr>
-        <tr>
-          <td class="center"><code>--</code></td>
-          <td class="center">&ndash;</td>
-          <td class="left">en dash</td>
-        </tr>
-        <tr>
-          <td class="center"><code>---</code></td>
-          <td class="center">&mdash;</td>
-          <td class="left">em dash</td>
-        </tr>
-        <tr>
-          <td class="center"><code>...</code></td>
-          <td class="center"><span style="letter-spacing: 0.125em;">...</span></td>
-          <td class="left">ellipsis</td>
-        </tr>
-        <tr>
-          <td class="center"><code>\~</code></td>
-          <td class="center"><span style="letter-spacing: 0.125em; position: relative; bottom: 0.5ex;">...</span></td>
-          <td class="left">raised ellipsis</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="gap-afore gap-after">When <code>-</code> occurs within a word (specifically, whenever it is <i>not</i> preceded by
-      whitespace), it’s left as U+002D <span class="sc">hyphen-minus</span>, since it is assumed to be
-      functioning as a hyphen.</p>
-    <p class="gap-afore">However, when a <code>-</code> is preceded by whitespace</p>
-    <ul class="gap-after">
-      <li>and it’s also followed by whitespace, the <code>-</code> is converted to an en dash.</li>
-      <li>and it’s <i>not</i> followed by whitespace, the <code>-</code> is converted to a minus sign.</li>
-    </ul>
-    <p class="gap-afore gap-after">For example,</p>
-    <table class="gap-afore gap-after">
-      <thead>
-        <tr>
-          <th class="left">Source</th>
-          <th class="left">Rendered</th>
-          <th class="left"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="left"><code>in between - and so</code></td>
-          <td class="left">in between &ndash; and so</td>
-          <td class="left">hyphen converted to en dash</td>
-        </tr>
-        <tr>
-          <td class="left"><code>the value is -1</code></td>
-          <td class="left">the value is &minus;1</td>
-          <td class="left">hyphen converted to minus</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="gap-afore gap-after">However, <b>it’s best to use <code>&#x5C;-</code> or <code>&amp;minus;</code> whenever you intend to write
-      a minus sign</b>, since it’s impossible to determine when to use a minus without
-      semantic information. For example, the syntactic heuristic will completely fail
-      in cases like</p>
-    <table class="gap-afore gap-after">
-      <thead>
-        <tr>
-          <th class="left">Source</th>
-          <th class="center">Rendered</th>
-          <th class="left"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="left"><code>@x-1</code></td>
-          <td class="center"><span class="var">x</span>-1</td>
-          <td class="left">hyphen is not converted to minus sign</td>
-        </tr>
-        <tr>
-          <td class="left"><code>@n - 1</code></td>
-          <td class="center"><span class="var">n</span> &ndash; 1</td>
-          <td class="left">hyphen converted to en dash rather than minus sign</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="gap-afore gap-after">You should instead write</p>
-    <table class="gap-afore gap-after">
-      <tbody>
-        <tr>
-          <td class="left"><code>@x&#x5C;-1</code></td>
-          <td class="center"><span class="var">x</span>&minus;1</td>
-        </tr>
-        <tr>
-          <td class="left"><code>@n \- 1</code></td>
-          <td class="center"><span class="var">n</span> &minus; 1</td>
-        </tr>
-      </tbody>
-    </table>
-    <p class="gap-afore gap-after">or use <code>&amp;minus;</code> or the minus character
-      (U+2212 <span class="sc">minus sign</span>) directly.</p>
-    <h3 class="gap-afore gap-after"><span id="small-caps" class="anchor"></span> <a href="#small-caps">#</a> Small Caps</h3>
-    <p class="gap-afore gap-after">Text can be set in small capitals using</p>
-    <p class="gap-afore gap-after"><span style="display: block; margin-left: 1.0em;"><code>{!</code> <span class="var">text</span> <code>}</code></span></p>
-    <p class="gap-afore gap-after">where <span class="var">text</span> doesn’t contain <code>{</code> or <code>}</code>.</p>
+    <h3 id="small-caps" class="gt gb"><a href="#small-caps">#</a> Small Caps</h3>
+    <p class="gt gb">Text can be set in small capitals using</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>%</code><span class="var">word</span></span></p>
+    <p class="gt gb">for one or more letters <span class="var">word</span> and</p>
+    <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>%{</code> <span class="var">text</span> <code>}</code></span></p>
+    <p class="gt gb">where <span class="var">text</span> doesn’t contain <code>{</code> or <code>}</code>.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
-<pre>We’re converting markdown to {!html} and {!css}_!_</pre>
+<pre>We’re converting markdown to %html and %css_!_</pre>
     <!-- ↑↑↑ PREFORMATTED ↑↑↑ -->
       </div>
       <div class="fmt">
       We’re converting markdown to <span class="sc">html</span> and <span class="sc">css</span><i>!</i>
       </div>
-    <h3 class="gap-afore gap-after"><span id="italic-and-bold" class="anchor"></span> <a href="#italic-and-bold">#</a> Italic and Bold</h3>
-    <p class="gap-afore gap-after">Text between pairs of <code>&#x5F;</code> or pairs of <code>&ast;</code> is rendered in italic. Text between
+    <h3 id="italic-and-bold" class="gt gb"><a href="#italic-and-bold">#</a> Italic and Bold</h3>
+    <p class="gt gb">Text between pairs of <code>&#x5F;</code> or pairs of <code>&ast;</code> is rendered in italic. Text between
       pairs of <code>&ast;&ast;</code> is rendered in bold.</p>
-    <p class="gap-afore gap-after">Italic and bold regions can be nested within each other, and italic regions can
+    <p class="gt gb">Italic and bold regions can be nested within each other, and italic regions can
       even be nested in themselves one level if different sigils are used.</p>
     <div class="src">
     <!-- ↓↓↓ PREFORMATTED ↓↓↓ -->
@@ -916,20 +733,19 @@ However, trying to interleave _italic and
       </div>
       <div class="fmt">
       This is <i>in italic with <b>bold</b> embedded,</i> and <b>this <i>still works</i>
-      vice-versa</b>. You can also <i>nest italic regions <span class="deitalic">within</span> italic regions</i>.
-    <p class="gap-afore gap-after">However, trying to interleave <i>italic and <b>bold like this_ causes things</b>
+      vice-versa</b>. You can also <i>nest italic regions <span class="ni">within</span> italic regions</i>.
+    <p class="gt gb">However, trying to interleave <i>italic and <b>bold like this_ causes things</b>
       to break.</i></p>
     </div>
-    <p class="gap-afore gap-after">Because <code>&ast;</code> is used for italic and bold, you can’t use <code>&ast;</code> for multiplication;
-      use × instead. (That character is U+00D7 <span class="sc">multiplication sign</span>, which you can
-      get by writing <code>&amp;times;</code> or <code>&#x5C;x</code>.) If you need an asterisk for something else,
-      type <code>&#x5C;&ast;</code>.</p>
-    <h2 class="gap-afore gap-after"><span id="css-classes" class="anchor"></span> <a href="#css-classes">#</a> CSS Classes</h2>
-    <p class="gap-afore gap-after">A few custom <span class="sc">css</span> classes are added to some elements, and you probably want
+    <p class="gt gb">Because <code>&ast;</code> is used for italic and bold, you can’t use <code>&ast;</code> for multiplication;
+      use × instead. (That character is <span class="sc">u&plus;00d7 multiplication sign</span>.) If you need
+      an asterisk for something else, type <code>&#x5C;&ast;</code>.</p>
+    <h2 id="css-classes" class="gt gb"><a href="#css-classes">#</a> CSS Classes</h2>
+    <p class="gt gb">A few custom <span class="sc">css</span> classes are added to some elements, and you probably want
       to add styling for these classes somewhere in your style sheets.</p>
-    <p class="gap-afore gap-after">For more complete examples, you can look at the style sheet embedded in this
+    <p class="gt gb">For more complete examples, you can look at the style sheet embedded in this
       document.</p>
-    <table class="gap-afore">
+    <table class="gt">
       <thead>
         <tr>
           <th class="left">Class</th>
@@ -939,19 +755,14 @@ However, trying to interleave _italic and
       </thead>
       <tbody>
         <tr>
-          <td class="left"><code>gap-afore</code></td>
+          <td class="left"><code>gt</code></td>
           <td class="left"><code>&ast;</code></td>
           <td class="left"><code>margin-top: 1rem;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>gap-after</code></td>
+          <td class="left"><code>gb</code></td>
           <td class="left"><code>&ast;</code></td>
           <td class="left"><code>margin-bottom: 1rem;</code></td>
-        </tr>
-        <tr>
-          <td class="left"><code>quote</code></td>
-          <td class="left"><code>div</code></td>
-          <td class="left"><span style="letter-spacing: 0.125em; position: relative; bottom: 0.5ex;">...</span></td>
         </tr>
         <tr>
           <td class="left"><code>sc</code></td>
@@ -959,22 +770,12 @@ However, trying to interleave _italic and
           <td class="left"><code>font-variant-caps: small-caps;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>anchor</code></td>
-          <td class="left"><code>span</code></td>
-          <td class="left"><span style="letter-spacing: 0.125em; position: relative; bottom: 0.5ex;">...</span></td>
-        </tr>
-        <tr>
-          <td class="left"><code>small</code></td>
-          <td class="left"><code>sub</code></td>
-          <td class="left"><span style="letter-spacing: 0.125em; position: relative; bottom: 0.5ex;">...</span></td>
-        </tr>
-        <tr>
           <td class="left"><code>var</code></td>
           <td class="left"><code>span</code></td>
           <td class="left"><code>font-style: italic;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>deitalic</code></td>
+          <td class="left"><code>ni</code></td>
           <td class="left"><code>span</code></td>
           <td class="left"><code>font-style: normal;</code></td>
         </tr>
@@ -992,6 +793,11 @@ However, trying to interleave _italic and
           <td class="left"><code>right</code></td>
           <td class="left"><code>th</code>, <code>td</code></td>
           <td class="left"><code>text-align: right;</code></td>
+        </tr>
+        <tr>
+          <td class="left"><code>sm</code></td>
+          <td class="left"><code>sub</code></td>
+          <td class="left"></td>
         </tr>
       </tbody>
     </table>

@@ -1,28 +1,23 @@
 html {
   --body-bg:  rgb(  0,   0,   0);
-  --body-fn:  rgb( 48,  48,  48);
   --body-fg:  rgb(224, 224, 224);
-  --chase-bg: rgb( 20,  20,  20);
-  --pre-bg:   rgb( 16,  16,  16);
+  --chase-bg: rgb( 12,  12,  12);
+  --pre-bg:   rgb(  8,   8,   8);
   --table-bd: rgb( 64,  64,  64);
   --hr-bd:    rgb(224, 224, 224);
   --quote-bd: rgb( 64,  64,  64);
 
   --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
-  --chase-img: radial-gradient(rgb(24, 24, 24) 1px, transparent 0);
 
   --a-fg:  rgba(176, 128, 255);
   --a-dec: rgba(224, 224, 224, 25%);
-
-  --src-bd: rgb(255,  64,  64);
-  --fmt-bd: rgb( 96,  96, 192);
 }
 
 html {
   font-family: "FiraGO", "Fira Sans", sans-serif;
   font-size: 16px;
   font-weight: 400;
-  line-height: 1.5rem;
+  line-height: 1.625rem;
   margin: 0;
   padding: 0;
 }
@@ -48,7 +43,7 @@ body {
 
 #chase {
   box-sizing: border-box;
-  max-width: min(48rem, 100%);
+  max-width: min(46rem, 100%);
   padding: 2rem;
 
   display: flex;
@@ -60,47 +55,41 @@ body {
 }
 
 #block {
-  width: 40rem;
+  width: 38rem;
   max-width: 100%;
 }
 
 #block > :nth-child(1)      { margin-top:    0; }
 #block > :nth-last-child(1) { margin-bottom: 0; }
 
-.gap-afore { margin-top:    0.75rem; }
-.gap-after { margin-bottom: 0.75rem; }
+.gt { margin-top:    0.75rem; }
+.gb { margin-bottom: 0.75rem; }
 
 h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 550;
 }
-h1.gap-afore {
+h1.gt {
   margin-top: 1.5rem;
 }
 
 h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 550;
 }
-h2.gap-afore {
+h2.gt {
   margin-top: 1.5rem;
 }
 
 h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 550;
 }
-h3.gap-afore {
+h3.gt {
   margin-top: 1.5rem;
-}
-
-h4, h5, h6 {
-  margin: 0;
-  font-size: inherit;
-  font-weight: 700;
 }
 
 p {
@@ -156,9 +145,11 @@ td {
 
 pre {
   font-family: "Fira Mono", "Fira Code", monospace;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
   margin: 0 0 0 -0.5rem;
   border-radius: 0.25rem;
-  padding: 0.25rem 0 0.25rem 0.5rem;
+  padding: 0.5rem 0 0.5rem 0.5rem;
   background-color: var(--pre-bg);
   overflow-x: auto;
 }
@@ -170,34 +161,18 @@ hr {
   margin: 1rem 0 1rem;
 }
 
-.quote {
+blockquote {
+  margin: 0;
+  border-top: none;
   border-left-width: 0.25rem;
   border-left-style: solid;
   border-left-color: var(--quote-bd);
+  border-right: none;
+  border-bottom: none;
+  padding-top: 0;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-}
-
-.src {
-  border-left-width: 0.25rem;
-  border-left-style: solid;
-  border-left-color: var(--src-bd);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.fmt {
-  border-left-width: 0.25rem;
-  border-left-style: solid;
-  border-left-color: var(--fmt-bd);
-  padding-top: 0.5rem;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.src pre {
-  background-color: inherit;
+  padding-bottom: 0;
 }
 
 code {
@@ -232,13 +207,13 @@ sub {
   line-height: 0;
   vertical-align: sub;
   font-size: 0.8125rem;
-  margin-right: 1px;
+  margin-right: 0.0625rem;
 }
 
-sub.small {
+sub.sm {
   font-size: 0.6875rem;
-  margin-left: 1px;
-  margin-right: 2px;
+  margin-left: 0.0625rem;
+  margin-right: 0.125rem;
 }
 
 b {
@@ -249,11 +224,13 @@ i {
   font-style: italic;
 }
 
-.deitalic {
+.ni {
   font-style: normal;
 }
 
 .sc {
   font-variant-caps: small-caps;
+  font-variant-numeric: oldstyle-nums;
   letter-spacing: 0.03125rem;
 }
+

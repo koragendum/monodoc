@@ -6,6 +6,10 @@ from typing import Optional
 
 INDENTSIZE = 1.0    # size of each indent step in em
 
+PRERENDERFILTER  = None
+POSTRENDERFILTER = None
+CODEBLKFILTER    = None
+
 # See guide.md and guide.html for a description of the supported features.
 
 ELEMENTS = {
@@ -122,58 +126,55 @@ def tagpair(
     element : str,
     ga : bool,
     gb : bool,
-    extra : Optional[str] = None
+    extra : Optional[str] = None,
+    name  : Optional[str] = None
 ) -> tuple[str, str]:
     # ga = gap above
     # gb = gap below
+    opening = element if name is None else f'{element} id="{name}"'
     if (not ga) and (not gb) and extra is None:
-        return (f'<{element}>', f'</{element}>')
+        return (f'<{opening}>', f'</{element}>')
     classes = []
     if extra is not None: classes.append(extra)
-    if ga: classes.append('gap-afore')
-    if gb: classes.append('gap-after')
+    if ga: classes.append('gt') # top
+    if gb: classes.append('gb') # bottom
     classes = " ".join(classes)
-    return (f'<{element} class="{classes}">', f'</{element}>')
+    return (f'<{opening} class="{classes}">', f'</{element}>')
 
 
 ESCAPE = {
-    r'\<': '&lt;',
-    r'\>': '&gt;',
     r'\&': '&amp;',
     r'\#': '&num;',
-    r'\`': '&#x60;',
-    r'\_': '&#x5F;',
     r'\*': '&ast;',
+    r'\_': '&#x5F;',
+    r'\`': '&#x60;',
+    r'\|': '&#x7C;',
+    r'\^': '&#x5E;',
+    r'\%': '&#x25;',
+    r'\+': '&plus;',
+    r'\×': '&times;'
 }
 
 # This matches [$a]($b) where $a is any sequences of characters that aren't
 #   brackets and $b is any sequence of characters that aren't parentheses.
 HYPERLINK = re.compile(r'\[([^\[\]]+?)\]\(([^()]+?)\)')
 
-ANCHOR = re.compile(r'\{#\s*([a-zA-Z0-9_+-]*)\s*\}')
+SMALLCAPS = re.compile(r'%([a-zA-Zα-ωΑ-Ω\-]+|\{[^{}]+?\})')
 
-VARIABLE = re.compile(r'@[a-zA-Z]+')
+VARIABLE = re.compile('@[a-zA-Zα-ωΑ-Ω]+')
 
-DELIMITER = re.compile(r'(\uf005)?([' + re.escape('()[]{}') + r'])(\uf005)?')
+SCRIPT = re.compile(r'(?<=\S)(\^|_|__)(\d+|\uf004?\uf005\uf004?|\{[^{}]*\})')
 
-SMALLCAPS = re.compile(r'\{!([^{}]+?)\}')
+CONTEXTWS = re.compile('([' + re.escape('()[]+−×÷') + '])')
 
-SCRIPT = re.compile(r'(?<=\S)(\^|_|__)(\d+|\uf004|\{[^{}]*\})')
+letr = '([a-zA-Zα-ωΑ-Ω0-9\uf004\uf005])'
+mark = '[\uf002\uf003\uf006]'
+RLETR = re.compile(letr + '(?:\uf009'+mark+')*$')
+LLETR = re.compile('^(?:'+mark+'\uf008)*' + letr)
 
-ABBREVIATION = {
-    '>=': '≥',
-    '<=': '≤',
-    '!=': '≠',
-   r'\-': '&minus;',
-   r'\x': '&times;',
-    '->': '→',
-    '<-': '←',
-   '...': '<span style="letter-spacing: 0.125em;">...</span>',
-#  r'\~': '<span style="letter-spacing: 0.125em;">···</span>',
-   r'\~': '<span style="letter-spacing: 0.125em; position: relative; bottom: 0.5ex;">...</span>',
-}
-
-HYPHENMINUS = re.compile(r'(\s*)(-+)(\s*)')
+char = '([a-zA-Zα-ωΑ-Ω0-9\uf004\uf005' + re.escape('()[]') + '])'
+RCHAR = re.compile(char + '(?:\uf009'+mark+')*$')
+LCHAR = re.compile('^(?:'+mark+'\uf008)*' + char)
 
 # This matches a single underscore or any number of asterisks, or
 #   the Unicode scalar values that start or end a formatting context.
@@ -201,15 +202,25 @@ def render(text : str, escape : bool = True) -> str:
     # This routine is responsible for inline styling, including
     #   inline code, links, substitutions, italic, and bold.
 
-    # Step 1. Escape Sequences
+    # TODO mathematics
+    # TODO regions with breaking discouraged
+    #   <span style="display: inline-block;">
+
+    # Step 0. Custom Transformations
+
+    if PRERENDERFILTER is not None:
+        text = PRERENDERFILTER(text)
+
+    # Step 1a. Escape Sequences
 
     if escape:
+        # TODO use re.sub instead
         if r'\\' in text:
             text = text.replace(r'\\', '&#x5C;')
-
-        for pattern, replacement in ESCAPE.items():
-            if pattern in text:
-                text = text.replace(pattern, replacement)
+        if r'\<' in text:
+            text = text.replace(r'\<', '&lt;')
+        if r'\>' in text:
+            text = text.replace(r'\>', '&gt;')
 
     # Step 2. Ensure we don't disrupt HTML tags
 
@@ -228,6 +239,13 @@ def render(text : str, escape : bool = True) -> str:
         if offset < len(text):
             parts.append(text[offset:])
         text = ''.join(parts)
+
+    # Step 1b. Escape Sequences
+
+    # TODO use re.sub instead
+    for pattern, replacement in ESCAPE.items():
+        if pattern in text:
+            text = text.replace(pattern, replacement)
 
     # Step 3. Inline code
 
@@ -271,14 +289,17 @@ def render(text : str, escape : bool = True) -> str:
         return f'\uf002\uf008{displayed}\uf009\uf002'
     text = HYPERLINK.sub(linkreplacement, text)
 
-    # Step 5. Anchors
-    #   {#xxx}  becomes  <span id="xxx" class="anchor"></span>
+    # Step 5. Small Capitals
 
-    ancs = []
-    def anchorreplacement(match : MatchObject) -> str:
-        ancs.append(f'<span id="{match[1]}" class="anchor"></span>')
-        return '\uf003'
-    text = ANCHOR.sub(anchorreplacement, text)
+    smcp = []
+    def smcpreplacement(match : MatchObject) -> str:
+        content = match[1]
+        if content[0] == '{':
+            content = content[1:-1].strip()
+        smcp.append(f'<span class="sc">')
+        smcp.append('</span>')
+        return f'\uf003\uf008{content}\uf009\uf003'
+    text = SMALLCAPS.sub(smcpreplacement, text)
 
     # Step 6. Variables
 
@@ -289,73 +310,101 @@ def render(text : str, escape : bool = True) -> str:
     def varreplacement(match : MatchObject) -> str:
         name = match[0][1:]
         vari.append(f'<span class="var">{name}</span>')
-        lhs = '\uf005' if name[ 0] in LEFT_DESCENDER else ''
-        rhs = '\uf005' if name[-1] in RIGHT_ASCENDER else ''
-        return f'{lhs}\uf004{rhs}'
+        lhs = '\uf004' if name[ 0] in LEFT_DESCENDER else ''
+        rhs = '\uf004' if name[-1] in RIGHT_ASCENDER else ''
+        return f'{lhs}\uf005{rhs}'
     text = VARIABLE.sub(varreplacement, text)
 
-    if len(vari) > 0:
-        def delimreplacement(match : MatchObject) -> str:
-            delim = match[2]
-            style = []
-            if match[1] is not None:
-                style.append(f'margin-left: 1px;')
-            if match[3] is not None:
-                style.append(f'margin-right: 1px;')
-            if len(style) == 0:
-                return delim
-            style = " ".join(style)
-            return f'<span style="{style}">{delim}</span>'
-        text = DELIMITER.sub(delimreplacement, text)
-        text = text.replace('\uf005', '')
-
-    # Step 8. Superscripts and Subscripts
+    # Step 7. Superscripts and Subscripts
     #   These must be preceded by a non-whitespace character.
     #
     #    ^num  or   ^@xxx  or   ^{xxx}  becomes  <sup>...</sup>
     #    _num  or   _@xxx  or   _{xxx}  becomes  <sub>...</sub>
-    #   __num  or  __@xxx  or  __{xxx}  becomes  <sub class="small">...</sub>
+    #   __num  or  __@xxx  or  __{xxx}  becomes  <sub class="sm">...</sub>
 
     scps = []
     def scriptreplacement(match : MatchObject) -> str:
         mark, content = match[1], match[2]
         name = 'sup' if mark[0] == '^' else 'sub'
-        attr = ' class="small"' if len(mark) > 1 else ''
+        attr = ' class="sm"' if len(mark) > 1 else ''
         opening, closing = f'<{name}{attr}>', f'</{name}>'
-        if content[0] != '{':
-            scps.append(f'{opening}{content}{closing}')
-            return '\uf006'
-        content = content[1:-1].strip()
+        if content[0] == '{':
+            content = content[1:-1].strip()
         scps.append(opening)
         scps.append(closing)
         return f'\uf006\uf008{content}\uf009\uf006'
     text = SCRIPT.sub(scriptreplacement, text)
 
-    # Step 8. Small Capitals
+    # Step 8. Delimiters and Operators
 
-    smcp = []
-    def smcpreplacement(match : MatchObject) -> str:
-        smcp.append(f'<span class="sc">')
-        smcp.append('</span>')
-        return f'\uf007\uf008{match[1]}\uf009\uf007'
-    text = SMALLCAPS.sub(smcpreplacement, text)
+    correction = {
+        '(': 0.0625,    # (p
+        ')': 0.0625,    #  d)
+        '[': 0.0625,    # [p
+        ']': 0.0625,    #  d]
+    }
+    delimspace = {
+        '(': 0.0625,    # x(
+        ')': 0,         # )x
+        '[': 0.0625,    # x[
+        ']': 0,         # ]x
+    }
+    binopspace = 0.125
 
-    # Step 9. Substitutions
+    cxws = []
 
-    for pattern, replacement in ABBREVIATION.items():
-        if pattern in text:
-            text = text.replace(pattern, replacement)
+    parts = [p for p in CONTEXTWS.split(text) if len(p) > 0]
+    repls = {}
+    stop = len(parts) - 1
+    for idx, char in enumerate(parts):
+        if len(char) > 1:
+            continue
 
-    def hyphenreplacement(match : MatchObject) -> str:
-        count = len(match[2])
-        if count == 1:
-            if len(match[1]) == 0: return match[0]
-            dash = '&ndash;' if len(match[3]) > 0 else '&minus;'
-            return match[1] + dash + match[3]
-        if count == 2: return match[1] + '&ndash;' + match[3]
-        if count == 3: return match[1] + '&mdash;' + match[3]
-        return match[0]
-    text = HYPHENMINUS.sub(hyphenreplacement, text)
+        lhs, rhs = 0, 0
+
+        if char in ('(', '['):
+            if idx > 0 and (match := RLETR.search(parts[idx-1])) is not None:
+                lhs = delimspace[char]
+                if match.group(1) == '\uf004':
+                    lhs = max(lhs, correction[char])
+            if idx < stop and (match := LLETR.search(parts[idx+1])) is not None:
+                if match.group(1) == '\uf004':
+                    rhs = correction[char]
+            if lhs == 0 and rhs == 0:
+                continue
+
+        elif char in (')', ']'):
+            if idx < stop and (match := LLETR.search(parts[idx+1])) is not None:
+                rhs = delimspace[char]
+                if match.group(1) == '\uf004':
+                    rhs = max(rhs, correction[char])
+            if idx > 0 and (match := RLETR.search(parts[idx-1])) is not None:
+                if match.group(1) == '\uf004':
+                    lhs = correction[char]
+            if lhs == 0 and rhs == 0:
+                continue
+
+        elif char in {'+', '−', '×', '÷'}:
+            if idx == 0 or idx == stop: continue
+            if RCHAR.search(parts[idx-1]) is None: continue
+            if LCHAR.search(parts[idx+1]) is None: continue
+            lhs = binopspace
+            rhs = binopspace
+
+        else:
+            continue
+
+        mgn = []
+        if lhs != 0: mgn.append(f'margin-left: {lhs}em;')
+        if rhs != 0: mgn.append(f'margin-right: {rhs}em;')
+        mgn = " ".join(mgn)
+
+        cxws.append(f'<span style="{mgn}">{char}</span>')
+        repls[idx] = '\uf007'
+
+    for idx, char in repls.items():
+        parts[idx] = char
+    text = ''.join(parts)
 
     # Step 9. Italic and Bold
     #   The markdown "***fst** snd*" should become "<i><b>fst</b> snd</i>"
@@ -372,7 +421,7 @@ def render(text : str, escape : bool = True) -> str:
         if sigil == '**':
             return '<b>'
         italic = not italic
-        return '<i>' if italic else '<span class="deitalic">'
+        return '<i>' if italic else '<span class="ni">'
 
     def fmtclose(sigil : str) -> str:
         nonlocal italic
@@ -413,36 +462,61 @@ def render(text : str, escape : bool = True) -> str:
     if len(stack) > 0:
         text = text + ''.join(fmtclose(sigil) for sigil in reversed(stack))
 
-    # Step 10. Substitute everything back in, and we're done!
+    # Step 10. Custom Transformations
+
+    text = text.replace(
+        '...',
+        '<span style="letter-spacing: 0.125em;">...</span>'
+    )
+
+    if POSTRENDERFILTER is not None:
+        text = POSTRENDERFILTER(text)
+
+    # Step 11. Substitute everything back in, and we're done!
 
     #                                           \uf009   itbf
     #                                           \uf008   itbf
-    if len(smcp) > 0: text = replacelist(text, '\uf007', smcp)
+    if len(cxws) > 0: text = replacelist(text, '\uf007', cxws)
     if len(scps) > 0: text = replacelist(text, '\uf006', scps)
-    #                                           \uf005   vari
-    if len(vari) > 0: text = replacelist(text, '\uf004', vari)
-    if len(ancs) > 0: text = replacelist(text, '\uf003', ancs)
+    if len(vari) > 0: text = replacelist(text, '\uf005', vari)
+    if len(vari) > 0: text =     text.replace( '\uf004', ''  )
+    if len(smcp) > 0: text = replacelist(text, '\uf003', smcp)
     if len(lnks) > 0: text = replacelist(text, '\uf002', lnks)
     if len(code) > 0: text = replacelist(text, '\uf001', code)
     if len(tags) > 0: text = replacelist(text, '\uf000', tags)
+
     return text
 
 #  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
 # These subroutines create different HTML elements.
 
-INDENT = re.compile(r'\s*\|(\d)>')
+INDENT = re.compile(r'\s*\|(\d?)>')
 
 ALIGNMENT = re.compile(r' *\|(?: *(?::? *-+ *:? *)\|)+ *')
 
+ANCHOR = re.compile(r'\{(#)?\s*([a-zA-Z0-9_+-]*)\s*\}')
 
 def makehead(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+    # If the line begins with {name} the element will have its ID set to name
+    # If the line begins with {!name} the heading will also have a permalink
     assert len(lines) == 1
-    woprefix = lines[0].lstrip('#')
-    level = len(lines[0]) - len(woprefix)
+    inner = lines[0].lstrip('#')
+    level = len(lines[0]) - len(inner)
     assert 6 >= level >= 1
+    inner = inner.strip()
+
+    match = ANCHOR.match(inner)
+    if match is not None:
+        name = match.group(2)
+        inner = inner[match.end():].lstrip()
+        if match.group(1) is not None:
+            inner = f'<a href="#{name}">#</a> {inner}'
+    else:
+        name = None
+
+    opening, closing = tagpair(f'h{level}', ga, gb, name=name)
     mgn = ' ' * margin
-    opening, closing = tagpair(f'h{level}', ga, gb)
-    html = render(woprefix.strip())
+    html = render(inner)
     return f'{mgn}{opening}{html}{closing}'
 
 
@@ -456,9 +530,10 @@ def makepara(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
         ln = lines[idx]
         if r'\\' in ln:
             ln = ln.replace(r'\\', '&#x5C;')
-        for pattern, replacement in ESCAPE.items():
-            if pattern in ln:
-                ln = ln.replace(pattern, replacement)
+        if r'\<' in ln:
+            ln = ln.replace(r'\<', '&lt;')
+        if r'\>' in ln:
+            ln = ln.replace(r'\>', '&gt;')
         lines[idx] = ln
 
     # Step 2. Perform line transformations.
@@ -467,9 +542,14 @@ def makepara(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
         ln = lines[idx]
         match = INDENT.match(ln)
         if match is None: continue
-        length = round(int(match.group(1)) * INDENTSIZE, 3)
+        if len(match.group(1)) == 0:
+            style = f'display: block; text-align: center;'
+        else:
+            style = 'display: block;'
+            length = round(int(match.group(1)) * INDENTSIZE, 3)
+            if length > 0:
+                style = f'{style} margin-left: {length}em;'
         body = ln[match.end():].strip()
-        style = f'display: block; margin-left: {length}em;'
         lines[idx] = (f'<span style="{style}">{body}</span>')
 
     # Step 3. Break the text at elements that are likely to be block-level.
@@ -581,15 +661,24 @@ def makepara(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
 
 
 def makelist(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
-    mgn = ' ' * margin
-    opening, closing = tagpair('ul', ga, gb)
-    html_lines = [mgn + opening]
-    stack = []  # list of (indent, bullet) pairs
+    joined = []
     for ln in lines:
         lstripped = ln.lstrip()
         indent = len(ln) - len(lstripped)
         bullet = lstripped[0]
-        content = lstripped[1:].strip()
+        if bullet in ('*', '-', '+'):
+            content = lstripped[1:].strip()
+        else:
+            indent, bullet, partial = joined.pop()
+            content = f'{partial} {lstripped.rstrip()}'
+        joined.append((indent, bullet, content))
+
+    mgn = ' ' * margin
+    opening, closing = tagpair('ul', ga, gb)
+    html_lines = [mgn + opening]
+    stack = []  # list of (indent, bullet) pairs
+
+    for indent, bullet, content in joined:
         html = render(content)
 
         if len(stack) == 0:
@@ -715,14 +804,13 @@ def makecode(
     margin : int,
     lang : str = None
 ) -> str:
-    # We don’t do anything with lang yet.
-    opening, closing = tagpair('pre', ga, gb)
+    # We don’t do much with lang yet.
+    extra = 'box-drawing' if lang == 'box' else None
+    opening, closing = tagpair('pre', ga, gb, extra)
     inner = '\n'.join(lines)
+    if CODEBLKFILTER is not None:
+        inner = CODEBLKFILTER(inner)
     html = opening + inner + closing
-    # ↓↓↓ TEMPORARY ↓↓↓
-    if lang is not None:
-        margin += 2
-    # ↑↑↑ TEMPORARY ↑↑↑
     if margin > 0:
         mgn = ' ' * margin
         html = '\n'.join([
@@ -730,23 +818,6 @@ def makecode(
             html,
             mgn + '<!-- ↑↑↑ PREFORMATTED ↑↑↑ -->',
         ])
-    # ↓↓↓ TEMPORARY ↓↓↓
-    if lang is not None:
-        margin -= 2
-        mgn = ' ' * margin
-        style = (
-            'position: absolute; right: 0.375rem;'
-            ' font-style: italic; color: var(--body-fn);'
-            ' background: var(--pre-bg); border-radius: 0.375rem;'
-            ' padding-left: 0.375rem; padding-bottom: 0.375rem;'
-        )
-        html = '\n'.join([
-            mgn + '<div style="position: relative;">',
-            mgn + f'  <span style="{style}">{lang}</span>',
-            html,
-            mgn + '</div>',
-        ])
-    # ↑↑↑ TEMPORARY ↑↑↑
     return html
 
 #  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
@@ -759,7 +830,7 @@ def makequot(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
     lines = [ln[leftskip:] for ln in lines]
     inner = _convert(lines, margin+2)
     mgn = ' ' * margin
-    opening, closing = tagpair('div', ga, gb, 'quote')
+    opening, closing = tagpair('blockquote', ga, gb)
     return f'{mgn}{opening}\n{inner}\n{mgn}{closing}'
 
 
@@ -768,10 +839,6 @@ def bulleted(stripped : str) -> bool:
         stripped.startswith(bullet)
         for bullet in ('* ', '- ', '+ ')
     )
-
-
-def notindent(ln : str) -> bool:
-    return INDENT.match(ln) is None
 
 
 def _convert(md_lines : str, margin : int) -> str:
@@ -847,7 +914,7 @@ def _convert(md_lines : str, margin : int) -> str:
             finish()
             continue
 
-        if stripped.startswith('|') and notindent(line):
+        if stripped.startswith('|') and INDENT.match(line) is None:
             assert '```' not in line
             if block_kind == 'tabl':
                 block_lines.append(line)
@@ -868,8 +935,6 @@ def _convert(md_lines : str, margin : int) -> str:
             block_kind = 'list'
             block_lines.append(line)
             continue
-        elif block_kind == 'list':
-            finish()
 
         if stripped.startswith('```'):
             finish()
@@ -890,6 +955,16 @@ def _convert(md_lines : str, margin : int) -> str:
             rem = line[start:]
             line = pre
             todo.append(rem)
+
+            if len(line.strip()) == 0:
+                continue
+
+        if block_kind == 'list':
+            indent = len(line) - len(line.lstrip())
+            if indent > 0:
+                block_lines.append(line)
+                continue
+            finish()
 
         if block_kind is None:
             assert len(block_lines) == 0
@@ -978,19 +1053,55 @@ def convert(markdown : str, margin : int = 0) -> str:
 if __name__ == '__main__':
     from os import path
     from sys import argv, exit, stderr
+    from runpy import run_path
 
     args = argv[1:]
     if len(args) == 0 or '-h' in args or '--help' in args:
-        print(f'usage: {argv[0]} <file-path> [<file-path> ...]', file=stderr)
+        print(
+            f'usage: {argv[0]} [-x <module>] [-l <css>] [-i <css>] <markdown>',
+            file=stderr
+        )
+        exit()
+    args = list(reversed(args))
+
+    links    = []
+    includes = []
+    sources  = []
+    while len(args) > 0:
+        arg = args.pop()
+        if arg == '-l' or arg == '--link':
+            links.append(args.pop())
+        elif arg == '-i' or arg == '--inline':
+            includes.append(args.pop())
+        elif arg == '-x' or arg == '--extension':
+            glob = run_path(args.pop())
+            if 'INDENTSIZE' in glob: INDENTSIZE       = glob['INDENTSIZE']
+            if 'prerender'  in glob: PRERENDERFILTER  = glob['prerender']
+            if 'postrender' in glob: POSTRENDERFILTER = glob['postrender']
+            if 'codeblock'  in glob: CODEBLKFILTER    = glob['codeblock']
+        else:
+            sources.append(arg)
+
+    if len(sources) == 0:
+        exit()
+
+    links = ''.join(
+        f'<link rel="stylesheet" href="{link}" type="text/css"/>\n'
+        for link in links
+    )
 
     css = []
-    with open('preview.css') as fh:
-        for ln in fh:
-            ln = ln.rstrip()
-            css.append('  ' + ln if len(ln) > 0 else ln)
-    css = "\n".join(css)
+    for inc in includes:
+        with open(inc) as fh:
+            for ln in fh:
+                ln = ln.rstrip()
+                css.append(f'  {ln}\n' if len(ln) > 0 else ln)
+    if len(css) > 0:
+        css = f'<style>\n{"".join(css)}</style>\n'
+    else:
+        css = ""
 
-    def preview(title : str, body : str) -> str:
+    def makepage(title : str, body : str) -> str:
         return (
             '<!DOCTYPE html>\n'
             '<meta charset="utf-8">\n'
@@ -999,9 +1110,8 @@ if __name__ == '__main__':
             ' height=device-height,'
             ' initial-scale=1.0">\n'
            f'<title>{title}</title>\n'
-            '<style>\n'
-           f'{css}\n'
-            '</style>\n'
+           f'{links}'
+           f'{css}'
             '<div id="chase">\n'
             '  <div id="block">\n'
            f'{body}\n'
@@ -1009,12 +1119,11 @@ if __name__ == '__main__':
             '</div>\n'
         )
 
-    for fn in argv[1:]:
-        with open(fn) as fh:
+    for src in sources:
+        with open(src) as fh:
             md = fh.read()
         html = convert(md, 4)
-        _, base = path.split(fn)
-        base, _ = path.splitext(base)
-        html = preview(base, html)
+        base, _ = path.splitext(src)
+        html = makepage(base, html)
         with open(f'{base}.html', 'w') as fh:
             print(html, file=fh)
