@@ -12,14 +12,14 @@
     --hr-bd:    rgb(224, 224, 224);
     --quote-bd: rgb( 64,  64,  64);
     --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
-    --a-fg:  rgba(176, 128, 255);
+    --a-fg:  rgb(176, 128, 255);
     --a-dec: rgba(224, 224, 224, 25%);
   }
   html {
     font-family: "FiraGO", "Fira Sans", sans-serif;
     font-size: 16px;
     font-weight: 400;
-    line-height: 1.625rem;
+    line-height: 1.75rem;
     margin: 0;
     padding: 0;
   }
@@ -53,10 +53,18 @@
     width: 38rem;
     max-width: 100%;
   }
-  #block > :nth-child(1)      { margin-top:    0; }
-  #block > :nth-last-child(1) { margin-bottom: 0; }
-  .gt { margin-top:    0.75rem; }
-  .gb { margin-bottom: 0.75rem; }
+  #block > :nth-child(1) {
+    margin-top: 0;
+  }
+  #block > :nth-last-child(1) {
+    margin-bottom: 0;
+  }
+  .gt {
+    margin-top: 0.75rem;
+  }
+  .gb {
+    margin-bottom: 0.75rem;
+  }
   h1 {
     margin: 0;
     font-size: 1.5rem;
@@ -64,6 +72,9 @@
   }
   h1.gt {
     margin-top: 1.5rem;
+  }
+  h1 code {
+    font-weight: 650;
   }
   h2 {
     margin: 0;
@@ -73,6 +84,9 @@
   h2.gt {
     margin-top: 1.5rem;
   }
+  h2 code {
+    font-weight: 650;
+  }
   h3 {
     margin: 0;
     font-size: 1.125rem;
@@ -80,6 +94,9 @@
   }
   h3.gt {
     margin-top: 1.5rem;
+  }
+  h3 code {
+    font-weight: 650;
   }
   p {
     margin: 0;
@@ -96,9 +113,15 @@
   li {
     margin: 0.25rem 0 0.25rem;
   }
-  .center { text-align: center; }
-  .left   { text-align: left;   }
-  .right  { text-align: right;  }
+  .center {
+    text-align: center;
+  }
+  .left {
+    text-align: left;
+  }
+  .right {
+    text-align: right;
+  }
   table {
     margin: 0;
     border: none;
@@ -123,9 +146,10 @@
     text-align: left;
   }
   pre {
-    font-family: "Fira Mono", "Fira Code", monospace;
-    font-size: 0.875rem;
-    line-height: 1.5rem;
+    font-family: "Victor Mono", monospace;
+    font-size: 0.9375em;  /* em not rem */
+    font-weight: 500;
+    line-height: 1.5em;   /* em not rem */
     margin: 0 0 0 -0.5rem;
     border-radius: 0.25rem;
     padding: 0.5rem 0 0.5rem 0.5rem;
@@ -152,7 +176,9 @@
     padding-bottom: 0;
   }
   code {
-    font-family: "Fira Mono", "Fira Code", monospace;
+    font-family: "Victor Mono", monospace;
+    font-size: 0.9375em;  /* em not rem */
+    font-weight: 500;
   }
   a {
     color: var(--a-fg);
@@ -184,8 +210,29 @@
     margin-left: 0.0625rem;
     margin-right: 0.125rem;
   }
+  .sb {
+    font-weight: 500;
+  }
+  .sb code {
+    font-weight: 600;
+  }
+  code .sb {
+    font-weight: 600;
+  }
+  pre .sb {
+    font-weight: 600;
+  }
   b {
     font-weight: 550;
+  }
+  b code {
+    font-weight: 650;
+  }
+  code b {
+    font-weight: 650;
+  }
+  pre b {
+    font-weight: 650;
   }
   i {
     font-style: italic;
@@ -196,7 +243,19 @@
   .sc {
     font-variant-caps: small-caps;
     font-variant-numeric: oldstyle-nums;
-    letter-spacing: 0.03125rem;
+    letter-spacing: 0.03125em;
+  }
+  .en {
+    display: inline-block;
+    width: 0.5em;
+  }
+  .sx {
+    display: inline-block;
+    width: 0.166667em;
+  }
+  .dc {
+    display: inline-block;
+    width: 0.1em;
   }
   .src {
     border-left-width: 0.25rem;
@@ -250,7 +309,7 @@
       are then individually rendered and then concatenated.</p>
     <p class="gt gb">You can mix markdown and <span class="sc">html</span>, since the markdown parser preserves <span class="sc">html</span>
       tags.</p>
-    <p class="gt gb">Monodoc uses <span class="sc">u&plus;f000</span> through <span class="sc">u&plus;f009</span> internally to mark locations as it
+    <p class="gt gb">Monodoc uses <span class="sc">u&plus;f000</span> through <span class="sc">u&plus;f00a</span> internally to mark locations as it
       manipulates text, so unfortunately your document can’t use these scalar values.</p>
     <h2 id="block-level-elements" class="gt gb"><a href="#block-level-elements">#</a> Block-level Elements</h2>
     <h3 id="headings" class="gt gb"><a href="#headings">#</a> Headings</h3>
@@ -261,7 +320,7 @@
     <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>{</code> <span class="var">label</span> <code>}</code></span></p>
     <p class="gt gb">after the <code>#</code> marks, where <span class="var">label</span> is the name or <span class="sc">id</span>. Only letters, numbers,
       and the characters
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F; + -</code></span>
+      <span style="display: block; margin-left: 1.0em;"><code>_ + -</code></span>
       are allowed in <span class="var">label</span>. Although it cannot <i>contain</i> whitespace, there may
       whitespace before or after.</p>
     <p class="gt gb">A permalink can also be inserted by writing</p>
@@ -615,10 +674,10 @@ There won’t be space after this paragraph
       Each heading, paragraph, list item, and table cell is rendered separately.</p>
     <h3 id="escape-sequences" class="gt gb"><a href="#escape-sequences">#</a> Escape Sequences</h3>
     <p class="gt gb">If you need a literal
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5C; &lt; &gt; &amp; &num; &ast; &#x5F; &#x60; &#x7C; &#x5E; &#x25;</code></span>
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5C; &lt; &gt; & # * _ &#x60; | ^ %</code></span>
       in a place where it’d be interpreted as markdown or <span class="sc">html</span> syntax, you can
       escape the character by typing a backslash first:
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5C;&#x5C; &#x5C;&lt; &#x5C;&gt; &#x5C;&amp; &#x5C;&num; &#x5C;&ast; &#x5C;&#x5F; &#x5C;&#x60; &#x5C;&#x7C; &#x5C;&#x5E; &#x5C;&#x25;</code></span></p>
+      <span style="display: block; margin-left: 1.0em;"><code>&#x5C;&#x5C; &#x5C;&lt; &#x5C;&gt; &#x5C;& &#x5C;# &#x5C;* &#x5C;_ &#x5C;&#x60; &#x5C;| &#x5C;^ &#x5C;%</code></span></p>
     <p class="gt gb">(You could also write <code>&amp;lt;</code> or <code>&amp;#x3C;</code> instead of <code>&#x5C;&lt;</code>. The backslash
       sequences are provided for convenience.)</p>
     <h3 id="inline-code" class="gt gb"><a href="#inline-code">#</a> Inline Code</h3>
@@ -674,7 +733,7 @@ The righthand side of *i* is cramped in [*i*] _vs_ in [@i];
       For <span class="var">i</span> = 0, 1, <span style="letter-spacing: 0.125em;">...</span>, <span class="var">n</span><span style="margin-left: 0.125em; margin-right: 0.125em;">−</span>1,
       <span style="display: block; margin-left: 1.0em;"><span class="var">x</span> = <span class="var">inp</span><span style="margin-left: 0.0625em;">[</span><span class="var">i</span><span style="margin-left: 0.0625em;">]</span></span>
       <span style="display: block; margin-left: 1.0em;"><span class="var">x</span> = <span class="var">f</span><span style="margin-left: 0.0625em;">(</span><span class="var">x</span>)</span>
-      <span style="display: block; margin-left: 1.0em;"><span class="var">out</span><span style="margin-left: 0.0625em;">[</span><span class="var">i</span><span style="margin-left: 0.0625em;">]</span> <- encode<span style="margin-left: 0.0625em;">(</span><span class="var">x</span>),</span>
+      <span style="display: block; margin-left: 1.0em;"><span class="var">out</span><span style="margin-left: 0.0625em;">[</span><span class="var">i</span><span style="margin-left: 0.0625em;">]</span> ← encode<span style="margin-left: 0.0625em;">(</span><span class="var">x</span>),</span>
       where <span class="var">inp</span> is a byte array (of length <span class="var">n</span>)
       and <span class="var">f</span> is a byte transformation.
     <p class="gt gb">The righthand side of <i>i</i> is cramped in [<i>i</i>] <i>vs</i> in [<span class="var">i</span><span style="margin-left: 0.0625em;">]</span>;
@@ -683,13 +742,13 @@ The righthand side of *i* is cramped in [*i*] _vs_ in [@i];
     <h3 id="superscripts-and-subscripts" class="gt gb"><a href="#superscripts-and-subscripts">#</a> Superscripts and Subscripts</h3>
     <p class="gt gb">Superscripts and subscripts are written with</p>
     <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>^</code><span class="var">num</span></span>
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;</code><span class="var">num</span></span></p>
+      <span style="display: block; margin-left: 1.0em;"><code>_</code><span class="var">num</span></span></p>
     <p class="gt gb">for one or more digits <span class="var">num</span> or</p>
     <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>^@</code><span class="var">var</span></span>
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;@</code><span class="var">var</span></span></p>
+      <span style="display: block; margin-left: 1.0em;"><code>_@</code><span class="var">var</span></span></p>
     <p class="gt gb">for some variable <span class="var">var</span> or</p>
     <p class="gt gb"><span style="display: block; margin-left: 1.0em;"><code>^{</code> <span class="var">text</span> <code>}</code></span>
-      <span style="display: block; margin-left: 1.0em;"><code>&#x5F;{</code> <span class="var">text</span> <code>}</code></span></p>
+      <span style="display: block; margin-left: 1.0em;"><code>_{</code> <span class="var">text</span> <code>}</code></span></p>
     <p class="gt gb">for any <span class="var">text</span> (so long as <span class="var">text</span> doesn’t include braces).</p>
     <p class="gt gb">Subscripts can be made smaller by doubling the underscore.</p>
     <div class="src">
@@ -717,8 +776,8 @@ and the maximum value of `usize` is 2^64 &amp;minus; 1.</pre>
       We’re converting markdown to <span class="sc">html</span> and <span class="sc">css</span><i>!</i>
       </div>
     <h3 id="italic-and-bold" class="gt gb"><a href="#italic-and-bold">#</a> Italic and Bold</h3>
-    <p class="gt gb">Text between pairs of <code>&#x5F;</code> or pairs of <code>&ast;</code> is rendered in italic. Text between
-      pairs of <code>&ast;&ast;</code> is rendered in bold.</p>
+    <p class="gt gb">Text between pairs of <code>_</code> or pairs of <code>*</code> is rendered in italic. Text between
+      pairs of <code>**</code> is rendered in bold.</p>
     <p class="gt gb">Italic and bold regions can be nested within each other, and italic regions can
       even be nested in themselves one level if different sigils are used.</p>
     <div class="src">
@@ -737,9 +796,9 @@ However, trying to interleave _italic and
     <p class="gt gb">However, trying to interleave <i>italic and <b>bold like this_ causes things</b>
       to break.</i></p>
     </div>
-    <p class="gt gb">Because <code>&ast;</code> is used for italic and bold, you can’t use <code>&ast;</code> for multiplication;
+    <p class="gt gb">Because <code>*</code> is used for italic and bold, you can’t use <code>*</code> for multiplication;
       use × instead. (That character is <span class="sc">u&plus;00d7 multiplication sign</span>.) If you need
-      an asterisk for something else, type <code>&#x5C;&ast;</code>.</p>
+      an asterisk for something else, type <code>&#x5C;*</code>.</p>
     <h2 id="css-classes" class="gt gb"><a href="#css-classes">#</a> CSS Classes</h2>
     <p class="gt gb">A few custom <span class="sc">css</span> classes are added to some elements, and you probably want
       to add styling for these classes somewhere in your style sheets.</p>
@@ -748,55 +807,55 @@ However, trying to interleave _italic and
     <table class="gt">
       <thead>
         <tr>
-          <th class="left">Class</th>
-          <th class="left">Elements</th>
+          <th class="center">Class</th>
+          <th class="center">Elements</th>
           <th class="left">Example Styling</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="left"><code>gt</code></td>
-          <td class="left"><code>&ast;</code></td>
+          <td class="center"><code>gt</code></td>
+          <td class="center"><code>*</code></td>
           <td class="left"><code>margin-top: 1rem;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>gb</code></td>
-          <td class="left"><code>&ast;</code></td>
+          <td class="center"><code>gb</code></td>
+          <td class="center"><code>*</code></td>
           <td class="left"><code>margin-bottom: 1rem;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>sc</code></td>
-          <td class="left"><code>span</code></td>
+          <td class="center"><code>sc</code></td>
+          <td class="center"><code>span</code></td>
           <td class="left"><code>font-variant-caps: small-caps;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>var</code></td>
-          <td class="left"><code>span</code></td>
+          <td class="center"><code>var</code></td>
+          <td class="center"><code>span</code></td>
           <td class="left"><code>font-style: italic;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>ni</code></td>
-          <td class="left"><code>span</code></td>
+          <td class="center"><code>ni</code></td>
+          <td class="center"><code>span</code></td>
           <td class="left"><code>font-style: normal;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>left</code></td>
-          <td class="left"><code>th</code>, <code>td</code></td>
+          <td class="center"><code>left</code></td>
+          <td class="center"><code>th</code>, <code>td</code></td>
           <td class="left"><code>text-align: left;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>center</code></td>
-          <td class="left"><code>th</code>, <code>td</code></td>
+          <td class="center"><code>center</code></td>
+          <td class="center"><code>th</code>, <code>td</code></td>
           <td class="left"><code>text-align: center;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>right</code></td>
-          <td class="left"><code>th</code>, <code>td</code></td>
+          <td class="center"><code>right</code></td>
+          <td class="center"><code>th</code>, <code>td</code></td>
           <td class="left"><code>text-align: right;</code></td>
         </tr>
         <tr>
-          <td class="left"><code>sm</code></td>
-          <td class="left"><code>sub</code></td>
+          <td class="center"><code>sm</code></td>
+          <td class="center"><code>sub</code></td>
           <td class="left"></td>
         </tr>
       </tbody>

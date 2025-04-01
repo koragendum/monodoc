@@ -1,0 +1,441 @@
+@font-face {
+  font-family: 'New Computer Modern Math';
+  font-weight: 400;
+  src: url('/fonts/NewCMMath-Regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'New Computer Modern Math';
+  font-weight: 500;
+  src: url('/fonts/NewCMMath-Book.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'New Computer Modern Math';
+  font-weight: 700;
+  src: url('/fonts/NewCMMath-Bold.otf') format('opentype');
+}
+
+html {
+  --body-bg:  rgb( 32,  32,  32);
+  --body-fg:  rgb(  0,   0,   0);
+/*--chase-bg: rgb(240, 240, 240);*/
+  --chase-bg: rgb(255, 232, 224);
+  --pre-bg:   rgb(  8,   8,   8);
+  --table-bd: rgb( 64,  64,  64);
+  --hr-bd:    rgb(224, 224, 224);
+  --quote-bd: rgb( 64,  64,  64);
+
+  --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
+
+  --a-fg:  rgb(192, 32, 32);
+  --a-dec: rgba(0, 0, 0, 25%);
+}
+
+html {
+  font-family: "Schotis Text";
+  font-size: 16px;
+  font-weight: 500;
+  font-variant-ligatures: contextual common-ligatures discretionary-ligatures;
+  line-height: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  width:      100dvw;
+  max-width:  100%;
+  margin:  0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background-color: var(--body-bg);
+  background-image: var(--body-img);
+  background-size: 1rem 1rem;
+  color: var(--body-fg);
+}
+
+#chase {
+  box-sizing: border-box;
+  max-width: min(46rem, 100%);
+  padding: 2rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+
+  background-color: var(--chase-bg);
+}
+
+#block {
+  width: 38rem;
+  max-width: 100%;
+}
+
+#block > :nth-child(1) {
+  margin-top: 0;
+}
+
+#block > :nth-last-child(1) {
+  margin-bottom: 0;
+}
+
+.gt {
+  margin-top: 0.75rem;
+}
+
+.gb {
+  margin-bottom: 0.75rem;
+}
+
+/*
+h1 {
+  margin: 0;
+  font-size: 2.0rem;
+  font-weight: 400;
+}
+*/
+
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.5em;
+  text-align: center;
+  font-variant-caps: small-caps;
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: 0.1em;
+}
+
+h1.gt {
+  margin-top: 1.5rem;
+}
+
+h1.gb {
+  margin-bottom: 1.125rem;
+}
+
+/*
+h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-style: italic;
+}
+*/
+
+h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 400;
+  font-style: italic;
+}
+
+h2.gt {
+  margin-top: 1.5rem;
+}
+
+h2.gb {
+  margin-bottom: 1.0rem;
+}
+
+h2 a {
+  font-style: normal;
+}
+
+h2 a:link {
+  text-decoration-line: none;
+}
+
+/*
+h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+*/
+
+h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h3.gt {
+  margin-top: 1.25rem;
+}
+
+h3.gb {
+  margin-bottom: 0.875rem;
+}
+
+p {
+  margin: 0;
+  hanging-punctuation: first last force-end;
+}
+
+ul {
+  margin: 0;
+  padding: 0 0 0 1.5rem;
+  list-style-type: "•\2002";
+}
+
+li > ul {
+  margin: 0;
+  list-style-type: "‣\2002";
+}
+
+li {
+  margin: 0.25rem 0 0.25rem;
+}
+
+.center {
+  text-align: center;
+}
+
+.left {
+  text-align: left;
+}
+
+.right {
+  text-align: right;
+}
+
+table {
+  margin: 0;
+  border: none;
+  padding: 0;
+  border-collapse: collapse;
+}
+
+tr {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--table-bd);
+}
+
+tbody tr:nth-last-child(1) {
+  border-bottom: none;
+}
+
+th {
+  padding: 0.25rem 1rem 0.25rem;
+  text-align: left;
+  font-weight: 550;
+}
+
+td {
+  padding: 0.25rem 1rem 0.25rem;
+  text-align: left;
+}
+
+hr {
+  border-width: 1px 0 0;
+  border-style: solid;
+  border-color: var(--hr-bd);
+  margin: 1rem 0 1rem;
+}
+
+blockquote {
+  margin: 0;
+  border-top: none;
+  border-left-width: 0.25rem;
+  border-left-style: solid;
+  border-left-color: var(--quote-bd);
+  border-right: none;
+  border-bottom: none;
+  padding-top: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0;
+}
+
+a {
+  color: var(--a-fg);
+}
+
+a:link, a:visited {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--a-dec);
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.125rem;
+}
+
+a:link:hover, a:visited:hover {
+  text-decoration-style: solid;
+}
+
+.var {
+  font-style: italic;
+}
+
+sup {
+  line-height: 0;
+}
+
+sub {
+  line-height: 0;
+  vertical-align: sub;
+  font-size: 0.8125rem;
+  margin-right: 0.0625rem;
+}
+
+sub.sm {
+  font-size: 0.6875rem;
+  margin-left: 0.0625rem;
+  margin-right: 0.125rem;
+}
+
+b {
+  font-weight: 600;
+}
+
+.xb {
+  font-weight: 700;
+}
+
+i {
+  font-style: italic;
+}
+
+.ni {
+  font-style: normal;
+}
+
+:not(mi).sc {
+  font-variant-caps: small-caps;
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: 0.03125em;
+}
+
+.en {
+  display: inline-block;
+  width: 0.5em;
+}
+
+.sx {
+  display: inline-block;
+  width: 0.166667em;
+}
+
+.dc {
+  display: inline-block;
+  width: 0.1em;
+}
+
+math {
+  display: inline-block;
+  math-style: normal;
+  font-family: "New Computer Modern Math";
+  font-size: 18px;
+  font-weight: 500;
+}
+
+math.inline {
+  display: inline;
+  math-style: compact;
+}
+
+mspace {
+  font-family: "Schotis Text";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+mtext {
+  font-family: "Schotis Text";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+mi:not(.mf) {
+  font-family: "Schotis Text";
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+mn {
+  font-family: "Schotis Text";
+  font-size: 16px;
+  font-variant-numeric: lining-nums;
+  font-weight: 500;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: oldstyle-nums;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: oldstyle-nums;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+  font-size: 10px;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 10px;
+}
+
+math.inline mfrac :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.inline mfrac :is(msup, msub) > :is(mspace, mtext, mi:not(.mf), mn):nth-last-child(1) {
+  font-size: 10px;
+}
+
+.inline mfrac :is(msup, msub) > :nth-last-child(1) :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 10px;
+}
+
+mi.rm {
+  font-style: normal;
+}
+
+mi.sc {
+  font-variant-caps: small-caps;
+}
+
+:is(mi, mn).sb {
+  font-weight: 600;
+}
+
+:is(mi, mn).bf {
+  font-weight: 700;
+}
+
+mo.exclam {
+  font-family: "Schotis Text";
+  font-style: italic;
+}
+
+/*
+@media (width >= 32rem) {
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  .just {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+}
+*/

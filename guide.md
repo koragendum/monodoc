@@ -34,7 +34,7 @@ are then individually rendered and then concatenated.
 You can mix markdown and %html, since the markdown parser preserves %html
 tags.
 
-Monodoc uses %{u\+f000} through %{u\+f009} internally to mark locations as it
+Monodoc uses %{u\+f000} through %{u\+f00a} internally to mark locations as it
 manipulates text, so unfortunately your document can’t use these scalar values.
 
 ## {#block-level-elements} Block-level Elements
@@ -51,7 +51,7 @@ by writing
 
 after the `#` marks, where @label is the name or %id. Only letters, numbers,
 and the characters
-|1> `\_ + -`
+|1> `_ + -`
 are allowed in @label. Although it cannot _contain_ whitespace, there may
 whitespace before or after.
 
@@ -359,12 +359,12 @@ Each heading, paragraph, list item, and table cell is rendered separately.
 ### {#escape-sequences} Escape Sequences
 
 If you need a literal
-|1> `\\ \< \> \& \# \* \_ \` \| \^ \%`
+|1> `\\ \< \> & # * _ \` | ^ %`
 in a place where it’d be interpreted as markdown or %html syntax, you can
 escape the character by typing a backslash first:
-|1> `\\\\ \\\< \\\> \\\& \\\# \\\* \\\_ \\\` \\\| \\\^ \\\%`
+|1> `\\\\ \\\< \\\> \\& \\# \\* \\_ \\\` \\| \\^ \\%`
 
-(You could also write `\&lt;` or `\&#x3C;` instead of `\\\<`. The backslash
+(You could also write `&amp;lt;` or `&amp;#x3C;` instead of `\\\<`. The backslash
 sequences are provided for convenience.)
 
 ### {#inline-code} Inline Code
@@ -431,7 +431,7 @@ The righthand side of *i* is cramped in [*i*] _vs_ in [@i];
 For @i = 0, 1, ..., @n−1,
 |1> @x = @inp[@i]
 |1> @x = @f(@x)
-|1> @out[@i] <- encode(@x),
+|1> @out[@i] ← encode(@x),
 where @inp is a byte array (of length @n)
 and @f is a byte transformation.
 
@@ -445,17 +445,17 @@ The righthand side of *i* is cramped in [*i*] _vs_ in [@i];
 Superscripts and subscripts are written with
 
 |1> `^`@num
-|1> `\_`@num
+|1> `_`@num
 
 for one or more digits @num or
 
 |1> `^@`@var
-|1> `\_@`@var
+|1> `_@`@var
 
 for some variable @var or
 
 |1> `^{` @text `}`
-|1> `\_{` @text `}`
+|1> `_{` @text `}`
 
 for any @text (so long as @text doesn’t include braces).
 
@@ -496,8 +496,8 @@ We’re converting markdown to %html and %css_!_
 
 ### {#italic-and-bold} Italic and Bold
 
-Text between pairs of `\_` or pairs of `\*` is rendered in italic. Text between
-pairs of `\*\*` is rendered in bold.
+Text between pairs of `_` or pairs of `*` is rendered in italic. Text between
+pairs of `**` is rendered in bold.
 
 Italic and bold regions can be nested within each other, and italic regions can
 even be nested in themselves one level if different sigils are used.
@@ -521,9 +521,9 @@ to break.
 
 </div>
 
-Because `\*` is used for italic and bold, you can’t use `\*` for multiplication;
+Because `*` is used for italic and bold, you can’t use `*` for multiplication;
 use × instead. (That character is %{u\+00d7 multiplication sign}.) If you need
-an asterisk for something else, type `\\\*`.
+an asterisk for something else, type `\\*`.
 
 ## {#css-classes} CSS Classes
 
@@ -534,9 +534,9 @@ For more complete examples, you can look at the style sheet embedded in this
 document.
 
 | Class    | Elements   | Example Styling                  |
-|:---------|:-----------|:---------------------------------|
-| `gt`     | `\*`       | `margin-top: 1rem;`              |
-| `gb`     | `\*`       | `margin-bottom: 1rem;`           |
+|:--------:|:----------:|:---------------------------------|
+| `gt`     | `*`        | `margin-top: 1rem;`              |
+| `gb`     | `*`        | `margin-bottom: 1rem;`           |
 | `sc`     | `span`     | `font-variant-caps: small-caps;` |
 | `var`    | `span`     | `font-style: italic;`            |
 | `ni`     | `span`     | `font-style: normal;`            |

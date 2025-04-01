@@ -1,14 +1,18 @@
 #! /usr/bin/python
 
+import mathml
 import re
 from re import Match as MatchObject
 from typing import Optional
 
 INDENTSIZE = 1.0    # size of each indent step in em
+PERMALINK = '#'
 
 PRERENDERFILTER  = None
+MIDRENDERFILTER  = None
 POSTRENDERFILTER = None
-CODEBLKFILTER    = None
+CODEBLOCKFILTER  = None
+CODEBLOCKCLASS   = None
 
 # See guide.md and guide.html for a description of the supported features.
 
@@ -36,12 +40,17 @@ ELEMENTS = {
     'form'       , 'input'      , 'label'      , 'legend'     , 'meter'      ,
     'optgroup'   , 'option'     , 'output'     , 'progress'   , 'select'     ,
     'textarea'   , 'details'    , 'dialog'     , 'summary'    , 'slot'       ,
-    'template'
+    'template'   ,
+    'math'       , 'mfrac'      , 'mi'         , 'mn'         , 'mo'         ,
+    'mover'      , 'mroot'      , 'mrow'       , 'mspace'     , 'msqrt'      ,
+    'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
+    'munderover' ,
 }
 
 BREAKING = {
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'div', 'p', 'pre', 'ol', 'ul', 'table'
+    'pre', 'div', 'p', 'ol', 'ul', 'table',
+    'details'
 }
 
 
@@ -126,20 +135,30 @@ def tagpair(
     element : str,
     ga : bool,
     gb : bool,
-    extra : Optional[str] = None,
-    name  : Optional[str] = None
+    classes : Optional[str | list[str]] = None,
+    name  : Optional[str] = None,
+    style : Optional[str] = None,
 ) -> tuple[str, str]:
     # ga = gap above
     # gb = gap below
-    opening = element if name is None else f'{element} id="{name}"'
-    if (not ga) and (not gb) and extra is None:
-        return (f'<{opening}>', f'</{element}>')
-    classes = []
-    if extra is not None: classes.append(extra)
+    opening = [element]
+    if name is not None:
+        opening.append(f'id="{name}"')
+    if classes is None:
+        classes = []
+    elif isinstance(classes, list):
+        classes = [*classes]
+    else:
+        classes = [classes]
     if ga: classes.append('gt') # top
     if gb: classes.append('gb') # bottom
-    classes = " ".join(classes)
-    return (f'<{opening} class="{classes}">', f'</{element}>')
+    if len(classes) > 0:
+        classes = " ".join(classes)
+        opening.append(f'class="{classes}"')
+    if style is not None:
+        opening.append(f'style="{style}"')
+    opening = " ".join(opening)
+    return (f'<{opening}>', f'</{element}>')
 
 
 ESCAPE = {
@@ -147,7 +166,6 @@ ESCAPE = {
     r'\#': '&num;',
     r'\*': '&ast;',
     r'\_': '&#x5F;',
-    r'\`': '&#x60;',
     r'\|': '&#x7C;',
     r'\^': '&#x5E;',
     r'\%': '&#x25;',
@@ -165,16 +183,17 @@ VARIABLE = re.compile('@[a-zA-Zα-ωΑ-Ω]+')
 
 SCRIPT = re.compile(r'(?<=\S)(\^|_|__)(\d+|\uf004?\uf005\uf004?|\{[^{}]*\})')
 
-CONTEXTWS = re.compile('([' + re.escape('()[]+−×÷') + '])')
+CONTEXTWS = re.compile('([' + re.escape('()[]+−×÷⋅') + '])')
 
 letr = '([a-zA-Zα-ωΑ-Ω0-9\uf004\uf005])'
 mark = '[\uf002\uf003\uf006]'
 RLETR = re.compile(letr + '(?:\uf009'+mark+')*$')
 LLETR = re.compile('^(?:'+mark+'\uf008)*' + letr)
 
-char = '([a-zA-Zα-ωΑ-Ω0-9\uf004\uf005' + re.escape('()[]') + '])'
-RCHAR = re.compile(char + '(?:\uf009'+mark+')*$')
-LCHAR = re.compile('^(?:'+mark+'\uf008)*' + char)
+rchar = '([a-zA-Zα-ωΑ-Ω0-9\uf004\uf005' + re.escape(')]') + '])'
+lchar = '([a-zA-Zα-ωΑ-Ω0-9\uf004\uf005' + re.escape('([') + '])'
+RCHAR = re.compile(rchar + '(?:\uf009'+mark+')*$')
+LCHAR = re.compile('^(?:'+mark+'\uf008)*' + lchar)
 
 # This matches a single underscore or any number of asterisks, or
 #   the Unicode scalar values that start or end a formatting context.
@@ -202,7 +221,6 @@ def render(text : str, escape : bool = True) -> str:
     # This routine is responsible for inline styling, including
     #   inline code, links, substitutions, italic, and bold.
 
-    # TODO mathematics
     # TODO regions with breaking discouraged
     #   <span style="display: inline-block;">
 
@@ -211,7 +229,7 @@ def render(text : str, escape : bool = True) -> str:
     if PRERENDERFILTER is not None:
         text = PRERENDERFILTER(text)
 
-    # Step 1a. Escape Sequences
+    # Step 1. Escape Sequences
 
     if escape:
         # TODO use re.sub instead
@@ -240,14 +258,10 @@ def render(text : str, escape : bool = True) -> str:
             parts.append(text[offset:])
         text = ''.join(parts)
 
-    # Step 1b. Escape Sequences
+    # Step 3a. Inline code
 
-    # TODO use re.sub instead
-    for pattern, replacement in ESCAPE.items():
-        if pattern in text:
-            text = text.replace(pattern, replacement)
-
-    # Step 3. Inline code
+    if r'\`' in text:
+        text = text.replace(r'\`', '&#x60;')
 
     code = []
     try: code_start = text.index('`')
@@ -272,6 +286,47 @@ def render(text : str, escape : bool = True) -> str:
             parts.append(text[offset:])
         text = ''.join(parts)
         code = [f'<code>{s}</code>' for s in code]
+
+    # Step 3b. Inline mathematical text
+
+    if r'\$' in text:
+        text = text.replace(r'\$', '&#x24;')
+
+    math = []
+    try: math_start = text.index('$')
+    except ValueError: math_start = None
+    if math_start is not None:
+        offset, parts = 0, []
+        while math_start is not None:
+            if offset <  math_start:
+                parts.append(text[offset:math_start])
+            try: math_end = text.index('$', math_start+1)
+            except ValueError:
+                parts.append('\uf00a')
+                math.append(text[math_start+1:])
+                offset = len(text)
+                break
+            parts.append('\uf00a')
+            math.append(text[math_start+1:math_end])
+            offset = math_end+1
+            try: math_start = text.index('$', offset)
+            except ValueError: math_start = None
+        if offset < len(text):
+            parts.append(text[offset:])
+        text = ''.join(parts)
+        def mrender(expr):
+            result = mathml.parse(expr)
+            if result is None:
+                return f'<code>{expr}</code>'
+            return '\n'.join(mathml.render(result, True))
+        math = [mrender(expr) for expr in math]
+
+    # Step 3c. Escape Sequences
+
+    # TODO use re.sub instead
+    for pattern, replacement in ESCAPE.items():
+        if pattern in text:
+            text = text.replace(pattern, replacement)
 
     # Step 4. Hyperlinks
     #   These have the form [displayed](url) with any amount of space in the
@@ -384,7 +439,7 @@ def render(text : str, escape : bool = True) -> str:
             if lhs == 0 and rhs == 0:
                 continue
 
-        elif char in {'+', '−', '×', '÷'}:
+        elif char in {'+', '−', '×', '÷', '⋅'}:
             if idx == 0 or idx == stop: continue
             if RCHAR.search(parts[idx-1]) is None: continue
             if LCHAR.search(parts[idx+1]) is None: continue
@@ -469,8 +524,8 @@ def render(text : str, escape : bool = True) -> str:
         '<span style="letter-spacing: 0.125em;">...</span>'
     )
 
-    if POSTRENDERFILTER is not None:
-        text = POSTRENDERFILTER(text)
+    if MIDRENDERFILTER is not None:
+        text = MIDRENDERFILTER(text)
 
     # Step 11. Substitute everything back in, and we're done!
 
@@ -482,8 +537,20 @@ def render(text : str, escape : bool = True) -> str:
     if len(vari) > 0: text =     text.replace( '\uf004', ''  )
     if len(smcp) > 0: text = replacelist(text, '\uf003', smcp)
     if len(lnks) > 0: text = replacelist(text, '\uf002', lnks)
+    if len(math) > 0: text = replacelist(text, '\uf00a', math)
     if len(code) > 0: text = replacelist(text, '\uf001', code)
     if len(tags) > 0: text = replacelist(text, '\uf000', tags)
+
+    # en    1/2 em
+    # word  1/4 em
+    # thin  1/6 em
+    # hair  1/10 em
+    text = text.replace('&ensp;',   '<span class="en"> </span>')
+    text = text.replace('&thinsp;', '<span class="sx"> </span>')
+    text = text.replace('&hairsp;', '<span class="dc"> </span>')
+
+    if POSTRENDERFILTER is not None:
+        text = POSTRENDERFILTER(text)
 
     return text
 
@@ -510,7 +577,7 @@ def makehead(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
         name = match.group(2)
         inner = inner[match.end():].lstrip()
         if match.group(1) is not None:
-            inner = f'<a href="#{name}">#</a> {inner}'
+            inner = f'<a href="#{name}">{PERMALINK}</a> {inner}'
     else:
         name = None
 
@@ -804,12 +871,13 @@ def makecode(
     margin : int,
     lang : str = None
 ) -> str:
-    # We don’t do much with lang yet.
-    extra = 'box-drawing' if lang == 'box' else None
-    opening, closing = tagpair('pre', ga, gb, extra)
+    classes = None
     inner = '\n'.join(lines)
-    if CODEBLKFILTER is not None:
-        inner = CODEBLKFILTER(inner)
+    if CODEBLOCKCLASS is not None:
+        classes = CODEBLOCKCLASS(inner, lang)
+    if CODEBLOCKFILTER is not None:
+        inner = CODEBLOCKFILTER(inner, lang)
+    opening, closing = tagpair('pre', ga, gb, classes=classes)
     html = opening + inner + closing
     if margin > 0:
         mgn = ' ' * margin
@@ -819,6 +887,40 @@ def makecode(
             mgn + '<!-- ↑↑↑ PREFORMATTED ↑↑↑ -->',
         ])
     return html
+
+
+MATHALIGN = re.compile(r'(\d?)([><])')
+
+
+def makemath(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
+    alignment = 'center'
+    indent = None
+    if len(lines) > 0:
+        match = MATHALIGN.match(lines[0])
+        if match is not None:
+            if len(match.group(1)) > 0:
+                length = round(int(match.group(1)) * INDENTSIZE, 3)
+            else:
+                length = 0
+            if match.group(2) == '<':
+                alignment = 'right'
+                if length > 0: indent = f'padding-right: {length}em;'
+            else:
+                alignment = 'left'
+                if length > 0: indent = f'padding-left: {length}em;'
+            lines[0] = lines[0][match.end():]
+
+    result = mathml.parse(' '.join(lines))
+    if result is None:
+        return makecode(lines, ga, gb, margin)
+
+    opening, closing = tagpair('div', ga, gb, classes=alignment, style=indent)
+    html_lines = [opening, *mathml.render(result, False, indent=1), closing]
+    if margin > 0:
+        mgn = ' ' * margin
+        return '\n'.join(mgn + ln for ln in html_lines)
+
+    return '\n'.join(html_lines)
 
 #  -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
 
@@ -883,6 +985,20 @@ def _convert(md_lines : str, margin : int) -> str:
                 todo.append(post)
             continue
 
+        if block_kind == 'math':
+            if '$$' not in line:
+                block_lines.append(line)
+                continue
+            start = line.index('$$')
+            pre = line[:start]
+            post = line[start+2:]
+            if len(pre.strip()) > 0:
+                block_lines.append(pre)
+            finish()
+            if len(post.strip()) > 0:
+                todo.append(post)
+            continue
+
         if len(stripped) == 0:
             finish()
             blocks.append('gap')
@@ -908,6 +1024,7 @@ def _convert(md_lines : str, margin : int) -> str:
 
         if stripped.startswith('#'):
             assert '```' not in line
+            assert '$$' not in line
             finish()
             block_kind = 'head'
             block_lines.append(line)
@@ -916,6 +1033,7 @@ def _convert(md_lines : str, margin : int) -> str:
 
         if stripped.startswith('|') and INDENT.match(line) is None:
             assert '```' not in line
+            assert '$$' not in line
             if block_kind == 'tabl':
                 block_lines.append(line)
                 continue
@@ -928,6 +1046,7 @@ def _convert(md_lines : str, margin : int) -> str:
 
         if bulleted(stripped):
             assert '```' not in line
+            assert '$$' not in line
             if block_kind == 'list':
                 block_lines.append(line)
                 continue
@@ -949,8 +1068,27 @@ def _convert(md_lines : str, margin : int) -> str:
                     todo.append(post)
             continue
 
+        if stripped.startswith('$$'):
+            finish()
+            block_kind = 'math'
+            start = line.index('$$')
+            post = line[start+2:]
+            if len(post.strip()) > 0:
+                todo.append(post)
+            continue
+
         if '```' in line:
             start = line.index('```')
+            pre = line[:start]
+            rem = line[start:]
+            line = pre
+            todo.append(rem)
+
+            if len(line.strip()) == 0:
+                continue
+
+        if '$$' in line:
+            start = line.index('$$')
             pre = line[:start]
             rem = line[start:]
             line = pre
@@ -1015,6 +1153,7 @@ def _convert(md_lines : str, margin : int) -> str:
         gap_below = index < L and blocks[index+1] == 'gap'
         kind, lines, extra = item
         if   kind == 'para': html = makepara(lines, gap_above, gap_below, margin)
+        elif kind == 'math': html = makemath(lines, gap_above, gap_below, margin)
         elif kind == 'code': html = makecode(lines, gap_above, gap_below, margin, extra)
         elif kind == 'list': html = makelist(lines, gap_above, gap_below, margin)
         elif kind == 'tabl': html = maketabl(lines, gap_above, gap_below, margin)
@@ -1076,9 +1215,12 @@ if __name__ == '__main__':
         elif arg == '-x' or arg == '--extension':
             glob = run_path(args.pop())
             if 'INDENTSIZE' in glob: INDENTSIZE       = glob['INDENTSIZE']
+            if 'PERMALINK'  in glob: PERMALINK        = glob['PERMALINK']
             if 'prerender'  in glob: PRERENDERFILTER  = glob['prerender']
+            if 'midrender'  in glob: MIDRENDERFILTER  = glob['midrender']
             if 'postrender' in glob: POSTRENDERFILTER = glob['postrender']
-            if 'codeblock'  in glob: CODEBLKFILTER    = glob['codeblock']
+            if 'codeblock'  in glob: CODEBLOCKFILTER  = glob['codeblock']
+            if 'blockclass' in glob: CODEBLOCKCLASS   = glob['blockclass']
         else:
             sources.append(arg)
 
