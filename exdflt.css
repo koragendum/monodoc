@@ -1,0 +1,182 @@
+.fc {
+  font-family: 'Fira Code';
+}
+
+.src {
+  line-height: 1.5em;   /* em not rem */
+  margin: 0 0 0 -0.5rem;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0 0.5rem 0.5rem;
+  background-color: var(--pre-bg);
+  overflow-x: auto;
+}
+
+.src b {
+  font-weight: 500;
+}
+
+pre.box-drawing {
+  line-height: 1.25em;  /* em not rem */
+}
+
+@media (width < 42rem) {
+  .src {
+    font-size: 0.75em;
+  }
+  pre {
+    font-size: 0.75em;  /* em not rem */
+  }
+}
+
+@media (width >= 42rem) {
+  .narrow {
+    display: none;
+  }
+}
+
+sup {
+  font-size: 0.75em;
+}
+
+pre .hi {
+  background-color: rgb(24, 24, 24);
+  margin:  0 -0.25em 0;   /* em not rem */
+  padding: 0  0.25em 0;   /* em not rem */
+  border-radius: 0.25em;  /* em not rem */
+}
+
+pre.pseudocode {
+  font-size: 0.875em;
+}
+
+.pseudocode .keyword       { color: rgb(144, 144, 255); }
+.pseudocode .flow          { color: rgb(255, 192, 112); }
+.pseudocode .function      { color: rgb( 32, 208, 144); }
+.pseudocode .numeric-const { color: rgb(255,  64,  80); }
+.pseudocode .textual-const { color: rgb(192, 128, 255); }
+.pseudocode .comment       { color: rgb( 96,  96,  96); }
+
+/* .lt { color: rgb( 64,  64,  64); } */
+.lt { color: rgb( 96,  96,  96); }
+.rd { color: rgb(255,  96,  96); } /* red   */
+.gr { color: rgb( 32, 192, 128); } /* green */
+.bl { color: rgb(128, 128, 255); } /* blue  */
+.mv { color: rgb(208,  96, 255); } /* mauve */
+.oc { color: rgb(255, 144,  96); } /* ochre */
+.tl { color: rgb(  0, 192, 192); } /* teal  */
+.lc { color: rgb(192, 144, 192); } /* lilac */
+.az { color: rgb(128, 176, 255); } /* azure */
+
+.lt a {
+  /* color: rgb(88, 64, 128); */
+  /* color: rgb(120, 96, 160); */
+  color: rgb(96, 72, 144);
+}
+
+.lt a:link, .lt a:visited {
+  /* text-decoration-color: rgba(128, 128, 128, 25%); */
+  text-decoration-color: rgba(144, 144, 144, 25%);
+}
+
+.rd.dim {
+  /* color: rgb(160, 64, 80); */
+  /* color: rgb(64, 28, 32); */
+  color: rgb(112, 48, 56);
+}
+
+.mv + sub { color: rgb(255,  96, 192); }
+.oc + sub { color: rgb(255, 192, 160); }
+.az + sub { color: rgb(176, 192, 255); }
+
+/*
+.lt .rd { color: rgb(128,  64,  64); }
+.lt .gr { color: rgb( 32,  84,  64); }
+.lt .bl { color: rgb( 64,  64, 112); }
+.lt .mv       { color: rgb(64, 64, 64); }
+.lt .oc       { color: rgb(64, 64, 64); }
+.lt .az       { color: rgb(64, 64, 64); }
+.lt .mv + sub { color: rgb(64, 64, 64); }
+.lt .oc + sub { color: rgb(64, 64, 64); }
+.lt .az + sub { color: rgb(64, 64, 64); }
+*/
+.lt .rd { color: rgb(144,  72,  72); }
+.lt .gr { color: rgb( 40,  96,  72); }
+.lt .bl { color: rgb( 72,  72, 128); }
+.lt .mv       { color: rgb(96, 96, 96); }
+.lt .oc       { color: rgb(96, 96, 96); }
+.lt .az       { color: rgb(96, 96, 96); }
+.lt .mv + sub { color: rgb(96, 96, 96); }
+.lt .oc + sub { color: rgb(96, 96, 96); }
+.lt .az + sub { color: rgb(96, 96, 96); }
+
+.rl {
+  position: relative;
+  bottom: -0.125lh;
+}
+
+/*
+.blrd {
+  background: linear-gradient(to right, oklch(60% 0.16 300deg), oklch(75% 0.15 30deg));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.blgr {
+  background: linear-gradient(to right, oklch(60% 0.16 300deg), oklch(75% 0.16 155deg));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+*/
+
+.os {
+  font-variant-numeric: oldstyle-nums;
+}
+
+.wip {
+  font-variant-caps: small-caps;
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: 0.03125rem;
+  color: rgb(255,  96,  96);
+  float: right;
+}
+
+@media (width < 36rem) {
+  .wip {
+    display: inline-block;
+    float: none;
+  }
+}
+
+details {
+  margin: 0 0 0 -0.5rem;
+  padding: 0 0 0 0.5rem;
+  background-color: var(--pre-bg);
+}
+
+details summary {
+  margin: 0;
+  padding: 0;
+}
+
+details summary::marker {
+  content: "+  ";
+  color: var(--a-fg);
+  font-weight: 500;
+  text-decoration-line: none;
+}
+
+details[open] summary::marker {
+  content: "−  ";
+}
+
+details summary .label {
+  font-style: italic;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--a-dec);
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.125rem;
+}
+
+details summary .label:hover {
+  text-decoration-style: solid;
+}

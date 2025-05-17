@@ -241,14 +241,14 @@ sup {
 sub {
   line-height: 0;
   vertical-align: sub;
-  font-size: 0.8125rem;
-  margin-right: 0.0625rem;
+  font-size: 0.8125em;
+  margin-right: 0.078125em;
 }
 
 sub.sm {
-  font-size: 0.6875rem;
-  margin-left: 0.0625rem;
-  margin-right: 0.125rem;
+  font-size: 0.6875em;
+  margin-left: 0.09375em;
+  margin-right: 0.1875em;
 }
 
 .sb {
@@ -310,4 +310,14 @@ i {
 .dc {
   display: inline-block;
   width: 0.1em;
+}
+
+.tw {
+  display: inline-block;
+  width: 0.083333em;
+}
+
+.mu {
+  display: inline-block;
+  width: 0.041667em;
 }

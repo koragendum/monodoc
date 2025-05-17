@@ -16,20 +16,61 @@
   src: url('/fonts/NewCMMath-Bold.otf') format('opentype');
 }
 
+@font-feature-values "New Computer Modern Math" {
+  @stylistic { calligraphic: 1; }
+}
+
+*.ca {
+  font-variant-alternates: stylistic(calligraphic);
+  font-feature-settings: 'ss01';
+  -moz-font-feature-settings: 'ss01';
+  -webkit-font-feature-settings: 'ss01';
+}
+
+@font-face {
+  font-family: 'Century Schoolbook';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/C059-Roman.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Century Schoolbook';
+  font-style: italic;
+  font-weight: 500;
+  src: url('/fonts/C059-Italic.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Century Schoolbook';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/C059-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Century Schoolbook';
+  font-style: italic;
+  font-weight: 700;
+  src: url('/fonts/C059-BoldItalic.otf') format('opentype');
+}
+
 html {
   --body-bg:  rgb( 32,  32,  32);
   --body-fg:  rgb(  0,   0,   0);
 /*--chase-bg: rgb(240, 240, 240);*/
   --chase-bg: rgb(255, 232, 224);
-  --pre-bg:   rgb(  8,   8,   8);
+  --pre-bg:   rgb(248, 224, 216);
   --table-bd: rgb( 64,  64,  64);
   --hr-bd:    rgb(224, 224, 224);
-  --quote-bd: rgb( 64,  64,  64);
+  --quote-bg: rgb(248, 224, 216);
+  --quote-bd: rgb(224, 200, 192);
 
   --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
 
   --a-fg:  rgb(192, 32, 32);
-  --a-dec: rgba(0, 0, 0, 25%);
+/*--a-fg:  rgb(200, 40, 24);*/
+  --a-dec: rgba(180, 138, 124, 25%);
 }
 
 html {
@@ -162,6 +203,7 @@ h3 {
 }
 */
 
+/*
 h3 {
   margin: 0;
   font-size: 1.125rem;
@@ -175,6 +217,21 @@ h3.gt {
 h3.gb {
   margin-bottom: 0.875rem;
 }
+*/
+
+h3 {
+  margin: 0;
+  font-size: 1.0rem;
+  font-weight: 600;
+}
+
+h3.gt {
+  margin-top: 1.0rem;
+}
+
+h3.gb {
+  margin-bottom: 0.75rem;
+}
 
 p {
   margin: 0;
@@ -184,16 +241,20 @@ p {
 ul {
   margin: 0;
   padding: 0 0 0 1.5rem;
-  list-style-type: "•\2002";
+  list-style-type: "›\2002";
 }
 
 li > ul {
   margin: 0;
-  list-style-type: "‣\2002";
+  list-style-type: "•\2002";
 }
 
 li {
   margin: 0.25rem 0 0.25rem;
+}
+
+li::marker {
+  color: var(--a-fg);
 }
 
 .center {
@@ -244,17 +305,18 @@ hr {
 }
 
 blockquote {
-  margin: 0;
+  margin: 0 0 0 0.1rem;
   border-top: none;
   border-left-width: 0.25rem;
   border-left-style: solid;
   border-left-color: var(--quote-bd);
   border-right: none;
   border-bottom: none;
-  padding-top: 0;
+  padding-top: 0.375rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  padding-bottom: 0;
+  padding-bottom: 0.25rem;
+  background-color: var(--quote-bg);
 }
 
 a {
@@ -331,17 +393,47 @@ i {
   width: 0.1em;
 }
 
-math {
+.tw {
   display: inline-block;
-  math-style: normal;
+  width: 0.083333em;
+}
+
+.mu {
+  display: inline-block;
+  width: 0.041667em;
+}
+
+.alt {
+  font-family: "Century Schoolbook";
+}
+
+math {
+  display: inline math; /* for Chromium */
   font-family: "New Computer Modern Math";
   font-size: 18px;
   font-weight: 500;
+  math-style: normal;
 }
 
-math.inline {
-  display: inline;
+math[display="block"] {
+  math-style: normal;
+  min-height: 24px;
+}
+
+math[display="inline"] {
   math-style: compact;
+}
+
+.left math {
+  text-align: left;
+}
+
+.center math {
+  text-align: center;
+}
+
+.right math {
+  text-align: right;
 }
 
 mspace {
@@ -363,6 +455,11 @@ mi:not(.mf) {
   font-size: 16px;
   font-style: italic;
   font-weight: 500;
+  text-transform: none;
+}
+
+mi.alt:not(.mf) {
+  font-family: "Century Schoolbook";
 }
 
 mn {
@@ -372,37 +469,66 @@ mn {
   font-weight: 500;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
-  font-size: 12px;
+:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)):not(.gk) {
   font-weight: 600;
   font-variant-numeric: oldstyle-nums;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn):not(.gk) {
+  font-weight: 600;
+  font-variant-numeric: oldstyle-nums;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+  font-size: 12px;
 }
 
 :is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
   font-size: 12px;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+  font-size: 10px;
+}
+
+:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 10px;
+}
+
+mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+  font-size: 8px;
+}
+
+mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 8px;
+}
+
+math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn):not(.gk) {
   font-weight: 600;
-  font-variant-numeric: oldstyle-nums;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
-  font-size: 10px;
-}
-
-:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
-  font-size: 10px;
-}
-
-math.inline mfrac :is(mspace, mtext, mi:not(.mf), mn) {
+math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn) {
   font-size: 12px;
-  font-weight: 600;
 }
 
-.inline mfrac :is(msup, msub) > :is(mspace, mtext, mi:not(.mf), mn):nth-last-child(1) {
+math[display="inline"] mfrac :is(msup, msub, msubsup) > :is(mspace, mtext, mi:not(.mf), mn):nth-last-child(1) {
   font-size: 10px;
 }
 
-.inline mfrac :is(msup, msub) > :nth-last-child(1) :is(mspace, mtext, mi:not(.mf), mn) {
+math[display="inline"] mfrac :is(msup, msub, msubsup) > :nth-last-child(1) :is(mspace, mtext, mi:not(.mf), mn) {
   font-size: 10px;
+}
+
+math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+  font-size: 8px;
+}
+
+math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+  font-size: 8px;
+}
+
+mi.gk {
+  font-family: "GFS Bodoni";
 }
 
 mi.rm {
@@ -426,7 +552,62 @@ mo.exclam {
   font-style: italic;
 }
 
-/*
+pre {
+  font-family: "Operator Mono", monospace;
+  font-size: 0.875em;
+  font-weight: 400;
+  line-height: 1.5em;
+  margin: 0;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem 0.5rem;
+  background-color: var(--pre-bg);
+  overflow-x: auto;
+}
+
+pre .sb {
+  font-weight: 500;
+}
+
+pre b {
+  font-weight: 600;
+}
+
+code {
+  font-family: "Operator Mono", monospace;
+  font-weight: 400;
+}
+
+.sb code {
+  font-weight: 500;
+}
+
+code .sb {
+  font-weight: 500;
+}
+
+b code {
+  font-weight: 600;
+}
+
+code b {
+  font-weight: 600;
+}
+
+.lt { color: rgb(180, 138, 124); }
+
+.score {
+  color: rgb(72, 96, 176);
+}
+
+/* TODO these need some tweaking */
+.pseudocode .keyword       { color: rgb( 64,  64, 128); }
+.pseudocode .flow          { color: rgb(176, 112,  64); }
+.pseudocode .type          { color: rgb( 64, 160, 112); }
+.pseudocode .function      { color: rgb( 48, 112,  64); }
+.pseudocode .numeric-const { color: rgb(176,  48,  48); }
+.pseudocode .textual-const { color: rgb(128,  56, 192); }
+.pseudocode .comment       { color: rgb(128, 128, 128); }
+
 @media (width >= 32rem) {
   p {
     text-align: justify;
@@ -438,4 +619,9 @@ mo.exclam {
     text-justify: inter-word;
   }
 }
-*/
+
+@media (width < 42rem) {
+  pre {
+    font-size: 0.75em;
+  }
+}

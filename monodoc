@@ -162,6 +162,7 @@ def tagpair(
 
 
 ESCAPE = {
+    r'\\': '&#x5C;',
     r'\&': '&amp;',
     r'\#': '&num;',
     r'\*': '&ast;',
@@ -170,7 +171,9 @@ ESCAPE = {
     r'\^': '&#x5E;',
     r'\%': '&#x25;',
     r'\+': '&plus;',
-    r'\×': '&times;'
+    r'\−': '&minus;',
+    r'\×': '&times;',
+    r'\–': '&ndash;'
 }
 
 # This matches [$a]($b) where $a is any sequences of characters that aren't
@@ -233,8 +236,6 @@ def render(text : str, escape : bool = True) -> str:
 
     if escape:
         # TODO use re.sub instead
-        if r'\\' in text:
-            text = text.replace(r'\\', '&#x5C;')
         if r'\<' in text:
             text = text.replace(r'\<', '&lt;')
         if r'\>' in text:
@@ -545,9 +546,17 @@ def render(text : str, escape : bool = True) -> str:
     # word  1/4 em
     # thin  1/6 em
     # hair  1/10 em
+    # twlf  1/12 em
+    # mu    1/24 em
     text = text.replace('&ensp;',   '<span class="en"> </span>')
     text = text.replace('&thinsp;', '<span class="sx"> </span>')
     text = text.replace('&hairsp;', '<span class="dc"> </span>')
+    text = text.replace('&twlfsp;', '<span class="tw"> </span>')
+    text = text.replace('&musp;',   '<span class="mu"> </span>')
+
+    text = text.replace('†{{', '<span class="lt">')
+    text = text.replace('{{', '<span style="display: inline-block;">')
+    text = text.replace('}}', '</span>')
 
     if POSTRENDERFILTER is not None:
         text = POSTRENDERFILTER(text)
@@ -595,8 +604,6 @@ def makepara(lines : list[str], ga : bool, gb : bool, margin : int) -> str:
 
     for idx in range(len(lines)):
         ln = lines[idx]
-        if r'\\' in ln:
-            ln = ln.replace(r'\\', '&#x5C;')
         if r'\<' in ln:
             ln = ln.replace(r'\<', '&lt;')
         if r'\>' in ln:
@@ -1203,15 +1210,21 @@ if __name__ == '__main__':
         exit()
     args = list(reversed(args))
 
-    links    = []
-    includes = []
-    sources  = []
+    icon = None
+    title = None
+    linked  = []
+    inlines = []
+    sources = []
     while len(args) > 0:
         arg = args.pop()
-        if arg == '-l' or arg == '--link':
-            links.append(args.pop())
+        if arg == '-t' or arg == '--title':
+            title = args.pop()
+        elif arg == '-p' or arg == '--icon':
+            icon = args.pop()
+        elif arg == '-l' or arg == '--link':
+            linked.append(args.pop())
         elif arg == '-i' or arg == '--inline':
-            includes.append(args.pop())
+            inlines.append(args.pop())
         elif arg == '-x' or arg == '--extension':
             glob = run_path(args.pop())
             if 'INDENTSIZE' in glob: INDENTSIZE       = glob['INDENTSIZE']
@@ -1227,14 +1240,21 @@ if __name__ == '__main__':
     if len(sources) == 0:
         exit()
 
-    links = ''.join(
+    links = []
+    if icon is not None:
+        icon = icon.split(',')
+        icon = icon[0]
+        mime = icon[1] if len(icon) > 1 else 'gif'
+        links.append(f'<link rel="icon" href="{icon}" type="image/{mime}"/>')
+    links.extend(
         f'<link rel="stylesheet" href="{link}" type="text/css"/>\n'
-        for link in links
+        for link in linked
     )
+    links = ''.join(links)
 
     css = []
-    for inc in includes:
-        with open(inc) as fh:
+    for inl in inlines:
+        with open(inl) as fh:
             for ln in fh:
                 ln = ln.rstrip()
                 css.append(f'  {ln}\n' if len(ln) > 0 else ln)
@@ -1243,7 +1263,7 @@ if __name__ == '__main__':
     else:
         css = ""
 
-    def makepage(title : str, body : str) -> str:
+    def makepage(title_elem : str, body : str) -> str:
         return (
             '<!DOCTYPE html>\n'
             '<meta charset="utf-8">\n'
@@ -1251,7 +1271,7 @@ if __name__ == '__main__':
             ' content="width=device-width,'
             ' height=device-height,'
             ' initial-scale=1.0">\n'
-           f'<title>{title}</title>\n'
+           f'<title>{title_elem}</title>\n'
            f'{links}'
            f'{css}'
             '<div id="chase">\n'
@@ -1266,6 +1286,7 @@ if __name__ == '__main__':
             md = fh.read()
         html = convert(md, 4)
         base, _ = path.splitext(src)
-        html = makepage(base, html)
+        title_elem = base if title is None else title
+        html = makepage(title_elem, html)
         with open(f'{base}.html', 'w') as fh:
             print(html, file=fh)
