@@ -55,6 +55,7 @@ OPERATORS = {
     '<': None,  # U+003C LESS-THAN SIGN
     '=': None,  # U+003D EQUALS SIGN
     '>': None,  # U+003E GREATER-THAN SIGN
+    '?': None,  # U+003F QUESTION MARK
     '[': None,  # U+005B LEFT SQUARE BRACKET
     ']': None,  # U+005D RIGHT SQUARE BRACKET
     '{': None,  # U+007B LEFT CURLY BRACKET
@@ -66,14 +67,19 @@ OPERATORS = {
     '×': None,  # U+00D7 MULTIPLICATION SIGN
     '÷': None,  # U+00F7 DIVISION SIGN
     '←': None,  # U+2190 LEFTWARDS ARROW
+    '↑': None,  # U+2191 UPWARDS ARROW
     '→': None,  # U+2192 RIGHTWARDS ARROW
+    '↓': None,  # U+2193 DOWNWARDS ARROW
     '⇐': None,  # U+21D0 LEFTWARDS DOUBLE ARROW
     '⇒': None,  # U+21D2 RIGHTWARDS DOUBLE ARROW
     '∂': None,  # U+2202 PARTIAL DIFFERENTIAL
     '−': None,  # U+2212 MINUS SIGN
+    '∘': None,  # U+2218 RING OPERATOR
     '∙': None,  # U+2219 BULLET OPERATOR
     '∧': None,  # U+2227 LOGICAL AND
     '∨': None,  # U+2228 LOGICAL OR
+    '⊕': None,  # U+2295 CIRCLED PLUS
+    '⊗': None,  # U+2297 CIRCLED TIMES
     '⋅': None,  # U+22C5 DOT OPERATOR
     '⋮': None,  # U+22EE VERTICAL ELLIPSIS
     '⋯': None,  # U+22EF MIDLINE HORIZONTAL ELLIPSIS
@@ -100,9 +106,6 @@ DIGRAPHS = {
 # ∗ U+2217 ASTERISK OPERATOR
 # ″ U+2033 DOUBLE PRIME
 # ‴ U+2034 TRIPLE PRIME
-# ∘ U+2218 RING OPERATOR
-# ⊕ U+2295 CIRCLED PLUS
-# ⊗ U+2297 CIRCLED TIMES
 
 PUNCTUATION = {
     ',': 'comma',
@@ -143,7 +146,7 @@ ESCAPE = {
 LATIN = re.compile(r'[a-zA-Zſ][a-zA-Zſ\u0300-\u036F]*')
 GREEK = re.compile(r'[α-ωΑ-Ω]+')
 DELIM = {'(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫', '|'}
-CLOSE = {')', ']', '⟩', '⟫', '|', '!', '⋯'}
+CLOSE = {')', ']', '⟩', '⟫', '|', '!', '?', '⋯'}
 
 VARIANTS = {
     'A': ('𝒜', '𝓐', '𝔄', '𝕬', '𝔸'),
@@ -233,7 +236,7 @@ class Atom:
                 if self.upright:
                     zero_rspace = True  # unary
 
-            if inner in ('→', '←', '⇒', '⇐'):
+            if inner in ('→', '←', '⇒', '⇐', '↑', '↓'):
                 if self.upright:
                     zero_lspace = True
                     zero_rspace = True
@@ -321,7 +324,8 @@ class Atom:
 
         if weight == 1: classes.append('sb')
         if weight == 2: classes.append('bf')
-        if inner == '!': classes.append('exclam')
+        if inner == '!': classes.append('it')
+        if inner == '?': classes.append('it')
 
         if len(classes) > 0:
             classes = " ".join(classes)

@@ -403,6 +403,16 @@ i {
   width: 0.041667em;
 }
 
+.cm {
+  font-family: "New Computer Modern Math";
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.gk {
+  font-family: "GFS Bodoni";
+}
+
 .alt {
   font-family: "Century Schoolbook";
 }
@@ -469,61 +479,61 @@ mn {
   font-weight: 500;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)):not(.gk) {
+:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)):not(.gk) {
   font-weight: 600;
   font-variant-numeric: oldstyle-nums;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn):not(.gk) {
+:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(.gk) {
   font-weight: 600;
   font-variant-numeric: oldstyle-nums;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 12px;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 12px;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 10px;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+:is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 10px;
 }
 
-mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 8px;
 }
 
-mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 8px;
 }
 
-math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn):not(.gk) {
+math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(.gk) {
   font-weight: 600;
 }
 
-math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn) {
+math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 12px;
 }
 
-math[display="inline"] mfrac :is(msup, msub, msubsup) > :is(mspace, mtext, mi:not(.mf), mn):nth-last-child(1) {
+math[display="inline"] mfrac :is(msup, msub, msubsup) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):nth-last-child(1) {
   font-size: 10px;
 }
 
-math[display="inline"] mfrac :is(msup, msub, msubsup) > :nth-last-child(1) :is(mspace, mtext, mi:not(.mf), mn) {
+math[display="inline"] mfrac :is(msup, msub, msubsup) > :nth-last-child(1) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 10px;
 }
 
-math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn):not(:nth-child(1)) {
+math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 8px;
 }
 
-math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn) {
+math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 8px;
 }
 
@@ -547,7 +557,7 @@ mi.sc {
   font-weight: 700;
 }
 
-mo.exclam {
+mo.it {
   font-family: "Schotis Text";
   font-style: italic;
 }
