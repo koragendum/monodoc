@@ -107,6 +107,10 @@ class HtmlElement:
         for key in sorted(self.attrs):
             value = self.attrs[key]
             fields.append(key if value is None else f'{key}="{value}"')
+        if self.element == 'mspace':
+            assert not self.inner
+            buffer.append(f'<{" ".join(fields)}/>')
+            return
         buffer.append(f'<{" ".join(fields)}>')
         if self.element in VOID:
             assert not self.inner
@@ -114,7 +118,7 @@ class HtmlElement:
         if not self.inner:
             buffer.append(f'</{self.element}>')
             return
-        multiline = self.element not in SINGLELINE and self.size() > 8
+        multiline = self.element not in SINGLELINE and self.size() > 6
         if multiline: buffer.append('\n')
         margin = INDENT * (depth + 1)
         for item in self.inner:

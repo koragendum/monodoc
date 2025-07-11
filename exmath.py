@@ -29,10 +29,11 @@ def blockclass(inner, lang):
 keyword   = re.compile(r'\$([a-zA-Z-]+)')
 flow      = re.compile(r'@([a-zA-Z-]+)')
 typ       = re.compile(r'\^([a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9-]*)')
-function  = re.compile(r"%([+−×/<>≤≥=≠]|[a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9'-]*)")
+function  = re.compile(r"%([+−×/<>≤≥=≠]+|[a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9'-]*)")
 numconst  = re.compile(r'#([0-9]+)')
 wordconst = re.compile(r"#([a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9'-]*)")
 comment   = re.compile(r'([※◊].*)$', re.MULTILINE)
+italic    = re.compile(r'_([a-zA-Z-]+)')
 
 def codeblock(inner, lang):
     if lang != 'pseudo': return inner
@@ -47,4 +48,5 @@ def codeblock(inner, lang):
     inner =  numconst.sub(r'<span class="numeric-const">\1</span>', inner)
     inner = wordconst.sub(r'<span class="textual-const">\1</span>', inner)
     inner =   comment.sub(r'<span class="comment">\1</span>',       inner)
+    inner =    italic.sub(r'<i>\1</i>',                             inner)
     return inner

@@ -1,32 +1,31 @@
 import re
+from html import HtmlElement
 
-# TODO digraphs for U+2061 FUNCTION APPLICATION
-#                   U+2062 INVISIBLE TIMES
-#                   U+2063 INVISIBLE SEPARATOR
-#                   U+2064 INVISIBLE PLUS
+# Quick Reference
+#
+#   "..."  text
+#    *xyz  multicharacter
+#      &x  semibold
+#     &&x  bold
+#      \x  upright
+#      %x  small capitals
+#      @x  script
+#     \@x  calligraphic
+#     @%x  blackletter
+#    \@%x  doublestruck
+#      _x  subscript
+#      ^x  superscript
+#     __x  under
+#     ^^x  over
 
-# "..."  text
-#  *xyz  multicharacter
-#    &x  semibold
-#   &&x  bold
-#    \x  upright
-#    %x  small capitals
-#    @x  script
-#   \@x  calligraphic
-#   @%x  blackletter
-#  \@%x  doublestruck
-#    _x  subscript
-#    ^x  superscript
-#   __x  under
-#   ^^x  over
-
-# <math display="block">      sets    math-style: normal;
-# <math display="inline">     sets    math-style: compact;
-
-# <* displaystyle="true">     sets    math-style: normal;
-# <* displaystyle="false">    sets    math-style: compact;
-
-# <mo movablelimits="true">   moves under/over to sub/sup if math-style=compact
+# Block vs Inline
+#
+#   <math display="block">    sets  math-style: normal;
+#   <math display="inline">   sets  math-style: compact;
+#   <* displaystyle="true">   sets  math-style: normal;
+#   <* displaystyle="false">  sets  math-style: compact;
+#
+#   <mo movablelimits="true"> moves under/over to sub/sup if math-style=compact
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -45,6 +44,12 @@ KEYWORDS = {
     'ent':    '⊢',  # U+22A2 RIGHT TACK
     'star':   '⋆',  # U+22C6 STAR OPERATOR
 }
+
+KEYCONTAINERS = ('frac', 'sqrt')
+
+KEYIDENTIFIERS = ('∞', '⋆')
+
+# Keywords that are not in KEYCONTAINERS or KEYIDENTIFIERS code for operators.
 
 OPERATORS = {
     '!': None,  # U+0021 EXCLAMATION MARK
@@ -108,9 +113,10 @@ DIGRAPHS = {
     '//': '⁄',  # U+2044 FRACTION SLASH
 }
 
-# ∗ U+2217 ASTERISK OPERATOR
-# ″ U+2033 DOUBLE PRIME
-# ‴ U+2034 TRIPLE PRIME
+# TODO digraphs for U+2061 FUNCTION APPLICATION
+#                   U+2062 INVISIBLE TIMES
+#                   U+2063 INVISIBLE SEPARATOR
+#                   U+2064 INVISIBLE PLUS
 
 PUNCTUATION = {
     ',': 'comma',
@@ -139,6 +145,8 @@ SPACE = {
 def space(dimen, inline):
     if dimen in SPACE:
         return SPACE[dimen][int(inline)]
+    if not isinstance(dimen, str):
+        raise TypeError # unit required
     return dimen
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -150,8 +158,11 @@ ESCAPE = {
 
 LATIN = re.compile(r'[a-zA-Zſ][a-zA-Zſ\u0300-\u036F]*')
 GREEK = re.compile(r'[α-ωΑ-Ω]+')
-DELIM = {'(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫', '|'}
-CLOSE = {')', ']', '⟩', '⟫', '|', '!', '?', '⋯'}
+DELIMITERS = {'(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫', '|'}
+
+# Tokens that can appear as the left-hand argument
+#   of a variadic operator (e.g. plus and minus)
+LEFTARG = {')', ']', '⟩', '⟫', '|', '!', '?', '⋯'}
 
 VARIANTS = {
     'A': ('𝒜', '𝓐', '𝔄', '𝕬', '𝔸'),
@@ -219,25 +230,25 @@ class Atom:
         self.variant = False
 
     def tall(self):
-        return self.kind == 'mo' and self.upright and self.inner in DELIM
+        return self.kind == 'mo' and self.upright and self.inner in DELIMITERS
 
-    def render(self, lines, inline, indent, prev=None):
+    def html(self, inline, prev=None):
         inner = self.inner
         weight = self.weight
 
-        opening = [self.kind]
+        attrs = {}
         classes = []
 
         if self.kind == 'mo':
-            delim = inner in DELIM
+            delim = inner in DELIMITERS
 
             zero_lspace = False
             zero_rspace = False
 
             if inner in ('+', '−'):
-                if isinstance(prev, Atom) and prev.kind == 'mo' \
-                and prev.inner not in CLOSE:
-                    zero_lspace = True
+                if isinstance(prev, Atom) and prev.kind == 'mo':
+                    if prev.inner not in LEFTARG:
+                        zero_lspace = True
                 if self.upright:
                     zero_rspace = True  # unary
 
@@ -246,40 +257,40 @@ class Atom:
                     zero_lspace = True
                     zero_rspace = True
 
-            # convert U+2044 FRACTION SLASH back to U+002F SOLIDUS
+            # map U+2044 FRACTION SLASH back to U+002F SOLIDUS
             if inner == '⁄':
                 inner = '/'
                 zero_lspace = True
                 zero_rspace = True
 
-            if zero_lspace: opening.append('lspace="0"')
-            if zero_rspace: opening.append('rspace="0"')
+            if zero_lspace: attrs['lspace'] = '0'
+            if zero_rspace: attrs['rspace'] = '0'
 
             if inner in ('|', '<', '>'):
-                opening.append('lspace="0.15em"')
-                opening.append('rspace="0.15em"')
+                attrs['lspace'] = '0.15em'
+                attrs['rspace'] = '0.15em'
 
             if inner == ':' and self.upright:
-                opening.append('lspace="0.075em"')
-                opening.append('rspace="0.075em"')
+                attrs['lspace'] = '0.075em'
+                attrs['rspace'] = '0.075em'
 
             if inner == '=' and self.upright:
-                opening.append('lspace="0.075em"')
-                opening.append('rspace="0.075em"')
+                attrs['lspace'] = '0.075em'
+                attrs['rspace'] = '0.075em'
 
             if delim:
                 if self.height > 0:
                     SIZES = ['1em', '1.25em', '1.5em', '1.75em', '2em']
                     height = min(self.height, 4)
                     size = SIZES[height]
-                    opening.append(f'minsize="{size}"')
-                    opening.append(f'maxsize="{size}"')
+                    attrs['minsize'] = size
+                    attrs['maxsize'] = size
                 elif self.upright:
                     size = '1.25em' if inline else '2em'
-                    opening.append(f'minsize="{size}"')
-                    opening.append(f'maxsize="{size}"')
+                    attrs['minsize'] = size
+                    attrs['maxsize'] = size
                 else:
-                    opening.append('stretchy="false"')  # Chromium and Safari
+                    attrs['stretchy'] = 'false' # Chromium and Safari
 
             inner = ESCAPE.get(inner, inner)
 
@@ -311,7 +322,7 @@ class Atom:
                 greek = greek and not self.variant
 
                 if len(inner) == 1 and (latin or greek or self.upright):
-                    opening.append('mathvariant="normal"')  # Firefox
+                    attrs['mathvariant'] = 'normal' # Firefox
 
                 if latin:
                     if 'ſ' in inner:
@@ -333,35 +344,10 @@ class Atom:
         if inner == '?': classes.append('it')
 
         if len(classes) > 0:
-            classes = " ".join(classes)
-            opening.append(f'class="{classes}"')
+            attrs['class'] = " ".join(classes)
 
-        lines.append(f'{"  "*indent}<{" ".join(opening)}>{inner}</{self.kind}>')
+        return HtmlElement(self.kind, inner, **attrs)
 
-class Space:
-    def __init__(self, width, height=None, depth=None):
-        self.width = width  # numeric (in em) or 'shelf'
-        self.height = None
-        self.depth = None
-
-    def render(self, lines, inline, indent, prev=None):
-        width = space(self.width, inline)
-        attrs = [f'width="{width}"']
-        if self.height is not None:
-            height = space(self.height, inline)
-            attrs.append(f'height="{height}"')
-        if self.depth is not None:
-            depth = space(self.depth, inline)
-            attrs.append(f'depth="{depth}"')
-        attrs = ' '.join(attrs)
-        lines.append(f'{"  "*indent}<mspace {attrs}/>')
-
-class Empty:
-    def __init__(self):
-        pass
-
-    def render(self, lines, inline, indent, prev=None):
-        lines.append(f'{"  "*indent}<mspace height="0" depth="0" width="0"/>')
 
 class Boxed:
     def __init__(self,
@@ -379,63 +365,112 @@ class Boxed:
         self.voffset  = voffset
         self.hoffset  = hoffset
 
-    def render(self, lines, inline, indent, prev=None):
-        margin = '  ' * indent
-        opening = ['mpadded']
+    def html(self, inline, prev=None):
+        attrs = {}
         if self.height is not None:
-            height = space(self.height, inline)
-            opening.append(f'height="{height}"')
+            attrs['height'] = space(self.height, inline)
         if self.depth is not None:
-            depth = space(self.depth, inline)
-            opening.append(f'depth="{depth}"')
+            attrs['depth'] = space(self.depth, inline)
         if self.width is not None:
-            width = space(self.width, inline)
-            opening.append(f'width="{width}"')
+            attrs['width'] = space(self.width, inline)
         if self.voffset is not None:
-            voffset = space(self.voffset, inline)
-            opening.append(f'voffset="{voffset}"')
+            attrs['voffset'] = space(self.voffset, inline)
         if self.hoffset is not None:
-            hoffset = space(self.hoffset, inline)
-            opening.append(f'lspace="{hoffset}"')
-        lines.append(f'{margin}<{" ".join(opening)}>')
+            attrs['lspace'] = space(self.hoffset, inline)
+
+        inner = []
         prev = None
         for item in self.sequence:
-            item.render(lines, inline, indent+1, prev)
+            inner.append(item.html(inline, prev))
             prev = item
-        lines.append(f'{margin}</mpadded>')
+
+        return HtmlElement('mpadded', *inner, **attrs)
+
+
+class Empty:
+    def __init__(self):
+        pass
+
+    def html(self, inline, prev=None):
+        return HtmlElement('mspace', height='0', depth='0', width='0')
+
 
 class Frac:
     def __init__(self, upper, lower):
         self.upper = upper
         self.lower = lower
 
-    def render(self, lines, inline, indent, prev=None):
+    def html(self, inline, prev=None):
         shelf = Space('shelf')
-        upper = Row(
-            [shelf, *self.upper.sequence, shelf] if isinstance(self.upper, Row)
-            else (
-                [self.upper]
-                if isinstance(self.upper, (Empty, Space)) or (
-                    isinstance(self.upper, Atom) and self.upper.inner == ''
-                )
-                else [shelf, self.upper, shelf]
-            )
+
+        if isinstance(self.upper, Row):
+            upper = [shelf, *self.upper.sequence, shelf]
+        elif isinstance(self.upper, (Empty, Space)):
+            upper = [self.upper]
+        elif isinstance(self.upper, Atom) and self.upper.inner == '':
+            upper = [self.upper]
+        else:
+            upper = [shelf, self.upper, shelf]
+
+        if isinstance(self.lower, Row):
+            lower = [shelf, *self.lower.sequence, shelf]
+        elif isinstance(self.lower, (Empty, Space)):
+            lower = [self.lower]
+        elif isinstance(self.lower, Atom) and self.lower.inner == '':
+            lower = [self.lower]
+        else:
+            lower = [shelf, self.lower, shelf]
+
+        return HtmlElement('mfrac',
+            Row(upper).html(inline),
+            Row(lower).html(inline),
         )
-        lower = Row(
-            [shelf, *self.lower.sequence, shelf] if isinstance(self.lower, Row)
-            else (
-                [self.lower]
-                if isinstance(self.lower, (Empty, Space)) or (
-                    isinstance(self.lower, Atom) and self.lower.inner == ''
-                )
-                else [shelf, self.lower, shelf]
-            )
-        )
-        margin = '  ' * indent
-        lines.append(f'{margin}<mfrac>')
-        upper.render(lines, inline, indent+1)
-        lower.render(lines, inline, indent+1)
-        lines.append(f'{margin}</mfrac>')
+
+
+class Phantom:
+    def __init__(self, inner):
+        self.inner = inner
+
+    def html(self, inline, prev=None):
+        return HtmlElement('mphantom', self.inner.html(inline))
+
+
+class Row:
+    def __init__(self, sequence):
+        self.sequence = sequence
+        self.root = False
+
+    def html(self, inline, prev=None):
+        attrs = {}
+        if self.root:
+            element = 'math'
+            attrs['display'] = 'inline' if inline else 'block'
+        else:
+            element = 'mrow'
+
+        inner = []
+        prev = None
+        for item in self.sequence:
+            inner.append(item.html(inline, prev))
+            prev = item
+
+        return HtmlElement(element, *inner, **attrs)
+
+
+class Space:
+    def __init__(self, width, height=None, depth=None):
+        self.width = width
+        self.height = None
+        self.depth = None
+
+    def html(self, inline, prev=None):
+        attrs = {'width': space(self.width, inline)}
+        if self.height is not None:
+            attrs['height'] = space(self.height, inline)
+        if self.depth is not None:
+            attrs['depth'] = space(self.depth, inline)
+        return HtmlElement('mspace', **attrs)
+
 
 STRUCT = {
     ('script', True , False): 'msub',
@@ -446,6 +481,20 @@ STRUCT = {
     ('stack' , True , True ): 'munderover',
 }
 
+def sequence_of(item, prefix=None):
+    if prefix is None: return item.sequence if isinstance(item, Row) else [item]
+    return [prefix, *item.sequence] if isinstance(item, Row) else [prefix, item]
+
+def is_atom(item, kind, inner):
+    if not isinstance(item, Atom):
+        return False
+    if item.kind != kind and kind != 'any':
+        return False
+    if isinstance(inner, str):
+        return item.inner == inner
+    else:
+        return item.inner in inner
+
 class Struct:
     def __init__(self, kind, center):
         self.kind = kind    # 'script' or 'stack'
@@ -453,98 +502,68 @@ class Struct:
         self.upper = None
         self.lower = None
 
-    def render(self, lines, inline, indent, prev=None):
-        margin = '  ' * indent
+    def html(self, inline, prev=None):
         has_lower = self.lower is not None
         has_upper = self.upper is not None
         element = STRUCT[(self.kind, has_lower, has_upper)]
-        lines.append(f'{margin}<{element}>')
-        self.center.render(lines, inline, indent+1)
+        inner = [self.center.html(inline)]
+
         if has_lower:
-            if isinstance(self.center, Atom) and self.center.kind == 'mo' \
-            and self.center.inner == '∫':
-                lower = Boxed(
-                    self.lower.sequence if isinstance(self.lower, Row)
-                    else [self.lower],
-                    hoffset='ladj'
-                )
+            if is_atom(self.center, 'mo', '∫'):
+                lower = Boxed(sequence_of(self.lower), hoffset='ladj')
             else:
                 lower = self.lower
-            lower.render(lines, inline, indent+1)
+
+            inner.append(lower.html(inline))
+
         if has_upper:
-            if isinstance(self.center, Atom) and self.center.kind == 'mo' \
-            and self.center.inner == '∫':
-                adj = Space('uadj')
-                upper = Row(
-                    [adj, *self.upper.sequence] if isinstance(self.lower, Row)
-                    else [adj, self.upper]
-                )
-            elif self.kind == 'script' and isinstance(self.center, Row) \
-            and any(
+            if is_atom(self.center, 'mo', '∫'):
+                upper = Row(sequence_of(self.upper, prefix=Space('uadj')))
+
+            elif self.kind == 'script' and isinstance(self.center, Row) and any(
                 isinstance(item, Atom) and item.tall()
                 for item in self.center.sequence
             ):
-                adj = Space('sadj')
-                upper = Row(
-                    [adj, *self.upper.sequence] if isinstance(self.lower, Row)
-                    else [adj, self.upper]
-                )
-            elif self.kind == 'script' and isinstance(self.upper, Atom) \
-            and self.upper.kind == 'mi' and self.upper.inner == '⋆':
+                upper = Row(sequence_of(self.upper, prefix=Space('sadj')))
+
+            elif self.kind == 'script' and is_atom(self.upper, 'mi', '⋆'):
                 upper = Boxed([self.upper], height='0')
+
             else:
                 upper = self.upper
-            upper.render(lines, inline, indent+1)
-        lines.append(f'{margin}</{element}>')
+
+            inner.append(upper.html(inline))
+
+        return HtmlElement(element, *inner)
+
 
 class Sqrt:
     def __init__(self, inner):
         self.inner = inner
 
-    def render(self, lines, inline, indent, prev=None):
-        margin = '  ' * indent
-        lines.append(f'{margin}<msqrt>')
-        self.inner.render(lines, inline, indent+1)
-        lines.append(f'{margin}</msqrt>')
+    def html(self, inline, prev=None):
+        return HtmlElement('msqrt', self.inner.html(inline))
 
-class Phantom:
-    def __init__(self, inner):
-        self.inner = inner
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-    def render(self, lines, inline, indent, prev=None):
-        margin = '  ' * indent
-        lines.append(f'{margin}<mphantom>')
-        self.inner.render(lines, inline, indent+1)
-        lines.append(f'{margin}</mphantom>')
+def not_content(item):
+    return not isinstance(item,
+        (Atom, Boxed, Empty, Frac, Phantom, Row, Struct, Sqrt)
+    )
 
-class Row:
-    def __init__(self, sequence):
-        self.sequence = sequence
-        self.root = False
+letter = r'[a-zA-Zα-ωΑ-Ωſ\U0001D400-\U0001D7CD][\u0300-\u036F]?'
+symbol = r'[•∞]'
+singlchar = f'({letter}|{symbol})'
+multichar = r'((?:[a-zA-Z][\u0300-\u036F]?)+)'
 
-    def render(self, lines, inline, indent, prev=None):
-        margin = '  ' * indent
-        if self.root:
-            element = 'math'
-            display = 'inline' if inline else 'block'
-            attrs = f' display="{display}"'
-        else:
-            element = 'mrow'
-            attrs = ''
+IDENTIFIER = re.compile(f'{singlchar}|\\*{multichar}')
 
-        lines.append(f'{margin}<{element}{attrs}>')
-        prev = None
-        for item in self.sequence:
-            item.render(lines, inline, indent+1, prev)
-            prev = item
-        lines.append(f'{margin}</{element}>')
+KEYWORD = re.compile('(?:' + '|'.join(KEYWORDS) + ')(?![a-zA-Z])')
 
-nonspace = (Atom, Boxed, Frac, Struct, Sqrt, Phantom, Row, Empty)
-
-IDENTIFIER = re.compile(r'([a-zA-Zα-ωΑ-Ωſ•∞\U0001D400-\U0001D7FF][\u0300-\u036F]?)|\*([a-zA-Zſ\u0300-\u036F]+)')
-SPECIAL = re.compile('(?:' + '|'.join(KEYWORDS) + ')(?![a-zA-Z])')
 NUMERIC = re.compile(r'\d+(?:\.\d+)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]')
+
 INTEGER = re.compile(r'\d+')
+
 SKIP = {'₋': 'neg', '₁': 'thin', '₂': 'med', '₃': 'thick'}
 
 # TODO for “:” keep track of whether there is a space (in the source) on the
@@ -581,21 +600,21 @@ def parse(text):
             match = NUMERIC.match(block, offset)
             if match is not None:
                 num = match.group()
-                if len(tokens) > 0 and tokens[-1] == '\\' \
-                and INTEGER.fullmatch(num) is not None:
+                if tokens and tokens[-1] == '\\':
+                    assert INTEGER.fullmatch(num) is not None
                     tokens[-1] = int(num)
                 else:
                     tokens.append(Atom('mn', num))
                 offset += len(num)
                 continue
 
-            match = SPECIAL.match(block, offset)
+            match = KEYWORD.match(block, offset)
             if match is not None:
                 word = match.group()
                 resolved = KEYWORDS[word]
-                if resolved in ('frac', 'sqrt'):
+                if resolved in KEYCONTAINERS:
                     tokens.append(resolved)
-                elif resolved in ('∞', '⋆'):
+                elif resolved in KEYIDENTIFIERS:
                     tokens.append(Atom('mi', resolved))
                 else:
                     tokens.append(Atom('mo', resolved))
@@ -724,7 +743,7 @@ def parse(text):
                 offset, arg = get(offset, depth)
                 if arg is None:
                     return (offset, None)
-                if not isinstance(arg, nonspace):
+                if not_content(arg):
                     return (offset, None)
                 sequence.append(Sqrt(arg))
                 continue
@@ -735,9 +754,9 @@ def parse(text):
                 offset, arg = get(offset, depth)
                 if arg is None:
                     return (offset, None)
-                if not isinstance(prev, nonspace):
+                if not_content(prev):
                     return (offset, None)
-                if not isinstance(arg, nonspace):
+                if not_content(arg):
                     return (offset, None)
                 if item == 'frac':
                     sequence[-1] = Frac(prev, arg)
@@ -765,13 +784,10 @@ def parse(text):
                 sequence[-1] = struct
                 continue
             # Remove punctuation space before unary plus and minus
-            if len(sequence) >= 2 and isinstance(item, Atom) \
-            and item.kind == 'mo' and item.inner in ('+', '−'):
-                penult = sequence[-2]
-                ultima = sequence[-1]
-                if isinstance(penult, Atom) and penult.inner in PUNCTUATION \
-                and isinstance(ultima, Space):
-                    sequence.pop()
+            if len(sequence) >= 2 and is_atom(item, 'mo', ('+', '−')):
+                if is_atom(sequence[-2], 'any', PUNCTUATION):
+                    if isinstance(sequence[-1], Space):
+                        sequence.pop()
             sequence.append(item)
         else:
             if depth > 0:
@@ -799,6 +815,10 @@ def parse(text):
     return result
 
 def render(expr, inline, indent=0):
-    lines = []
-    expr.render(lines, inline, indent)
-    return lines
+    buffer = []
+    expr.html(inline).render(buffer)
+    lines = ''.join(buffer).splitlines()
+    if indent == 0:
+        return lines
+    margin = '  ' * indent
+    return [margin + ln for ln in lines]
