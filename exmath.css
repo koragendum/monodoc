@@ -56,9 +56,11 @@
 }
 
 html {
-  --body-bg:  rgb( 32,  32,  32);
+/*--body-bg:  rgb( 32,  32,  32);*/
+  --body-bg:  rgb(255, 232, 224);
   --body-fg:  rgb(  0,   0,   0);
 /*--chase-bg: rgb(240, 240, 240);*/
+/*--chase-bg: rgb(255, 240, 224);*/
   --chase-bg: rgb(255, 232, 224);
   --pre-bg:   rgb(248, 224, 216);
   --table-bd: rgb( 64,  64,  64);
@@ -66,7 +68,8 @@ html {
   --quote-bg: rgb(248, 224, 216);
   --quote-bd: rgb(224, 200, 192);
 
-  --body-img:  radial-gradient(rgb(16, 16, 16) 1px, transparent 0);
+/*--body-img: radial-gradient(rgb(16, 16, 16) 1px, transparent 0);*/
+  --body-img: radial-gradient(rgb(224, 200, 192) 1px, transparent 0);
 
   --a-fg:  rgb(192, 32, 32);
 /*--a-fg:  rgb(200, 40, 24);*/
@@ -104,7 +107,8 @@ body {
 
 #chase {
   box-sizing: border-box;
-  max-width: min(46rem, 100%);
+  max-width: 100%;
+  width: 50rem;
   padding: 2rem;
 
   display: flex;
@@ -116,7 +120,7 @@ body {
 }
 
 #block {
-  width: 38rem;
+  width: 42rem;
   max-width: 100%;
 }
 

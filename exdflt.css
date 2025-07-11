@@ -56,6 +56,13 @@ pre.pseudocode {
 .pseudocode .textual-const { color: rgb(192, 128, 255); }
 .pseudocode .comment       { color: rgb( 96,  96,  96); }
 
+/* .pseudocode .type { color: rgb(176, 116, 208); } */
+/* .pseudocode .type { color: rgb(224, 160,  96); } */
+/* .pseudocode .type { color: rgb(224, 176, 128); } */
+/* .pseudocode .type { color: rgb(224, 192, 128); } */
+/* .pseudocode .type { color: rgb(192, 128, 255); } */
+   .pseudocode .type { color: rgb(255, 144, 240); }
+
 /* .lt { color: rgb( 64,  64,  64); } */
 .lt { color: rgb( 96,  96,  96); }
 .rd { color: rgb(255,  96,  96); } /* red   */

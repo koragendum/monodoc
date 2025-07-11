@@ -28,10 +28,10 @@ def blockclass(inner, lang):
 
 keyword   = re.compile(r'\$([a-zA-Z-]+)')
 flow      = re.compile(r'@([a-zA-Z-]+)')
-typ       = re.compile(r'\^([a-zA-Z][a-zA-Z0-9-]*)')
-function  = re.compile(r"%([+−×/<>≤≥=≠]|[a-zA-Z][a-zA-Z'-]*)")
+typ       = re.compile(r'\^([a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9-]*)')
+function  = re.compile(r"%([+−×/<>≤≥=≠]|[a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9'-]*)")
 numconst  = re.compile(r'#([0-9]+)')
-wordconst = re.compile(r"#([a-zA-Z][a-zA-Z0-9'-]*)")
+wordconst = re.compile(r"#([a-zA-Zα-ωΑ-Ω][a-zA-Zα-ωΑ-Ω0-9'-]*)")
 comment   = re.compile(r'([※◊].*)$', re.MULTILINE)
 
 def codeblock(inner, lang):

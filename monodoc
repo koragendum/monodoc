@@ -17,6 +17,7 @@ CODEBLOCKCLASS   = None
 # See guide.md and guide.html for a description of the supported features.
 
 ELEMENTS = {
+    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'html'       , 'base'       , 'head'       , 'link'       , 'meta'       ,
     'style'      , 'title'      , 'body'       , 'address'    , 'article'    ,
     'aside'      , 'footer'     , 'header'     , 'h1'         , 'h2'         ,
@@ -41,10 +42,13 @@ ELEMENTS = {
     'optgroup'   , 'option'     , 'output'     , 'progress'   , 'select'     ,
     'textarea'   , 'details'    , 'dialog'     , 'summary'    , 'slot'       ,
     'template'   ,
+    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'math'       , 'mfrac'      , 'mi'         , 'mn'         , 'mo'         ,
     'mover'      , 'mroot'      , 'mrow'       , 'mspace'     , 'msqrt'      ,
     'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
     'munderover' ,
+    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'python'     ,
 }
 
 BREAKING = {
@@ -52,6 +56,57 @@ BREAKING = {
     'pre', 'div', 'p', 'ol', 'ul', 'table',
     'details'
 }
+
+
+ATTRKEY = re.compile('[a-zA-Z](?:-?[a-zA-Z0-9]+)*')
+ATTRBRK = re.compile('[\\s=\'"]')
+
+def parseattrs(text : str) -> Optional[dict[str, str]]:
+    # We assume there is no leading whitespace,
+    #   and maintain that property as an invariant.
+    if len(text) == 0: return {}
+    parts = []
+    while True:
+        match = ATTRBRK.search(text)
+        if match is None:
+            parts.append(text)
+            break
+        item = text[:match.start()]
+        if item:
+            parts.append(item)
+        char = match[0]
+        if char == '=':
+            parts.append(None)
+            text = text[match.end():].lstrip()
+            if text: continue
+            break
+        if char in ('"', "'"):
+            left = match.end()
+            try: right = text.index(char, left)
+            except ValueError: return None
+            parts.append(text[left:right])
+            text = text[right+1:].lstrip()
+            if text: continue
+            break
+        text = text[match.end():].lstrip()
+        if text: continue
+        break
+    attrs = {}
+    index = 0
+    length = len(parts)
+    while index < length:
+        key = parts[index]
+        if key is None: return None # “= ...”
+        if not ATTRKEY.fullmatch(key): return None
+        if index + 2 < length and parts[index+1] is None:
+            value = parts[index+2]
+            if value is None: return None # “key = = ...”
+            attrs[key] = value
+            index += 3
+        else:
+            attrs[key] = None
+            index += 1
+    return attrs
 
 
 def parsetag(text : str, offset : int = 0) -> Optional[tuple[str, str, str, int, int]]:
@@ -63,7 +118,7 @@ def parsetag(text : str, offset : int = 0) -> Optional[tuple[str, str, str, int,
     #   – the index of the start of the remainder
     # or None if no tag was found.
     #
-    # Given the those two indices, tag and rem,
+    # That is,
     #   – text[   :tag] is the text before the first tag
     #   – text[tag:rem] is the text of the first tag verbatim
     #   – text[rem:   ] is the text following the first tag
@@ -99,17 +154,14 @@ def parsetag(text : str, offset : int = 0) -> Optional[tuple[str, str, str, int,
 
         # Opening tags might include attributes, and
         #   in particular, may contain quoted text.
-        delim = None
         while index < length:
             char = text[index]
-            if delim is not None:
-                if char == delim:
-                    delim = None
-                index += 1
-                continue
             if char in ("'", '"'):
-                delim = char
-                index += 1
+                try:
+                    delim = text.index(char, index+1)
+                except ValueError:
+                    break
+                index = delim + 1
                 continue
             if char == '<':
                 break
@@ -953,7 +1005,7 @@ def bulleted(stripped : str) -> bool:
 def _convert(md_lines : str, margin : int) -> str:
 
     # This is a list of "gap" or (kind, [line]) pairs
-    #   where kind is "head", "para", "list", "table", or "code".
+    #   where kind is "head", "para", "list", "table", "code", or "math".
     blocks = []
 
     block_kind = None
@@ -1013,7 +1065,7 @@ def _convert(md_lines : str, margin : int) -> str:
 
         if stripped.startswith('//'):
             # In addition to <!-- multiline --> style comments, we support
-            #   single line comments with // (at the start of a line).
+            #   single line comments with // virgules (at the start of a line).
             continue
 
         if stripped.startswith('>'):

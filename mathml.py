@@ -5,16 +5,20 @@ import re
 #                   U+2063 INVISIBLE SEPARATOR
 #                   U+2064 INVISIBLE PLUS
 
-# "..." text
-# *id   multicharacter
-# \id   upright
-# %id   small capitals
-# &id   semibold
-# &&id  bold
-# _     subscript
-# ^     superscript
-# __    under
-# ^^    over
+# "..."  text
+#  *xyz  multicharacter
+#    &x  semibold
+#   &&x  bold
+#    \x  upright
+#    %x  small capitals
+#    @x  script
+#   \@x  calligraphic
+#   @%x  blackletter
+#  \@%x  doublestruck
+#    _x  subscript
+#    ^x  superscript
+#   __x  under
+#   ^^x  over
 
 # <math display="block">      sets    math-style: normal;
 # <math display="inline">     sets    math-style: compact;
@@ -22,23 +26,24 @@ import re
 # <* displaystyle="true">     sets    math-style: normal;
 # <* displaystyle="false">    sets    math-style: compact;
 
-# <mo movablelimits="true">   moves under/over to sub/sup when math-style is compact
+# <mo movablelimits="true">   moves under/over to sub/sup if math-style=compact
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 KEYWORDS = {
     'on':     'frac',
     'sqrt':   'sqrt',
+    'lt':     '<',  # U+003C LESS-THAN SIGN
+    'gt':     '>',  # U+003E GREATER-THAN SIGN
     'all':    '∀',  # U+2200 FOR ALL
     'exists': '∃',  # U+2203 THERE EXISTS
+    'null':   '∅',  # U+2205 EMPTY SET
     'prod':   '∏',  # U+220F N-ARY PRODUCT
     'sum':    '∑',  # U+2211 N-ARY SUMMATION
     'inf':    '∞',  # U+221E INFINITY
     'int':    '∫',  # U+222B INTEGRAL
     'ent':    '⊢',  # U+22A2 RIGHT TACK
     'star':   '⋆',  # U+22C6 STAR OPERATOR
-    'lt':     '<',  # U+003C LESS-THAN SIGN
-    'gt':     '>',  # U+003E GREATER-THAN SIGN
 }
 
 OPERATORS = {
@@ -534,6 +539,8 @@ class Row:
             prev = item
         lines.append(f'{margin}</{element}>')
 
+nonspace = (Atom, Boxed, Frac, Struct, Sqrt, Phantom, Row, Empty)
+
 IDENTIFIER = re.compile(r'([a-zA-Zα-ωΑ-Ωſ•∞\U0001D400-\U0001D7FF][\u0300-\u036F]?)|\*([a-zA-Zſ\u0300-\u036F]+)')
 SPECIAL = re.compile('(?:' + '|'.join(KEYWORDS) + ')(?![a-zA-Z])')
 NUMERIC = re.compile(r'\d+(?:\.\d+)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]')
@@ -661,7 +668,7 @@ def parse(text):
     height = 0
     upright   = False
     smallcaps = False
-    calli     = False
+    variant   = False
     coalesced = []
     for token in tokens:
         if isinstance(token, int):
@@ -675,21 +682,21 @@ def parse(text):
         elif token == '%':
             smallcaps = True
         elif token == '@':
-            calli = True
+            variant = True
         elif isinstance(token, Atom):
-            token.weight = weight
-            token.height = height
-            token.upright = upright
+            token.weight    = weight
+            token.height    = height
+            token.upright   = upright
             token.smallcaps = smallcaps
-            token.variant = calli
+            token.variant   = variant
             coalesced.append(token)
             weight = 0
             height = 0
             upright = False
             smallcaps = False
-            calli = False
+            variant = False
         else:
-            if weight > 0 or height > 0 or upright or smallcaps or calli:
+            if weight > 0 or height > 0 or upright or smallcaps or variant:
                 return None
             coalesced.append(token)
 
@@ -717,7 +724,7 @@ def parse(text):
                 offset, arg = get(offset, depth)
                 if arg is None:
                     return (offset, None)
-                if not isinstance(arg, (Atom, Boxed, Frac, Struct, Sqrt, Phantom, Row, Empty)):
+                if not isinstance(arg, nonspace):
                     return (offset, None)
                 sequence.append(Sqrt(arg))
                 continue
@@ -728,9 +735,9 @@ def parse(text):
                 offset, arg = get(offset, depth)
                 if arg is None:
                     return (offset, None)
-                if not isinstance(prev, (Atom, Boxed, Frac, Struct, Sqrt, Phantom, Row, Empty)):
+                if not isinstance(prev, nonspace):
                     return (offset, None)
-                if not isinstance(arg, (Atom, Boxed, Frac, Struct, Sqrt, Phantom, Row, Empty)):
+                if not isinstance(arg, nonspace):
                     return (offset, None)
                 if item == 'frac':
                     sequence[-1] = Frac(prev, arg)
@@ -777,8 +784,6 @@ def parse(text):
 
         if len(sequence) == 0:
             result = Empty()
-            # result = Phantom(Atom('mo', '\u2062'))
-            # result = None
         elif len(sequence) == 1:
             result = sequence[0]
         else:

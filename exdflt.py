@@ -31,7 +31,8 @@ def blockclass(inner, lang):
 
 keyword   = re.compile(r'\$([a-zA-Z-]+)')
 flow      = re.compile(r'@([a-zA-Z-]+)')
-function  = re.compile(r"%([+−×/<>≤≥=≠]|[a-zA-Z][a-zA-Z'-]*)")
+typ       = re.compile(r'\^([a-zA-Z][a-zA-Z0-9-]*)')
+function  = re.compile(r"%([+−×/<>≤≥=≠]|[-=]>|<[-=]|[a-zA-Z][a-zA-Z'-]*)")
 numconst  = re.compile(r'#([0-9]+)')
 wordconst = re.compile(r"#([a-zA-Z][a-zA-Z0-9'-]*)")
 comment   = re.compile(r'([※◊].*)$', re.MULTILINE)
@@ -45,6 +46,7 @@ def codeblock(inner, lang):
         # #constant
         inner =   keyword.sub(r'<span class="keyword">\1</span>',       inner)
         inner =      flow.sub(r'<span class="flow">\1</span>',          inner)
+        inner =       typ.sub(r'<span class="type">\1</span>',          inner)
         inner =  function.sub(r'<span class="function">\1</span>',      inner)
         inner =  numconst.sub(r'<span class="numeric-const">\1</span>', inner)
         inner = wordconst.sub(r'<span class="textual-const">\1</span>', inner)
