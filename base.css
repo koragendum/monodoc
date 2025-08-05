@@ -1,16 +1,13 @@
 html {
-/*--body-bg:   rgb(  0,   0,   0);*/
-  --body-bg:   rgb( 12,  12,  12);
+  --body-bg:   rgb( 16,  16,  16);
   --body-fg:   rgb(224, 224, 224);
-/*--chase-bg:  rgb( 12,  12,  12);*/
-  --chase-bg: rgba( 12,  12,  12, 0.5);
-  --pre-bg:    rgb(  8,   8,   8);
+  --chase-bg: rgba( 16,  16,  16, 0.5);
+  --pre-bg:    rgb( 14,  14,  14);
   --table-bd:  rgb( 64,  64,  64);
   --hr-bd:     rgb(224, 224, 224);
   --quote-bd:  rgb( 64,  64,  64);
 
-/*--body-img: radial-gradient(rgb(16, 16, 16) 1px, transparent 0);*/
-  --body-img: radial-gradient(rgb(24, 24, 24) 1px, transparent 0);
+  --body-img: radial-gradient(rgb(28, 28, 28) 1px, transparent 0);
 
   --a-fg:  rgb(176, 128, 255);
   --a-dec: rgba(224, 224, 224, 25%);

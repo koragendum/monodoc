@@ -64,8 +64,11 @@ INDENT = '  '
 class HtmlElement:
     def __init__(self, element, *inner, **attrs):
         self.element = element
-        self.attrs = attrs
         self.inner = list(inner)
+        if 'class_' in attrs:
+            assert 'class' not in attrs
+            attrs['class'] = attrs.pop('class_')
+        self.attrs = attrs
         self._size = None
 
     def size(self):
@@ -125,7 +128,7 @@ class HtmlElement:
             if multiline:
                 buffer.append(margin)
             if isinstance(item, HtmlElement):
-                item.render(buffer, depth + 1)
+                item.render(buffer, depth + 1 if multiline else depth)
             elif isinstance(item, str):
                 buffer.append(item)
             else:
@@ -133,16 +136,3 @@ class HtmlElement:
             if multiline: buffer.append('\n')
         if multiline and depth > 0: buffer.append(INDENT * depth)
         buffer.append(f'</{self.element}>')
-
-
-def render(items):
-    buffer = []
-    for item in items:
-        if isinstance(item, HtmlElement):
-            item.render(buffer)
-        elif isinstance(item, str):
-            buffer.append(item)
-        else:
-            raise TypeError
-        buffer.append('\n')
-    return ''.join(buffer)

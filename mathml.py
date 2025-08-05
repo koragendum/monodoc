@@ -129,7 +129,7 @@ SPACE = {
     'shelf':  ( '0.2em',  '0.1em'),    # fraction rule
     'sadj':   ('-0.4em', '-0.4em'),    # fraction superscript
     'ladj':   ('-0.2em', '-0.3em'),    # integral lower bound
-    'uadj':   ( '0.1em',  '0.0em'),    # integral upper bound
+    'uadj':   ( '0.1em',   None  ),    # integral upper bound
 
     'neg':    ('-0.1em', '-0.1em'),
     'thin':   ( '0.1em',  '0.1em'),
@@ -440,6 +440,17 @@ class Row:
         self.sequence = sequence
         self.root = False
 
+    def compact(self, inline):
+        subseq = [
+            item for item in self.sequence
+            if not isinstance(item, Space) or not item.null(inline)
+        ]
+        if len(subseq) == 0:
+            raise RuntimeError
+        if len(subseq) == 1:
+            return subseq[0]
+        return Row(self.sequence)   # NOTE this does not preserve self.root
+
     def html(self, inline, prev=None):
         attrs = {}
         if self.root:
@@ -462,6 +473,12 @@ class Space:
         self.width = width
         self.height = None
         self.depth = None
+
+    def null(self, inline):
+        return all(
+            dimen is None or space(dimen, inline) is None
+            for dimen in (self.width, self.height, self.depth)
+        )
 
     def html(self, inline, prev=None):
         attrs = {'width': space(self.width, inline)}
@@ -519,6 +536,7 @@ class Struct:
         if has_upper:
             if is_atom(self.center, 'mo', '∫'):
                 upper = Row(sequence_of(self.upper, prefix=Space('uadj')))
+                upper = upper.compact(inline)
 
             elif self.kind == 'script' and isinstance(self.center, Row) and any(
                 isinstance(item, Atom) and item.tall()
@@ -546,10 +564,10 @@ class Sqrt:
 
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def not_content(item):
-    return not isinstance(item,
-        (Atom, Boxed, Empty, Frac, Phantom, Row, Struct, Sqrt)
-    )
+def subsumable(item):
+    # does not include Space
+    classes = (Atom, Boxed, Empty, Frac, Phantom, Row, Struct, Sqrt)
+    return isinstance(item, classes)
 
 letter = r'[a-zA-Zα-ωΑ-Ωſ\U0001D400-\U0001D7CD][\u0300-\u036F]?'
 symbol = r'[•∞]'
@@ -743,7 +761,7 @@ def parse(text):
                 offset, arg = get(offset, depth)
                 if arg is None:
                     return (offset, None)
-                if not_content(arg):
+                if not subsumable(arg):
                     return (offset, None)
                 sequence.append(Sqrt(arg))
                 continue
@@ -754,9 +772,9 @@ def parse(text):
                 offset, arg = get(offset, depth)
                 if arg is None:
                     return (offset, None)
-                if not_content(prev):
+                if not subsumable(prev):
                     return (offset, None)
-                if not_content(arg):
+                if not subsumable(arg):
                     return (offset, None)
                 if item == 'frac':
                     sequence[-1] = Frac(prev, arg)

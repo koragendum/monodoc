@@ -436,6 +436,7 @@ math[display="block"] {
 
 math[display="inline"] {
   math-style: compact;
+  max-height: 16px;
 }
 
 .left math {

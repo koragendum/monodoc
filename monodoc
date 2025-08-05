@@ -2,6 +2,7 @@
 
 import mathml
 import re
+from html import ELEMENTS
 from re import Match as MatchObject
 from typing import Optional
 
@@ -14,42 +15,6 @@ POSTRENDERFILTER = None
 CODEBLOCKFILTER  = None
 CODEBLOCKCLASS   = None
 
-# See guide.md and guide.html for a description of the supported features.
-
-ELEMENTS = {
-    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'html'       , 'base'       , 'head'       , 'link'       , 'meta'       ,
-    'style'      , 'title'      , 'body'       , 'address'    , 'article'    ,
-    'aside'      , 'footer'     , 'header'     , 'h1'         , 'h2'         ,
-    'h3'         , 'h4'         , 'h5'         , 'h6'         , 'hgroup'     ,
-    'main'       , 'nav'        , 'section'    , 'search'     , 'blockquote' ,
-    'dd'         , 'div'        , 'dl'         , 'dt'         , 'figcaption' ,
-    'figure'     , 'hr'         , 'li'         , 'menu'       , 'ol'         ,
-    'p'          , 'pre'        , 'ul'         , 'a'          , 'abbr'       ,
-    'b'          , 'bdi'        , 'bdo'        , 'br'         , 'cite'       ,
-    'code'       , 'data'       , 'dfn'        , 'em'         , 'i'          ,
-    'kbd'        , 'mark'       , 'q'          , 'rp'         , 'rt'         ,
-    'ruby'       , 's'          , 'samp'       , 'small'      , 'span'       ,
-    'strong'     , 'sub'        , 'sup'        , 'time'       , 'u'          ,
-    'var'        , 'wbr'        , 'area'       , 'audio'      , 'img'        ,
-    'map'        , 'track'      , 'video'      , 'embed'      , 'fencedframe',
-    'iframe'     , 'object'     , 'picture'    , 'portal'     , 'source'     ,
-    'svg'        , 'math'       , 'canvas'     , 'noscript'   , 'script'     ,
-    'del'        , 'ins'        , 'caption'    , 'col'        , 'colgroup'   ,
-    'table'      , 'tbody'      , 'td'         , 'tfoot'      , 'th'         ,
-    'thead'      , 'tr'         , 'button'     , 'datalist'   , 'fieldset'   ,
-    'form'       , 'input'      , 'label'      , 'legend'     , 'meter'      ,
-    'optgroup'   , 'option'     , 'output'     , 'progress'   , 'select'     ,
-    'textarea'   , 'details'    , 'dialog'     , 'summary'    , 'slot'       ,
-    'template'   ,
-    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'math'       , 'mfrac'      , 'mi'         , 'mn'         , 'mo'         ,
-    'mover'      , 'mroot'      , 'mrow'       , 'mspace'     , 'msqrt'      ,
-    'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
-    'munderover' ,
-    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'python'     ,
-}
 
 BREAKING = {
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -64,7 +29,8 @@ ATTRBRK = re.compile('[\\s=\'"]')
 def parseattrs(text : str) -> Optional[dict[str, str]]:
     # We assume there is no leading whitespace,
     #   and maintain that property as an invariant.
-    if len(text) == 0: return {}
+    if len(text) == 0:
+        return {}
     parts = []
     while True:
         match = ATTRBRK.search(text)
@@ -89,8 +55,8 @@ def parseattrs(text : str) -> Optional[dict[str, str]]:
             if text: continue
             break
         text = text[match.end():].lstrip()
-        if text: continue
-        break
+        if not text:
+            break
     attrs = {}
     index = 0
     length = len(parts)
@@ -351,7 +317,7 @@ def render(text : str, escape : bool = True) -> str:
     if math_start is not None:
         offset, parts = 0, []
         while math_start is not None:
-            if offset <  math_start:
+            if offset < math_start:
                 parts.append(text[offset:math_start])
             try: math_end = text.index('$', math_start+1)
             except ValueError:
