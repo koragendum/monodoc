@@ -30,7 +30,7 @@ ELEMENTS = {
     'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
     'munderover' ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'python'     ,
+    'include'    , 'python'     ,
 }
 
 SINGLELINE = {
@@ -48,14 +48,18 @@ SINGLELINE = {
     'legend'     , 'meter'      , 'option'     , 'output'     , 'progress'   ,
     'summary'    , 'slot'       ,
     # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'mi'         , 'mn'         , 'mo'         , 'mtext'
+    'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
 }
 
 VOID = {
     # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'area'       , 'base'       , 'br'         , 'col'        , 'embed'      ,
     'hr'         , 'img'        , 'input'      , 'link'       , 'meta'       ,
-    'source'     , 'track'      , 'wbr'
+    'source'     , 'track'      , 'wbr'        ,
+    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'mspace'     ,
+    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'include'    ,
 }
 
 
@@ -65,9 +69,9 @@ class HtmlElement:
     def __init__(self, element, *inner, **attrs):
         self.element = element
         self.inner = list(inner)
-        if 'class_' in attrs:
+        if 'kind' in attrs:
             assert 'class' not in attrs
-            attrs['class'] = attrs.pop('class_')
+            attrs['class'] = attrs.pop('kind')
         self.attrs = attrs
         self._size = None
 
@@ -110,14 +114,13 @@ class HtmlElement:
         for key in sorted(self.attrs):
             value = self.attrs[key]
             fields.append(key if value is None else f'{key}="{value}"')
-        if self.element == 'mspace':
-            assert not self.inner
-            buffer.append(f'<{" ".join(fields)}/>')
-            return
-        buffer.append(f'<{" ".join(fields)}>')
         if self.element in VOID:
             assert not self.inner
+            # XHTML requires U+002F whereas HTML 5 does not.
+            ultima = '/' if self.element == 'mspace' else ''
+            buffer.append(f'<{" ".join(fields)}{ultima}>')
             return
+        buffer.append(f'<{" ".join(fields)}>')
         if not self.inner:
             buffer.append(f'</{self.element}>')
             return
