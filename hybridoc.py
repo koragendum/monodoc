@@ -61,7 +61,7 @@ def parse_attributes(text : str) -> Optional[dict[str, str]]:
     return attrs
 
 
-def parse_error(text):
+def parse_error(text) -> HtmlElement:
     kwargs = {
         'class': 'hybridoc-error',
         'line-number': getframeinfo(currentframe().f_back).lineno
@@ -113,7 +113,7 @@ SKIPCLASS = {
 # ₇        1/16 em   ws7
 # ₈        1/24 em   ws8
 
-def parse(
+def _parse(
     src    : str,
     offset : int           = 0,
     stop   : Optional[str] = None,
@@ -266,7 +266,8 @@ def parse(
                     index = match.start()
                     char = match.group()
                     if char == '>':
-                        tag = src[offset:index].split(maxsplit=1)
+                        tag = src[offset:index].removesuffix('/') \
+                            .split(maxsplit=1)
                         index += 1
                         element = tag[0]
                         if len(tag) > 1:
@@ -306,10 +307,29 @@ def parse(
                 if element in VOID:
                     # This is a void element, so there’s
                     #   no corresponding closing tag.
-                    push(index, HtmlElement(element, **attrs))
+                    if element == 'include':
+                        if 'href' not in attrs:
+                            push(index)
+                            continue
+                        # TODO path ought to be relative to the file
+                        with open(attrs['href']) as external:
+                            content = external.read()
+                        inner, _, _ = _parse(content.strip())
+                        push(index, *inner)
+                    else:
+                        push(index, HtmlElement(element, **attrs))
                     continue
 
-                inner, post, complete = parse(src, index, '</', italic)
+                special = element in ('style', 'python')
+                if special:
+                    cutoff = src.find('</', index)
+                    complete = cutoff != -1
+                    if complete:
+                        inner = src[index:cutoff]
+                        post = cutoff + 2
+                else:
+                    inner, post, complete = _parse(src, index, '</', italic)
+
                 if not complete:
                     push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
                     continue
@@ -317,18 +337,32 @@ def parse(
                 # 4 Check that the closing tag matches
                 end = src.find('>', post)
                 if end == -1:
-                    push(post,
-                        HtmlElement(element, *inner, **attrs),
-                        parse_error(f'&lt;/')
-                    )
+                    interior = f'&lt;{element}&gt;...' if special \
+                        else HtmlElement(element, *inner, **attrs)
+                    push(post, interior, parse_error(f'&lt;/'))
                     continue
 
-                tag = src[stop_idx:end]
+                tag = src[post:end]
                 if tag.strip() != element:
-                    push(end + 1,
-                        HtmlElement(element, *inner, **attrs),
-                        parse_error(f'&lt;/{tag}&gt;')
-                    )
+                    interior = f'&lt;{element}&gt;...' if special \
+                        else HtmlElement(element, *inner, **attrs)
+                    push(end + 1, interior, parse_error(f'&lt;/{tag}&gt;'))
+                    continue
+
+                if element == 'style':
+                    # TODO parse CSS
+                    push(end + 1)
+                    continue
+
+                if element == 'python':
+                    # TODO unindent inner
+                    GLOBALS['STREAM'].clear()
+                    exec(inner, GLOBALS)
+                    insert = GLOBALS['STREAM']
+                    if insert:
+                        push(end + 1, *insert)
+                    else:
+                        push(end + 1)
                     continue
 
                 push(end + 1, HtmlElement(element, *inner, **attrs))
@@ -338,7 +372,7 @@ def parse(
                 if src[offset:offset+1] != '{':
                     continue
                 offset += 1
-                inner, post, complete = parse(src, offset, '}', italic)
+                inner, post, complete = _parse(src, offset, '}', italic)
                 if not complete:
                     push(offset, parse_error('@{'))
                     continue
@@ -385,7 +419,7 @@ def parse(
             case '%':
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = parse(src, offset, '}', italic)
+                    inner, post, complete = _parse(src, offset, '}', italic)
                     if complete:
                         push(post, HtmlElement('span', *inner, kind='sc'))
                     else:
@@ -401,7 +435,7 @@ def parse(
             case "'":
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = parse(src, offset, '}', italic)
+                    inner, post, complete = _parse(src, offset, '}', italic)
                     if complete:
                         push(post, HtmlElement('var', *inner))
                     else:
@@ -416,7 +450,7 @@ def parse(
             case '^' | '_':
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = parse(src, offset, '}', italic)
+                    inner, post, complete = _parse(src, offset, '}', italic)
                     if complete:
                         element = 'sub' if sigil.group() == '_' else 'sup'
                         push(post, HtmlElement(element, *inner))
@@ -434,7 +468,7 @@ def parse(
             case '*':
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = parse(src, offset, '}', True)
+                    inner, post, complete = _parse(src, offset, '}', True)
                     if complete:
                         push(post, HtmlElement('i', *inner))
                     else:
@@ -450,7 +484,7 @@ def parse(
                 if src[offset:offset+1] != '{':
                     continue
                 offset += 1
-                inner, post, complete = parse(src, offset, '}', italic)
+                inner, post, complete = _parse(src, offset, '}', italic)
                 if complete:
                     push(post, HtmlElement('b', *inner))
                 else:
@@ -461,7 +495,7 @@ def parse(
                 if src[offset:offset+1] != '{':
                     continue
                 offset += 1
-                inner, post, complete = parse(src, offset, '}', italic)
+                inner, post, complete = _parse(src, offset, '}', italic)
                 if complete:
                     push(post, HtmlElement('span', *inner, kind='margin-note'))
                 else:
@@ -475,7 +509,7 @@ def parse(
                     offset += 1
                 else:
                     continue
-                inner, post, complete = parse(src, offset, '}', italic)
+                inner, post, complete = _parse(src, offset, '}', italic)
                 if complete:
                     push(post, HtmlElement('span', *inner, kind='inline-note'))
                 else:
@@ -483,7 +517,7 @@ def parse(
 
             # No-break spans
             case '{':
-                inner, post, complete = parse(src, offset, '}', italic)
+                inner, post, complete = _parse(src, offset, '}', italic)
                 if complete:
                     push(post, HtmlElement('span', *inner, kind='nobr'))
                 else:
@@ -495,13 +529,23 @@ def parse(
     return (out, adv, stopped)
 
 
+def parse(src : str) -> list[str | HtmlElement]:
+    out, _, _ = _parse(src)
+    return out
+
+
+GLOBALS = {
+    'HtmlElement': HtmlElement,
+    'parse':       parse,
+    'STREAM':      []
+}
+
+
 def convert(src_lines : str) -> list[HtmlElement]:
     return []
 
 def p(source):
-    out, advance, stopped = parse(source)
+    out = parse(source)
     buffer = []
     HtmlElement('p', *out).render(buffer)
     print(''.join(buffer))
-    if advance < len(source):
-        print(source[advance:])

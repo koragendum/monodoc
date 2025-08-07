@@ -135,7 +135,8 @@ class HtmlElement:
             elif isinstance(item, str):
                 buffer.append(item)
             else:
-                raise TypeError
+                raise TypeError('not an instance of str or HtmlElement: '
+                    f'{item} has type {type(item)}')
             if multiline: buffer.append('\n')
         if multiline and depth > 0: buffer.append(INDENT * depth)
         buffer.append(f'</{self.element}>')
