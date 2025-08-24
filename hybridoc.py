@@ -125,11 +125,11 @@ def _parse(
     #   following the stop pattern.)
     #
     # hyperlinks               @{...}{...}
-    # inline math               $...$   automatically no-break
+    # inline math               $...$
     # inline code               `...`
     # small capitals    %word  %{...}
-    # variables         'letr  '{...}   using <var>
-    # superscripts      ^nmrl  ^{...}   using <sup> or U+2070–208F
+    # variables         'letr  '{...}
+    # superscripts      ^nmrl  ^{...}
     # subscripts        _nmrl  _{...}
     # italic            *word  *{...}
     # bold                     &{...}
@@ -189,7 +189,8 @@ def _parse(
         offset = post
         adv = post
 
-    while offset < len(src):
+    length = len(src)
+    while offset < length:
         sigil = INITIAL.search(src, offset)
 
         # There are no more sigils that could start a delimited region,
@@ -356,13 +357,9 @@ def _parse(
 
                 if element == 'python':
                     # TODO unindent inner
-                    GLOBALS['STREAM'].clear()
+                    push(end + 1)
+                    GLOBALS['STREAM'] = out
                     exec(inner, GLOBALS)
-                    insert = GLOBALS['STREAM']
-                    if insert:
-                        push(end + 1, *insert)
-                    else:
-                        push(end + 1)
                     continue
 
                 push(end + 1, HtmlElement(element, *inner, **attrs))
@@ -401,11 +398,14 @@ def _parse(
                     push(offset, parse_error('$'))
                 else:
                     expr = src[offset:end]
-                    result = parse_math(expr)
-                    if result is None:
+                    math = parse_math(expr)
+                    if math is None:
                         push(end + 1, parse_error(f'${expr}$'))
                     else:
-                        push(end + 1, result.html(inline=True))
+                        inner = math.html(inline=True)
+                        push(end + 1, HtmlElement('span', inner, kind='math'))
+                        # The span is for a rule like
+                        #   span.math { display: inline-block; }
 
             # Inline code
             case '`':
@@ -534,11 +534,7 @@ def parse(src : str) -> list[str | HtmlElement]:
     return out
 
 
-GLOBALS = {
-    'HtmlElement': HtmlElement,
-    'parse':       parse,
-    'STREAM':      []
-}
+GLOBALS = {'HtmlElement': HtmlElement, 'parse': parse, 'STREAM': None}
 
 
 def convert(src_lines : str) -> list[HtmlElement]:

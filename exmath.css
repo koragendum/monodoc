@@ -1,20 +1,6 @@
-@font-face {
-  font-family: 'New Computer Modern Math';
-  font-weight: 400;
-  src: url('/fonts/NewCMMath-Regular.otf') format('opentype');
-}
-
-@font-face {
-  font-family: 'New Computer Modern Math';
-  font-weight: 500;
-  src: url('/fonts/NewCMMath-Book.otf') format('opentype');
-}
-
-@font-face {
-  font-family: 'New Computer Modern Math';
-  font-weight: 700;
-  src: url('/fonts/NewCMMath-Bold.otf') format('opentype');
-}
+@font-face { font-family: 'New Computer Modern Math'; font-weight: 400; src: url('/fonts/NewCMMath-Regular.otf') format('opentype'); }
+@font-face { font-family: 'New Computer Modern Math'; font-weight: 500; src: url('/fonts/NewCMMath-Book.otf')    format('opentype'); }
+@font-face { font-family: 'New Computer Modern Math'; font-weight: 700; src: url('/fonts/NewCMMath-Bold.otf')    format('opentype'); }
 
 @font-feature-values "New Computer Modern Math" {
   @stylistic { calligraphic: 1; }
@@ -27,33 +13,10 @@
   -webkit-font-feature-settings: 'ss01';
 }
 
-@font-face {
-  font-family: 'Century Schoolbook';
-  font-style: normal;
-  font-weight: 500;
-  src: url('/fonts/C059-Roman.otf') format('opentype');
-}
-
-@font-face {
-  font-family: 'Century Schoolbook';
-  font-style: italic;
-  font-weight: 500;
-  src: url('/fonts/C059-Italic.otf') format('opentype');
-}
-
-@font-face {
-  font-family: 'Century Schoolbook';
-  font-style: normal;
-  font-weight: 700;
-  src: url('/fonts/C059-Bold.otf') format('opentype');
-}
-
-@font-face {
-  font-family: 'Century Schoolbook';
-  font-style: italic;
-  font-weight: 700;
-  src: url('/fonts/C059-BoldItalic.otf') format('opentype');
-}
+@font-face { font-family: 'Century Schoolbook'; font-style: normal; font-weight: 500; src: url('/fonts/C059-Roman.otf')      format('opentype'); }
+@font-face { font-family: 'Century Schoolbook'; font-style: italic; font-weight: 500; src: url('/fonts/C059-Italic.otf')     format('opentype'); }
+@font-face { font-family: 'Century Schoolbook'; font-style: normal; font-weight: 700; src: url('/fonts/C059-Bold.otf')       format('opentype'); }
+@font-face { font-family: 'Century Schoolbook'; font-style: italic; font-weight: 700; src: url('/fonts/C059-BoldItalic.otf') format('opentype'); }
 
 html {
 /*--body-bg:  rgb( 32,  32,  32);*/
