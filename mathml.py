@@ -832,6 +832,7 @@ def parse(text):
     result.root = True
     return result
 
+# TEMPORARY (FOR MONODOC ONLY)
 def render(expr, inline, indent=0):
     buffer = []
     expr.html(inline).render(buffer)

@@ -2,11 +2,43 @@
 
 import re
 
+from css     import parse as parse_css
 from html    import ELEMENTS, VOID, HtmlElement
 from mathml  import parse as parse_math
 from inspect import currentframe, getframeinfo
+from os      import path
 from re      import Match as MatchObject
 from typing  import Optional
+
+PERMALINK = '#'
+
+# Paths in include elements are relative to this directory.
+ROOT = '.'
+
+# Functions registered to transform code blocks.
+HANDLER = {}
+
+# Populated by style elements.
+STYLESHEETS = []
+
+# Populated by template elements.
+TEMPLATES = {}
+
+
+# General Utilities  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+
+
+def unindent(text):
+    lines = text.splitlines()
+    lengths = ((len(ln), len(ln.lstrip())) for ln in lines)
+    leftskip = min(
+        (total - trimmed for total, trimmed in lengths if trimmed > 0),
+        default = 0
+    )
+    return '\n'.join(ln[leftskip:].rstrip() for ln in lines)
+
+
+# Parsing  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
 ATTRKEY = re.compile('[a-zA-Z]+(?:-[a-zA-Z]+)*')
@@ -74,7 +106,7 @@ def parse_error(text) -> HtmlElement:
 
 
 INITIAL  = re.compile('[' + re.escape("$%&'*<@^_`{}\u2020\u203B") + ']')
-NONSPACE = re.compile('[^ \t\n\r]')
+NONSPACE = re.compile(r'[^ \t\n\r]')
 
 ELEMINI = re.compile('[a-z]')
 TAGBRK  = re.compile('[>"\']')
@@ -101,7 +133,7 @@ SKIPCLASS = {
 }
 
 # https://www.desmos.com/calculator/jirjvadckz
-
+#
 #    name    size   class
 #    ────  ───────  ─────
 # ₁  em      1  em    em
@@ -312,11 +344,13 @@ def _parse(
                         if 'href' not in attrs:
                             push(index)
                             continue
-                        # TODO path ought to be relative to the file
-                        with open(attrs['href']) as external:
+                        with open(path.join(ROOT, attrs['href'])) as external:
                             content = external.read()
                         inner, _, _ = _parse(content.strip())
                         push(index, *inner)
+                    elif element == 'template':
+                        TEMPLATES.update(attrs)
+                        push(index)
                     else:
                         push(index, HtmlElement(element, **attrs))
                     continue
@@ -351,15 +385,14 @@ def _parse(
                     continue
 
                 if element == 'style':
-                    # TODO parse CSS
+                    STYLESHEETS.append(inner)
                     push(end + 1)
                     continue
 
                 if element == 'python':
-                    # TODO unindent inner
                     push(end + 1)
                     GLOBALS['STREAM'] = out
-                    exec(inner, GLOBALS)
+                    exec(unindent(inner), GLOBALS)
                     continue
 
                 push(end + 1, HtmlElement(element, *inner, **attrs))
@@ -398,9 +431,13 @@ def _parse(
                     push(offset, parse_error('$'))
                 else:
                     expr = src[offset:end]
+                    block = expr[:1] == '#'
+                    if block: expr = expr[1:]
                     math = parse_math(expr)
                     if math is None:
-                        push(end + 1, parse_error(f'${expr}$'))
+                        push(end + 1, parse_error(f'${src[offset:end]}$'))
+                    elif block:
+                        push(end + 1, math.html(inline=False))
                     else:
                         inner = math.html(inline=True)
                         push(end + 1, HtmlElement('span', inner, kind='math'))
@@ -534,14 +571,398 @@ def parse(src : str) -> list[str | HtmlElement]:
     return out
 
 
-GLOBALS = {'HtmlElement': HtmlElement, 'parse': parse, 'STREAM': None}
+# Compiling  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
-def convert(src_lines : str) -> list[HtmlElement]:
-    return []
+def tagpair(
+    element : str,
+    gap_a : bool,
+    gap_b : bool,
+    classes : Optional[str | list[str]] = None,
+    name  : Optional[str] = None,
+    style : Optional[str] = None,
+) -> tuple[str, str]:
+    opening = [element]
+    if name is not None:
+        opening.append(f'id="{name}"')
+    if classes is None:
+        classes = []
+    elif isinstance(classes, list):
+        classes = [*classes]
+    else:
+        classes = [classes]
+    if gap_a: classes.append('gt')  # gap-top
+    if gap_b: classes.append('gb')  # gap-bottom
+    if classes:
+        classes = " ".join(classes)
+        opening.append(f'class="{classes}"')
+    if style is not None:
+        opening.append(f'style="{style}"')
+    opening = " ".join(opening)
+    return (f'<{opening}>', f'</{element}>')
+
+
+def _head(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    level, anchor, text = lines
+    opening, closing = tagpair(f'h{level}', gap_a, gap_b, name=anchor)
+    if anchor is not None:
+        text = f'<a href="#{anchor}">{PERMALINK}</a> {text}'
+    output.append(f'{opening}{text}{closing}')
+
+
+def _para(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    opening, closing = tagpair('p', gap_a, gap_b)
+    output.append(opening)
+    output.extend(lines)
+    output.append(closing)
+
+
+def _note(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    opening, closing = tagpair('div', gap_a, gap_b, classes="blocknote")
+    output.append(opening)
+    output.extend(_convert(lines))
+    output.append(closing)
+
+
+def _quot(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    opening, closing = tagpair('div', gap_a, gap_b, classes="blockquote")
+    output.append(opening)
+    output.extend(_convert(lines))
+    output.append(closing)
+
+
+def _iden(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    opening, closing = tagpair('div', gap_a, gap_b, classes="indent")
+    output.append(opening)
+    output.extend(_convert(lines))
+    output.append(closing)
+
+
+def _list(output : list[str], items : list[list[str]], gap_a : bool, gap_b : bool):
+    opening, closing = tagpair('ul', gap_a, gap_b)
+    output.append(opening)
+    for item in items:
+        output.append('<li>')
+        output.extend(_convert(item))
+        output.append('</li>')
+    output.append(closing)
+
+
+def _code(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
+    if meta and (lang := meta[0]) in HANDLER:
+        modifiers = meta[1:] or None
+        lines = HANDLER[lang](lang, lines, modifiers=modifiers)
+    opening, closing = tagpair('pre', gap_a, gap_b)
+    output.append(opening)
+    output.extend(lines)
+    output.append(closing)
+
+
+def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
+    opening, closing = tagpair('div', gap_a, gap_b, classes=f'math-{meta}')
+    output.append(opening + '$#')
+    output.extend(lines)
+    output.append('$' + closing)
+
+
+SIGIL = {
+    '*': 'note',
+    '"': 'quot',
+    '>': 'iden',
+    '•': 'list',
+    '#': 'code',
+}
+
+INSET = set(SIGIL.values())
+
+ANCHOR = '([a-zA-Z0-9_-]+)'
+HEADING = re.compile(f'#([123456]) +(?:\\[{ANCHOR}\\] +)?')
+
+def _convert(src : list[str], enclose : bool = False) -> list[str]:
+    # Returns lines of hybrid text.
+    #
+    # head  #2 Second-level Heading
+    #
+    #       #3 [anchor] Third-level Heading
+    #
+    # note  * block note
+    #         spanning multiple lines
+    #
+    # quot  " block quote
+    #         spanning multiple lines
+    #
+    # iden  > indented block
+    #         spanning multiple lines
+    #         > containing a
+    #           nested block
+    #
+    # list  • first list item
+    #         spanning multiple lines
+    #       • second list item
+    #         • with a nested list
+    #
+    # code  # lang
+    #         code block
+    #         spanning multiple lines
+    #
+    #       # begin
+    #       code block
+    #       spanning multiple lines
+    #       # end
+    #
+    #       # begin lang
+    #       code block
+    #       spanning multiple lines
+    #       # end
+    #
+    # math  $^ centered MathML block $
+    #
+    #       $> left-aligned and indented MathML block $
+
+    # This is a list of "gap" or ("head", [level, anchor, text], None)
+    # or ("kind", [line, ...], meta) triples where kind is one of the
+    # following: para, note, quot, iden, list, code verb, or math.
+    blocks = []
+
+    block_kind  = None
+    block_lines = []
+    block_meta  = None
+    offset      = None
+
+    def finish():
+        nonlocal block_kind, block_lines, block_meta, offset
+        if block_kind is None:
+            return
+        if not block_lines:
+            block_kind = None
+            block_meta = None
+            offset     = None
+            return
+        while block_lines and not block_lines[-1]:
+            block_lines.pop()
+        blocks.append((block_kind, block_lines, block_meta))
+        block_kind  = None
+        block_lines = []
+        block_meta  = None
+        offset      = None
+
+    todo = list(reversed(src))
+
+    while todo:
+        line = todo.pop()
+        trimmed = line.strip()
+
+        if not trimmed:
+            if block_kind == 'para':
+                finish()
+                blocks.append('gap')
+            elif block_kind is None:
+                blocks.append('gap')
+            elif block_lines:
+                block_lines.append('')
+            continue
+
+        # INVARIANT trimmed is now nonempty
+
+        if block_kind == 'verb':
+            if trimmed[0] == '#' and trimmed[1:].lstrip().lower() == 'end':
+                finish()
+            else:
+                block_lines.append(line)
+            continue
+
+        if block_kind == 'math':
+            if '$' not in trimmed:
+                block_lines.append(line)
+                continue
+            start = line.index('$')
+            pre = line[:start]
+            post = line[start+1:]
+            if pre.strip():
+                block_lines.append(pre)
+            finish()
+            if post.strip():
+                todo.append(post)
+            continue
+
+        if trimmed.startswith('//'):
+            # In addition to <!-- HTML --> style comments, we also support
+            #   single-line comments with virgules (at the start of a line).
+            continue
+
+        # INVARIANT block_kind is now None, "para", or
+        #   "note", "quot", "iden", "list", or "code".
+
+        indent = len(line) - len(line.lstrip())
+
+        if block_kind in INSET:
+            if indent >= offset:
+                block_lines.append(line[offset:])
+                continue
+            finish()
+
+        # INVARIANT block_kind is now None or "para".
+
+        char = trimmed[0]
+        if char in SIGIL:
+
+            if char == '#':
+                match = HEADING.match(trimmed)
+                if match:
+                    finish()
+                    level  = match.group(1)
+                    anchor = match.group(2)
+                    text   = trimmed[match.end():]
+                    blocks.append(('head', [level, anchor, text], None))
+                    continue
+
+            content = trimmed[1:].lstrip()
+            overhang = len(trimmed) - len(content)
+            if overhang > 1:
+                finish()
+                offset = indent + overhang
+
+                if char == '#':
+                    mods = [mod.lower() for mod in content.split()]
+                    if mods[0] == 'begin':
+                        block_kind = 'verb'
+                        block_meta = mods[1:]
+                    else:
+                        block_kind = 'code'
+                        block_meta = mods
+                    continue
+
+                block_kind = SIGIL[char]
+                block_lines.append(content)
+                continue
+
+        # INVARIANT block_kind is still None or "para".
+
+        if '$' in trimmed:
+            s0 = trimmed.find('$^')
+            s1 = trimmed.find('$>')
+            match s0, s1:
+                case -1, -1: start = None
+                case  _, -1: start = s0
+                case -1,  _: start = s1
+                case  _,  _: start = min(s0, s1)
+            if start is not None:
+                pre = line[:start]
+                post = line[start+2:]
+                if pre.strip():
+                    block_kind = 'para'
+                    block_lines.append(pre)
+                    finish()
+                block_kind = 'math'
+                block_meta = 'left' if line[start+1] == '>' else 'center'
+                if post.strip():
+                    todo.append(post)
+                continue
+
+        # INVARIANT block_kind is still None or "para".
+
+        block_kind = 'para'
+        block_lines.append(line)
+
+    finish()
+
+    # Before iterating over the blocks, we deduplicate gaps
+    #   and gather list items into lists.
+
+    filtered = []
+    gap = False
+    prev_kind = None
+    active_list = None
+    for item in blocks:
+        if item == 'gap':
+            gap = True
+            continue
+        kind, lines, _ = item
+        if kind == 'list':
+            if prev_kind == 'list':
+                active_list.append(lines)
+                gap = False
+                continue
+            if gap and filtered:
+                filtered.append('gap')
+            active_list = [lines]
+            filtered.append(('list', active_list, None))
+        else:
+            if kind == 'para' and prev_kind == 'para':
+                enclose = True
+            if gap and filtered:
+                filtered.append('gap')
+            filtered.append(item)
+        prev_kind = kind
+        gap = False
+
+    blocks = filtered
+
+    # Now we can finally transform each block!
+
+    output = []
+    L = len(blocks) - 1
+    for index, item in enumerate(blocks):
+        if item == 'gap':
+            continue
+        gap_above = index > 0 and blocks[index-1] == 'gap'
+        gap_below = index < L and blocks[index+1] == 'gap'
+        kind, lines, meta = item
+        match kind:
+            case 'para':
+                if enclose:
+                    _para(output, lines, gap_above, gap_below)
+                else:
+                    output.extend(lines)
+            case 'head': _head(output, lines,       gap_above, gap_below)
+            case 'note': _note(output, lines,       gap_above, gap_below)
+            case 'quot': _quot(output, lines,       gap_above, gap_below)
+            case 'iden': _iden(output, lines,       gap_above, gap_below)
+            case 'list': _list(output, lines,       gap_above, gap_below)
+            case 'code': _code(output, lines, meta, gap_above, gap_below)
+            case 'verb': _code(output, lines, meta, gap_above, gap_below)
+            case 'math': _math(output, lines, meta, gap_above, gap_below)
+
+    return output
+
+
+def convert(src : str) -> list[str | HtmlElement]:
+    lines = _convert(src.splitlines(), enclose=True)
+    return parse('\n'.join(lines))
+
+
+# Globals  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+
+
+# Available for python elements. Routines can emit HTML by appending to STREAM.
+GLOBALS = {
+    'HtmlElement': HtmlElement,
+    'parse_css':   parse_css,
+    'parse_math':  parse_math,
+    'parse_expr':  parse,
+    'parse_doc':   convert,
+    'STREAM':      None
+}
+
+
+# Main · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+
 
 def p(source):
     out = parse(source)
     buffer = []
     HtmlElement('p', *out).render(buffer)
+    print(''.join(buffer))
+
+def c(path):
+    with open(path) as fh:
+        src = fh.read()
+    print('COMPILED '.ljust(80, '-'))
+    lines = _compile(src.splitlines(), enclose=True)
+    for ln in lines:
+        print(ln)
+    print('PARSED '.ljust(80, '-'))
+    out = parse('\n'.join(lines))
+    buffer = []
+    HtmlElement('root', *out).render(buffer)
     print(''.join(buffer))

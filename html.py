@@ -30,7 +30,7 @@ ELEMENTS = {
     'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
     'munderover' ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'python'     ,
+    'include'    , 'python'     , 'template'   ,
 }
 
 SINGLELINE = {
@@ -59,7 +59,7 @@ VOID = {
     # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'mspace'     ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    ,
+    'include'    , 'template'   ,
 }
 
 

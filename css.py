@@ -33,6 +33,7 @@ class Map:
     def items(self):
         return ((key, self.data[key]) for key in self.keys)
 
+
 class CssRules:
     def __init__(self):
         self.ruleset = Map(Map) # maps selector to declarations
@@ -167,6 +168,7 @@ def _closing_brace(src : str, offset : int) -> Optional[int]:
             case '*/':
                 return None
 
+
 PROPERTY = re.compile(r'-{0,2}[a-z]+(?:-[a-z]+)*')
 PROP_SIGIL = re.compile(r'[:;}]|/\*|\*/')
 
@@ -198,6 +200,7 @@ def _parse_property(src : str, offset : int) -> Optional[tuple[str, int]]:
                 return None
             case _:
                 return None
+
 
 DEC_SIGIL = re.compile(r'[";}]|/\*|\*/')
 
