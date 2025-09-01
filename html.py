@@ -1,3 +1,5 @@
+import re
+
 ELEMENTS = {
     # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'html'       , 'base'       , 'head'       , 'link'       , 'meta'       ,
@@ -33,6 +35,22 @@ ELEMENTS = {
     'include'    , 'python'     , 'template'   ,
 }
 
+VOID = {
+    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'area'       , 'base'       , 'br'         , 'col'        , 'embed'      ,
+    'hr'         , 'img'        , 'input'      , 'link'       , 'meta'       ,
+    'source'     , 'track'      , 'wbr'        ,
+    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'mspace'     ,
+    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'include'    , 'template'   ,
+}
+
+
+INDENT = 2
+
+# Ordinarily, linebreaks may be inserted between the nodes of an element.
+#   This is suppressed for these elements.
 SINGLELINE = {
     # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'title'      , 'address'    , 'h1'         , 'h2'         , 'h3'         ,
@@ -51,19 +69,19 @@ SINGLELINE = {
     'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
 }
 
-VOID = {
-    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'area'       , 'base'       , 'br'         , 'col'        , 'embed'      ,
-    'hr'         , 'img'        , 'input'      , 'link'       , 'meta'       ,
-    'source'     , 'track'      , 'wbr'        ,
-    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'mspace'     ,
-    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'template'   ,
+# Ordinarily, leading or trailing whitespace within an element may be stripped
+#   or added, and whitespace preceding or following an element may be stripped
+#   or added. This is suppressed for these elements.
+RESPECTING = {
+    'a'          , 'abbr'       , 'b'          , 'bdi'        , 'bdo'        ,
+    'cite'       , 'code'       , 'data'       , 'del'        , 'dfn'        ,
+    'em'         , 'i'          , 'ins'        , 'kbd'        , 'mark'       ,
+    'q'          , 'ruby'       , 's'          , 'samp'       , 'slot'       ,
+    'small'      , 'span'       , 'strong'     , 'sub'        , 'sup'        ,
+    'time'       , 'u'          , 'var'        , 'wbr'        ,
 }
 
-
-INDENT = '  '
+COMPACTSP = re.compile(r'[ \t\r\n]+')
 
 class HtmlElement:
     def __init__(self, element, *inner, **attrs):
@@ -73,29 +91,60 @@ class HtmlElement:
             assert 'class' not in attrs
             attrs['class'] = attrs.pop('kind')
         self.attrs = attrs
+        self._compact = False
         self._size = None
 
+    def push(self, *items):
+        self.inner.extend(items)
+        self._size = None
+        self._compact = False
+        return self
+
+    def _check(self):
+        for item in self.inner:
+            if isinstance(item, (str, HtmlElement)):
+                continue
+            raise TypeError('not an instance of str or HtmlElement: '
+                f'{item} has type {type(item)}')
+
+    def compact(self):
+        if self._compact:
+            return
+        prev = None
+        for index, item in enumerate(self.inner):
+            if isinstance(item, str) and isinstance(prev, str):
+                joined = prev + item
+                self.inner[index-1] = None
+                self.inner[index] = cat
+                prev = joined
+            else:
+                prev = item
+        if self.element == 'pre':
+            self.inner = [item for item in self.inner if item is not None]
+        else:
+            self.inner = [
+                COMPACTSP.sub(' ', item) if isinstance(item, str) else item
+                for item in self.inner
+                if item is not None
+            ]
+        self._size = None
+        self._compact = True
+
     def size(self):
-        # Roughly the number of characters in
-        #   the rendered output divided by four.
+        # Roughly the number of characters in the rendered output.
         if self._size is None:
             self._size = (
-                (1 if self.element in VOID else 2)
-                + len(self.attrs) * 2
+                (4 if self.element in VOID else 8)
+                + len(self.attrs) * 12
                 + sum(
                     item.size() if isinstance(item, HtmlElement)
-                        else len(item) // 4
+                        else len(item)
                     for item in self.inner
                 )
             )
         return self._size
 
-    def push(self, *items):
-        self.inner.extend(items)
-        self._size = None
-        return self
-
-    def render(self, buffer, depth=0):
+    def render(self, buffer, depth=0, verbatim=False):
         # “In HTML, a void element must not have an end tag. In contrast, SVG
         #  or MathML elements that cannot have any child nodes may use an end
         #  tag instead of XML self-closing-tag syntax in their start tag.”
@@ -110,33 +159,111 @@ class HtmlElement:
         #  is a foreign element, then there may be a single U+002F SOLIDUS
         #  character. This character has no effect on void elements, but on
         #  foreign elements it marks the start tag as self-closing.”
+
         fields = [self.element]
         for key in sorted(self.attrs):
             value = self.attrs[key]
             fields.append(key if value is None else f'{key}="{value}"')
+
         if self.element in VOID:
             assert not self.inner
             # XHTML requires U+002F whereas HTML 5 does not.
             ultima = '/' if self.element == 'mspace' else ''
             buffer.append(f'<{" ".join(fields)}{ultima}>')
             return
+
         buffer.append(f'<{" ".join(fields)}>')
         if not self.inner:
             buffer.append(f'</{self.element}>')
             return
-        multiline = self.element not in SINGLELINE and self.size() > 6
-        if multiline: buffer.append('\n')
-        margin = INDENT * (depth + 1)
-        for item in self.inner:
-            if multiline:
-                buffer.append(margin)
-            if isinstance(item, HtmlElement):
-                item.render(buffer, depth + 1 if multiline else depth)
-            elif isinstance(item, str):
-                buffer.append(item)
+
+        self.compact()
+
+        if verbatim:
+            for item in self.inner:
+                if isinstance(item, str):
+                    buffer.append(item)
+                else:
+                    item.render(buffer, depth, verbatim=True)
+            buffer.append(f'</{self.element}>')
+            return
+
+        L = len(self.inner) - 1
+
+        if self.element == 'pre':
+            buffer.append('\n')
+            for index, item in enumerate(self.inner):
+                if isinstance(item, str):
+                    if index == 0:
+                        item = item.lstrip('\n')
+                    if index == L:
+                        item = item.rstrip('\n')
+                    buffer.append(item)
+                else:
+                    item.render(buffer, depth, verbatim=True)
+            buffer.append(f'</{self.element}>')
+            return
+
+        multiline = self.element not in SINGLELINE and self.size() > 32
+        flexible = self.element not in RESPECTING
+        margin = ' ' * (INDENT * (depth + 1))
+
+        def flexible_item(index):
+            return self.inner[index].element not in RESPECTING
+
+        def prev_admissable(index):
+            item = self.inner[index]
+            return item.endswith(' ') if isinstance(item, str) \
+                else item.element not in RESPECTING
+
+        def post_admissable(index):
+            item = self.inner[index]
+            return item.startswith(' ') if isinstance(item, str) \
+                else item.element not in RESPECTING
+
+        for index, item in enumerate(self.inner):
+            if isinstance(item, str):
+                flex_leading = (index == 0 and flexible) \
+                    or (index > 0 and flexible_item(index - 1))
+                flex_trailing = (index == L and flexible) \
+                    or (index < L and flexible_item(index + 1))
+                if flex_leading or (multiline and item.startswith(' ')):
+                    item = item.removeprefix(' ')
+                if flex_trailing or (multiline and item.endswith(' ')):
+                    item = item.removesuffix(' ')
+                if item:
+                    if multiline and (flex_leading or item.startswith(' ')):
+                        buffer.append('\n')
+                        buffer.append(margin)
+                    buffer.append(item)
             else:
-                raise TypeError('not an instance of str or HtmlElement: '
-                    f'{item} has type {type(item)}')
-            if multiline: buffer.append('\n')
-        if multiline and depth > 0: buffer.append(INDENT * depth)
+                flex_leading = (index == 0 and flexible) \
+                    or (index > 0 and prev_admissable(index - 1))
+                flex_trailing = (index == L and flexible) \
+                    or (index < L and post_admissable(index + 1))
+                newline = multiline and flex_leading
+                if newline:
+                    buffer.append('\n')
+                    buffer.append(margin)
+                item.render(buffer, depth + 1 if newline else depth)
+
+        if multiline and (flexible or prev_admissable(L)):
+            buffer.append('\n')
+            if depth > 0:
+                buffer.append(' ' * (INDENT * depth))
+
         buffer.append(f'</{self.element}>')
+
+
+def _extant(elements, classes, node):
+    elements.add(node.element)
+    if 'class' in node.attrs:
+        classes.update(node.attrs['class'])
+    for item in node.inner:
+        if isinstance(item, HtmlElement):
+            _extant(elements, classes, item)
+
+def extant(node):
+    elements, classes = set(), set()
+    _extant(elements, classes, node)
+    return (elements, classes)

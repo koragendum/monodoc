@@ -16,7 +16,7 @@ PERMALINK = '#'
 ROOT = '.'
 
 # Functions registered to transform code blocks.
-HANDLER = {}
+HANDLERS = {}
 
 # Populated by style elements.
 STYLESHEETS = []
@@ -109,6 +109,7 @@ INITIAL  = re.compile('[' + re.escape("$%&'*<@^_`{}\u2020\u203B") + ']')
 NONSPACE = re.compile(r'[^ \t\n\r]')
 
 ELEMINI = re.compile('[a-z]')
+CUSTOM  = re.compile('[a-z][a-z0-9-]*')
 TAGBRK  = re.compile('[>"\']')
 
 WORD    = re.compile('[a-zA-Z]+(?:-[a-zA-Z]+)*')
@@ -324,10 +325,10 @@ def _parse(
                     continue
 
                 # 2 Check that the opening tag is well-formed
-                if element not in ELEMENTS:
+                if not (element in ELEMENTS or CUSTOM.fullmatch(element)):
                     # This isn’t an HTML tag, although it looks like one.
-                    #   We could ignore it, but it’s probably better to let
-                    #   the author know.
+                    #   We’re a little more strict than we need to be; see
+                    #   https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
                     push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
                     continue
 
@@ -363,7 +364,8 @@ def _parse(
                         inner = src[index:cutoff]
                         post = cutoff + 2
                 else:
-                    inner, post, complete = _parse(src, index, '</', italic)
+                    inner, post, complete = \
+                        _parse(src, index, '</', italic or element == 'i')
 
                 if not complete:
                     push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
@@ -574,92 +576,85 @@ def parse(src : str) -> list[str | HtmlElement]:
 # Compiling  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
-def tagpair(
+def _tagpair(
     element : str,
     gap_a : bool,
     gap_b : bool,
-    classes : Optional[str | list[str]] = None,
-    name  : Optional[str] = None,
-    style : Optional[str] = None,
+    _id   : Optional[str] = None,
+    _class: Optional[str] = None,
 ) -> tuple[str, str]:
     opening = [element]
-    if name is not None:
-        opening.append(f'id="{name}"')
-    if classes is None:
-        classes = []
-    elif isinstance(classes, list):
-        classes = [*classes]
-    else:
-        classes = [classes]
-    if gap_a: classes.append('gt')  # gap-top
-    if gap_b: classes.append('gb')  # gap-bottom
+    if _id is not None:
+        opening.append(f'id="{_id}"')
+    classes = []
+    if _class: classes.append(_class)
+    if  gap_a: classes.append('gap-top')    # gap-top
+    if  gap_b: classes.append('gap-bottom') # gap-bottom
     if classes:
         classes = " ".join(classes)
         opening.append(f'class="{classes}"')
-    if style is not None:
-        opening.append(f'style="{style}"')
     opening = " ".join(opening)
     return (f'<{opening}>', f'</{element}>')
 
 
 def _head(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     level, anchor, text = lines
-    opening, closing = tagpair(f'h{level}', gap_a, gap_b, name=anchor)
+    opening, closing = _tagpair(f'h{level}', gap_a, gap_b, _id=anchor)
     if anchor is not None:
         text = f'<a href="#{anchor}">{PERMALINK}</a> {text}'
     output.append(f'{opening}{text}{closing}')
 
 
 def _para(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
-    opening, closing = tagpair('p', gap_a, gap_b)
+    opening, closing = _tagpair('p', gap_a, gap_b)
     output.append(opening)
     output.extend(lines)
     output.append(closing)
 
 
 def _note(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
-    opening, closing = tagpair('div', gap_a, gap_b, classes="blocknote")
+    opening, closing = _tagpair('block-note', gap_a, gap_b)
     output.append(opening)
-    output.extend(_convert(lines))
+    output.extend(_preprocess(lines))
     output.append(closing)
 
 
 def _quot(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
-    opening, closing = tagpair('div', gap_a, gap_b, classes="blockquote")
+    opening, closing = _tagpair('block-quote', gap_a, gap_b)
     output.append(opening)
-    output.extend(_convert(lines))
+    output.extend(_preprocess(lines))
     output.append(closing)
 
 
 def _iden(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
-    opening, closing = tagpair('div', gap_a, gap_b, classes="indent")
+    opening, closing = _tagpair('block-indent', gap_a, gap_b)
     output.append(opening)
-    output.extend(_convert(lines))
+    output.extend(_preprocess(lines))
     output.append(closing)
 
 
 def _list(output : list[str], items : list[list[str]], gap_a : bool, gap_b : bool):
-    opening, closing = tagpair('ul', gap_a, gap_b)
+    opening, closing = _tagpair('ul', gap_a, gap_b)
     output.append(opening)
     for item in items:
         output.append('<li>')
-        output.extend(_convert(item))
+        output.extend(_preprocess(item))
         output.append('</li>')
     output.append(closing)
 
 
 def _code(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
-    if meta and (lang := meta[0]) in HANDLER:
+    if meta and (lang := meta[0]) in HANDLERS:
         modifiers = meta[1:] or None
-        lines = HANDLER[lang](lang, lines, modifiers=modifiers)
-    opening, closing = tagpair('pre', gap_a, gap_b)
+        lines = HANDLERS[lang](lang, lines, modifiers=modifiers)
+    opening, closing = _tagpair('pre', gap_a, gap_b)
     output.append(opening)
     output.extend(lines)
     output.append(closing)
 
 
 def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
-    opening, closing = tagpair('div', gap_a, gap_b, classes=f'math-{meta}')
+    opening, closing = _tagpair('block-math', gap_a, gap_b, _class=meta)
     output.append(opening + '$#')
     output.extend(lines)
     output.append('$' + closing)
@@ -678,7 +673,7 @@ INSET = set(SIGIL.values())
 ANCHOR = '([a-zA-Z0-9_-]+)'
 HEADING = re.compile(f'#([123456]) +(?:\\[{ANCHOR}\\] +)?')
 
-def _convert(src : list[str], enclose : bool = False) -> list[str]:
+def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     # Returns lines of hybrid text.
     #
     # head  #2 Second-level Heading
@@ -926,8 +921,8 @@ def _convert(src : list[str], enclose : bool = False) -> list[str]:
     return output
 
 
-def convert(src : str) -> list[str | HtmlElement]:
-    lines = _convert(src.splitlines(), enclose=True)
+def compile(src : str) -> list[str | HtmlElement]:
+    lines = _preprocess(src.splitlines(), enclose=True)
     return parse('\n'.join(lines))
 
 
@@ -939,30 +934,11 @@ GLOBALS = {
     'HtmlElement': HtmlElement,
     'parse_css':   parse_css,
     'parse_math':  parse_math,
-    'parse_expr':  parse,
-    'parse_doc':   convert,
+    'parse_text':  parse,
+    'compile':     compile,
     'STREAM':      None
 }
 
 
 # Main · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
-
-def p(source):
-    out = parse(source)
-    buffer = []
-    HtmlElement('p', *out).render(buffer)
-    print(''.join(buffer))
-
-def c(path):
-    with open(path) as fh:
-        src = fh.read()
-    print('COMPILED '.ljust(80, '-'))
-    lines = _compile(src.splitlines(), enclose=True)
-    for ln in lines:
-        print(ln)
-    print('PARSED '.ljust(80, '-'))
-    out = parse('\n'.join(lines))
-    buffer = []
-    HtmlElement('root', *out).render(buffer)
-    print(''.join(buffer))

@@ -48,8 +48,8 @@ class CssRules:
     def render(self, buffer, depth=0):
         # NOTE that unlike HtmlElement.render, the elements of the buffer are
         #   expected to be joined with newlines rather than empty strings.
-        outermargin = INDENT * depth
-        innermargin = INDENT * (depth + 1)
+        outermargin = ' ' * (INDENT * depth)
+        innermargin = ' ' * (INDENT * (depth + 1))
         for selector, declarations in self.ruleset.items():
             buffer.append(f'{outermargin}{selector} {{')
             for prop, value in declarations.items():
@@ -82,7 +82,7 @@ class StyleSheet:
     def render(self, buffer, depth=0):
         # NOTE that unlike HtmlElement.render, the elements of the buffer are
         #   expected to be joined with newlines rather than empty strings.
-        margin = INDENT * depth
+        margin = ' ' * (INDENT * depth)
         for other in self.other:
             buffer.extend(margin + ln for ln in other.split('\n'))
         self.base.render(buffer, depth)
