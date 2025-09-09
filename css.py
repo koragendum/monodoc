@@ -96,6 +96,12 @@ class StyleSheet:
             buffer.append(margin + '*/')
 
 
+def render(stylesheet, depth=0):
+    buffer = []
+    stylesheet.render(buffer, depth)
+    return '\n'.join(buffer)
+
+
 COMPACTSP = re.compile(r'[ \t\r\n]+')
 REMOVERHS = re.compile('([' + re.escape('([') + ']) ')
 REMOVELHS = re.compile(' ([' + re.escape(')],') + '])')

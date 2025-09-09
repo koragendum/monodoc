@@ -32,7 +32,7 @@ ELEMENTS = {
     'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
     'munderover' ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'python'     , 'template'   ,
+    'include'    , 'python'     , 'module'     ,
 }
 
 VOID = {
@@ -43,7 +43,7 @@ VOID = {
     # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'mspace'     ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'template'   ,
+    'include'    , 'module'     ,
 }
 
 
@@ -67,18 +67,28 @@ SINGLELINE = {
     'summary'    , 'slot'       ,
     # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
+    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
+    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'inline-math',
+    'small-caps' , 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
 }
 
 # Ordinarily, leading or trailing whitespace within an element may be stripped
 #   or added, and whitespace preceding or following an element may be stripped
 #   or added. This is suppressed for these elements.
+# This should be a subset of SINGLELINE.
 RESPECTING = {
+    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'a'          , 'abbr'       , 'b'          , 'bdi'        , 'bdo'        ,
     'cite'       , 'code'       , 'data'       , 'del'        , 'dfn'        ,
     'em'         , 'i'          , 'ins'        , 'kbd'        , 'mark'       ,
     'q'          , 'ruby'       , 's'          , 'samp'       , 'slot'       ,
     'small'      , 'span'       , 'strong'     , 'sub'        , 'sup'        ,
     'time'       , 'u'          , 'var'        , 'wbr'        ,
+    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
+    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'inline-math',
+    'small-caps' , 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
 }
 
 COMPACTSP = re.compile(r'[ \t\r\n]+')
@@ -90,8 +100,12 @@ class HtmlElement:
         if 'kind' in attrs:
             assert 'class' not in attrs
             attrs['class'] = attrs.pop('kind')
+        if 'name' in attrs:
+            assert 'id' not in attrs
+            attrs['id'] = attrs.pop('name')
         self.attrs = attrs
         self._compact = False
+        self._pruned = False
         self._size = None
 
     def push(self, *items):
@@ -110,15 +124,17 @@ class HtmlElement:
     def compact(self):
         if self._compact:
             return
+
         prev = None
         for index, item in enumerate(self.inner):
             if isinstance(item, str) and isinstance(prev, str):
                 joined = prev + item
                 self.inner[index-1] = None
-                self.inner[index] = cat
+                self.inner[index] = joined
                 prev = joined
             else:
                 prev = item
+
         if self.element == 'pre':
             self.inner = [item for item in self.inner if item is not None]
         else:
@@ -127,8 +143,29 @@ class HtmlElement:
                 for item in self.inner
                 if item is not None
             ]
+
         self._size = None
         self._compact = True
+
+    def prune(self):
+        if self._pruned:
+            return
+
+        for index, item in enumerate(self.inner):
+            if isinstance(item, HtmlElement):
+                item.prune()
+                if item.element == 'p' and not item.inner:
+                    self.inner[index] = None
+
+        self.inner = [item for item in self.inner if item is not None]
+
+        self.compact()
+
+        if self.element == 'p' and self.inner == [' ']:
+            self.inner.clear()
+
+        self._size = None
+        self._pruned = True
 
     def size(self):
         # Roughly the number of characters in the rendered output.
@@ -172,12 +209,12 @@ class HtmlElement:
             buffer.append(f'<{" ".join(fields)}{ultima}>')
             return
 
+        self.prune()
+
         buffer.append(f'<{" ".join(fields)}>')
         if not self.inner:
             buffer.append(f'</{self.element}>')
             return
-
-        self.compact()
 
         if verbatim:
             for item in self.inner:
@@ -253,6 +290,12 @@ class HtmlElement:
                 buffer.append(' ' * (INDENT * depth))
 
         buffer.append(f'</{self.element}>')
+
+
+def render(element, depth=0):
+    buffer = []
+    element.render(buffer, depth)
+    return ''.join(buffer)
 
 
 def _extant(elements, classes, node):
