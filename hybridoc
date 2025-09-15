@@ -9,14 +9,15 @@ from html    import ELEMENTS, VOID, HtmlElement
 from html    import render as render_html
 from mathml  import parse as parse_math
 from inspect import currentframe, getframeinfo
-from os      import path
+from os      import getcwd, path
 from re      import Match as MatchObject
+from sys     import argv
 from typing  import Optional
 
-PERMALINK = '#'
+SOURCE_DIR   = None  # set in main routine
+HYBRIDOC_DIR = path.dirname(path.abspath(argv[0]))
 
-# Paths in include elements are relative to this directory.
-ROOT = '.'
+PERMALINK = '#'
 
 # Functions registered to transform code blocks.
 HANDLERS = {}
@@ -27,36 +28,52 @@ STYLESHEETS = []
 # Populated by module elements.
 LOADEDMODULES = {}
 
-# Maps module name to a CSS or Python file.
+# Maps module name to a CSS file or None.
 MODULES = {
-    'base': 'base.css',
-    'lite': 'lite.css',
-    'dark': 'dark.css',
-    'math': 'math.css',
+    'base': (1, 'css/base.css'),
+    'lite': (2, 'css/lite.css'),
+    'dark': (2, 'css/dark.css'),
+    'math': (3, 'css/math.css'),
     # fonts
-    'alegreya': 'alegreya.css',
-    'at-name':  'at-name.css',
-    'century':  'century.css',
-    'fira':     'fira.css',
-    'ff-meta':  'ff-meta.css',
-    'inter':    'inter.css',
-    'new-cm':   'new-cm.css',
-    'operator': 'operator.css',
-    'schotis':  'schotis.css',
-    'victor':   'victor.css',
+    'alegreya': (0, 'css/alegreya.css'),
+    'at-name':  (0, 'css/at-name.css' ),
+    'century':  (0, 'css/century.css' ),
+    'fira':     (0, 'css/fira.css'    ),
+    'ff-meta':  (0, 'css/ff-meta.css' ),
+    'inter':    (0, 'css/inter.css'   ),
+    'new-cm':   (0, 'css/new-cm.css'  ),
+    'operator': (0, 'css/operator.css'),
+    'schotis':  (0, 'css/schotis.css' ),
+    'victor':   (0, 'css/victor.css'  ),
     # presets
     'expo-lite': None,
     'expo-dark': None,
 }
 
 DEPENDENCIES = {
+    'math':      ('schotis', 'new-cm', 'century'),
     'expo-lite': ('base', 'lite', 'schotis', 'victor'),
     'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'victor'),
-    'math':      ('schotis', 'new-cm', 'century'),
 }
 
 
 # General Utilities  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+
+
+def _resolve(filename, *dirs):
+    for root in dirs:
+        res = path.normpath(path.join(root, filename))
+        if path.isfile(res):
+            return res
+    return None
+
+
+def resolve_module(filename):
+    return _resolve(filename, HYBRIDOC_DIR)
+
+
+def resolve_include(filename):
+    return _resolve(filename, SOURCE_DIR, HYBRIDOC_DIR)
 
 
 def unindent(text):
@@ -373,7 +390,11 @@ def _parse(
                         if 'href' not in attrs:
                             push(index)
                             continue
-                        with open(path.join(ROOT, attrs['href'])) as external:
+                        location = resolve_include(attrs['href'])
+                        if location is None:
+                            push(index)
+                            continue
+                        with open(location) as external:
                             content = external.read()
                         _, extension = path.splitext(attrs['href'])
                         if extension == '.css':
@@ -974,6 +995,7 @@ GLOBALS = {
     'parse_math':  parse_math,
     'parse_text':  parse,
     'compile':     compile,
+    'HANDLERS':    HANDLERS,
     'STREAM':      None
 }
 
@@ -981,7 +1003,7 @@ GLOBALS = {
 # Main · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 if __name__ == '__main__':
-    from sys import argv, exit, stderr
+    from sys import exit, stderr
 
     args = argv[1:]
     if not args or '-h' in args or '--help' in args:
@@ -1015,6 +1037,10 @@ if __name__ == '__main__':
     if out is None:
         raise AssertionError(f'missing destination path')
 
+    SOURCE_DIR = path.dirname(path.abspath(inp))
+
+    # Head - - - - - - - - - - - - - - -
+
     MIME = {
         '.gif':  'gif',
         '.jpeg': 'jpeg',
@@ -1040,6 +1066,8 @@ if __name__ == '__main__':
             raise AssertionError()
         head.append(f'<link rel="stylesheet" href="{url}" type="image/css">')
 
+    # HTML - - - - - - - - - - - - - - -
+
     with open(inp) as fh:
         src = fh.read()
     content = compile(src)
@@ -1052,15 +1080,53 @@ if __name__ == '__main__':
     )
     html = render_html(body)
 
+    # Modules  - - - - - - - - - - - - -
+
+    modules = set()
+
+    def _add(mod):
+        if mod in modules:
+            return
+        modules.add(mod)
+        if mod in DEPENDENCIES:
+            for dep in DEPENDENCIES[mod]:
+                _add(dep)
+
+    for mod in LOADEDMODULES:
+        _add(mod)
+
+    modules = [
+        fname for prio, fname in
+        sorted(
+            MODULES[mod]
+            for mod in modules
+            if MODULES[mod] is not None
+        )
+    ]
+
+    # CSS  - - - - - - - - - - - - - - -
+
     stylesheet = StyleSheet()
+
+    for mod in modules:
+        with open(mod) as fh:
+            src = fh.read()
+        parse_css(src, stylesheet)
+
     for src in STYLESHEETS:
         parse_css(src, stylesheet)
+
     css = render_css(stylesheet, depth=1)
+
+    # Output - - - - - - - - - - - - - -
 
     page = '\n'.join([
         '<!DOCTYPE html>',
         '<meta charset="utf-8">',
-        '<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">',
+        '<meta name="viewport"'
+            ' content="width=device-width,'
+            ' height=device-height,'
+            ' initial-scale=1.0">',
         *head,
         '<style>',
         css,
