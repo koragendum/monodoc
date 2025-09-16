@@ -35,23 +35,24 @@ MODULES = {
     'dark': (2, 'css/dark.css'),
     'math': (3, 'css/math.css'),
     # fonts
-    'alegreya': (0, 'css/alegreya.css'),
-    'at-name':  (0, 'css/at-name.css' ),
-    'century':  (0, 'css/century.css' ),
-    'fira':     (0, 'css/fira.css'    ),
-    'ff-meta':  (0, 'css/ff-meta.css' ),
-    'inter':    (0, 'css/inter.css'   ),
-    'new-cm':   (0, 'css/new-cm.css'  ),
-    'operator': (0, 'css/operator.css'),
-    'schotis':  (0, 'css/schotis.css' ),
-    'victor':   (0, 'css/victor.css'  ),
+    'alegreya': (0, 'css/font/alegreya.css'),
+    'at-name':  (0, 'css/font/at-name.css' ),
+    'bodoni':   (0, 'css/font/bodoni.css'  ),
+    'century':  (0, 'css/font/century.css' ),
+    'fira':     (0, 'css/font/fira.css'    ),
+    'ff-meta':  (0, 'css/font/ff-meta.css' ),
+    'inter':    (0, 'css/font/inter.css'   ),
+    'new-cm':   (0, 'css/font/new-cm.css'  ),
+    'operator': (0, 'css/font/operator.css'),
+    'schotis':  (0, 'css/font/schotis.css' ),
+    'victor':   (0, 'css/font/victor.css'  ),
     # presets
     'expo-lite': None,
     'expo-dark': None,
 }
 
 DEPENDENCIES = {
-    'math':      ('schotis', 'new-cm', 'century'),
+    'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
     'expo-lite': ('base', 'lite', 'schotis', 'victor'),
     'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'victor'),
 }
@@ -248,7 +249,7 @@ def _parse(
                     if fragment:
                         out.append(''.join(fragment))
                         fragment = []
-                    out.append(HtmlElement('span', ' ', kind=SKIPCLASS[char]))
+                    out.append(HtmlElement(SKIPELEM[char], ' '))
                 case _:
                     fragment.append(char)
         if fragment:
@@ -502,11 +503,10 @@ def _parse(
                     else:
                         inner = math.html(inline=True)
                         push(end + 1, HtmlElement('inline-math', inner))
-                        # The span is for a rule like
-                        #   span.math { display: inline-block; }
 
             # Inline code
             case '`':
+                # TODO use _parse
                 end = src.find('`', offset)
                 if end == -1:
                     push(offset, parse_error('`'))
@@ -647,8 +647,8 @@ def _tagpair(
         opening.append(f'id="{_id}"')
     classes = []
     if _class: classes.append(_class)
-    if  gap_a: classes.append('gap-top')    # gap-top
-    if  gap_b: classes.append('gap-bottom') # gap-bottom
+    if gap_a: classes.append('gap-top')     # gap-top
+    if gap_b: classes.append('gap-bottom')  # gap-bottom
     if classes:
         classes = " ".join(classes)
         opening.append(f'class="{classes}"')
@@ -706,10 +706,10 @@ def _code(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
     if meta and (lang := meta[0]) in HANDLERS:
         modifiers = meta[1:] or None
         lines = HANDLERS[lang](lang, lines, modifiers=modifiers)
-    opening, closing = _tagpair('pre', gap_a, gap_b)
-    output.append(opening)
+    opening, closing = _tagpair('block-code', gap_a, gap_b)
+    output.append(opening + '<pre>')
     output.extend(lines)
-    output.append(closing)
+    output.append('</pre>' + closing)
 
 
 def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
@@ -792,9 +792,13 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             block_meta = None
             offset     = None
             return
+        gap = False
         while block_lines and not block_lines[-1]:
             block_lines.pop()
+            gap = True
         blocks.append((block_kind, block_lines, block_meta))
+        if gap:
+            blocks.append('gap')
         block_kind  = None
         block_lines = []
         block_meta  = None
@@ -1078,6 +1082,7 @@ if __name__ == '__main__':
         ),
         name='chase'
     )
+    body.prune()
     html = render_html(body)
 
     # Modules  - - - - - - - - - - - - -

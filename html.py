@@ -32,7 +32,12 @@ ELEMENTS = {
     'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
     'munderover' ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'python'     , 'module'     ,
+    'include'    , 'module'     , 'python'     ,
+    'block-note' , 'block-quote', 'block-math' , 'block-code' ,
+    'block-indent'              ,
+    'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
+    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
+    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
 }
 
 VOID = {
@@ -53,24 +58,24 @@ INDENT = 2
 #   This is suppressed for these elements.
 SINGLELINE = {
     # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'title'      , 'address'    , 'h1'         , 'h2'         , 'h3'         ,
-    'h4'         , 'h5'         , 'h6'         , 'dd'         , 'dt'         ,
-    'figcaption' , 'li'         , 'p'          , 'a'          , 'abbr'       ,
-    'b'          , 'bdi'        , 'bdo'        , 'cite'       , 'code'       ,
-    'data'       , 'dfn'        , 'em'         , 'i'          , 'kbd'        ,
-    'mark'       , 'q'          , 'rp'         , 'rt'         , 'ruby'       ,
-    's'          , 'samp'       , 'small'      , 'span'       , 'strong'     ,
-    'sub'        , 'sup'        , 'time'       , 'u'          , 'var'        ,
-    'audio'      , 'track'      , 'video'      , 'del'        , 'ins'        ,
-    'caption'    , 'td'         , 'th'         , 'button'     , 'label'      ,
-    'legend'     , 'meter'      , 'option'     , 'output'     , 'progress'   ,
-    'summary'    , 'slot'       ,
+    'a'          , 'abbr'       , 'address'    , 'audio'      , 'b'          ,
+    'bdi'        , 'bdo'        , 'button'     , 'caption'    , 'cite'       ,
+    'code'       , 'data'       , 'del'        , 'dd'         , 'dfn'        ,
+    'dt'         , 'em'         , 'figcaption' , 'h1'         , 'h2'         ,
+    'h3'         , 'h4'         , 'h5'         , 'h6'         , 'i'          ,
+    'ins'        , 'kbd'        , 'label'      , 'legend'     , 'li'         ,
+    'mark'       , 'meter'      , 'option'     , 'output'     , 'progress'   ,
+    'q'          , 'rp'         , 'rt'         , 'ruby'       , 's'          ,
+    'samp'       , 'slot'       , 'small'      , 'span'       , 'strong'     ,
+    'sub'        , 'summary'    , 'sup'        , 'td'         , 'th'         ,
+    'time'       , 'title'      , 'track'      , 'u'          , 'var'        ,
+    'video'      ,
     # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
-    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'inline-math',
-    'small-caps' , 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
+    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
+    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
 }
 
 # Ordinarily, leading or trailing whitespace within an element may be stripped
@@ -87,8 +92,8 @@ RESPECTING = {
     'time'       , 'u'          , 'var'        , 'wbr'        ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
-    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'inline-math',
-    'small-caps' , 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
+    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
+    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
 }
 
 COMPACTSP = re.compile(r'[ \t\r\n]+')
@@ -209,8 +214,6 @@ class HtmlElement:
             buffer.append(f'<{" ".join(fields)}{ultima}>')
             return
 
-        self.prune()
-
         buffer.append(f'<{" ".join(fields)}>')
         if not self.inner:
             buffer.append(f'</{self.element}>')
@@ -258,8 +261,15 @@ class HtmlElement:
             return item.startswith(' ') if isinstance(item, str) \
                 else item.element not in RESPECTING
 
+        # TODO prefer to place the first item on the same line as the opening
+        #     tag if it’s a string
+        #   and place the closing on the same line as the last item if it’s
+        #     a string
+        #   especially (only?) in paragraphs
+
         for index, item in enumerate(self.inner):
             if isinstance(item, str):
+                # TODO line breaks for long strings
                 flex_leading = (index == 0 and flexible) \
                     or (index > 0 and flexible_item(index - 1))
                 flex_trailing = (index == L and flexible) \

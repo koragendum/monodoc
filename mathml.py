@@ -582,7 +582,7 @@ NUMERIC = re.compile(r'\d+(?:\.\d+)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞
 
 INTEGER = re.compile(r'\d+')
 
-SKIP = {'₋': 'neg', '₁': 'thin', '₂': 'med', '₃': 'thick'}
+SKIP = {'₀': 'neg', '₁': 'thin', '₂': 'med', '₃': 'thick'}
 
 # TODO for “:” keep track of whether there is a space (in the source) on the
 #   lefthand side and use that to determine whether it is a label or a relation

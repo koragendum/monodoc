@@ -1,0 +1,12 @@
+@font-face { font-family: 'AT Name Mono'; font-style: normal; font-weight: 400; src: url('/fonts/ATNameMono-Regular.woff2')         format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: italic; font-weight: 400; src: url('/fonts/ATNameMono-Italic.woff2')          format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: normal; font-weight: 500; src: url('/fonts/ATNameMono-Medium.woff2')          format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: italic; font-weight: 500; src: url('/fonts/ATNameMono-MediumItalic.woff2')    format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: normal; font-weight: 600; src: url('/fonts/ATNameMono-SemiBold.woff2')        format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: italic; font-weight: 600; src: url('/fonts/ATNameMono-SemiBoldItalic.woff2')  format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: normal; font-weight: 700; src: url('/fonts/ATNameMono-Bold.woff2')            format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: italic; font-weight: 700; src: url('/fonts/ATNameMono-BoldItalic.woff2')      format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: normal; font-weight: 800; src: url('/fonts/ATNameMono-ExtraBold.woff2')       format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: italic; font-weight: 800; src: url('/fonts/ATNameMono-ExtraBoldItalic.woff2') format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: normal; font-weight: 900; src: url('/fonts/ATNameMono-Black.woff2')           format('woff2'); }
+@font-face { font-family: 'AT Name Mono'; font-style: italic; font-weight: 900; src: url('/fonts/ATNameMono-BlackItalic.woff2')     format('woff2'); }
