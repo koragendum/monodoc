@@ -35,18 +35,19 @@ AVAILABLEMODULES = {
     'dark': (2, 'css/dark.css'),
     'math': (3, 'css/math.css'),
     # fonts
-    'alegreya': (0, 'css/font/alegreya.css'),
-    'at-name':  (0, 'css/font/at-name.css' ),
-    'bodoni':   (0, 'css/font/bodoni.css'  ),
-    'century':  (0, 'css/font/century.css' ),
-    'fira':     (0, 'css/font/fira.css'    ),
-    'ff-meta':  (0, 'css/font/ff-meta.css' ),
-    'inter':    (0, 'css/font/inter.css'   ),
-    'new-cm':   (0, 'css/font/new-cm.css'  ),
-    'operator': (0, 'css/font/operator.css'),
-    'schotis':  (0, 'css/font/schotis.css' ),
-    'sudo':     (0, 'css/font/sudo.css'    ),
-    'victor':   (0, 'css/font/victor.css'  ),
+    'alegreya': (0, 'css/fonts/alegreya.css'),
+    'at-name':  (0, 'css/fonts/at-name.css' ),
+    'bodoni':   (0, 'css/fonts/bodoni.css'  ),
+    'century':  (0, 'css/fonts/century.css' ),
+    'fira':     (0, 'css/fonts/fira.css'    ),
+    'ff-meta':  (0, 'css/fonts/ff-meta.css' ),
+    'iosevka':  (0, 'css/fonts/iosevka.css' ),
+    'inter':    (0, 'css/fonts/inter.css'   ),
+    'new-cm':   (0, 'css/fonts/new-cm.css'  ),
+    'operator': (0, 'css/fonts/operator.css'),
+    'schotis':  (0, 'css/fonts/schotis.css' ),
+    'sudo':     (0, 'css/fonts/sudo.css'    ),
+    'victor':   (0, 'css/fonts/victor.css'  ),
     # presets
     'expo-lite': None,
     'expo-dark': None,
@@ -425,8 +426,10 @@ def _parse(
                         inner = src[index:cutoff]
                         post = cutoff + 2
                 else:
+                    inner_italic = italic or element == 'i' \
+                        or ('class' in attrs and 'i' in attrs['class'].split())
                     inner, post, complete = \
-                        _parse(src, index, '</', italic or element == 'i')
+                        _parse(src, index, '</', inner_italic)
 
                 if not complete:
                     push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
@@ -674,8 +677,8 @@ def _para(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     output.append(closing)
 
 
-def _note(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
-    opening, closing = _tagpair('block-note', gap_a, gap_b)
+def _note(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
+    opening, closing = _tagpair('block-note', gap_a, gap_b, _class=meta)
     output.append(opening)
     output.extend(_preprocess(lines))
     output.append(closing)
@@ -896,6 +899,8 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
 
                 block_kind = SIGIL[char]
                 block_lines.append(content)
+                if char == '*':
+                    block_meta = 'i'
                 continue
 
         # INVARIANT block_kind is still None or "para".
@@ -977,7 +982,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 else:
                     output.extend(lines)
             case 'head': _head(output, lines,       gap_above, gap_below)
-            case 'note': _note(output, lines,       gap_above, gap_below)
+            case 'note': _note(output, lines, meta, gap_above, gap_below)
             case 'quot': _quot(output, lines,       gap_above, gap_below)
             case 'iden': _iden(output, lines,       gap_above, gap_below)
             case 'list': _list(output, lines,       gap_above, gap_below)

@@ -206,6 +206,10 @@ i {
   font-style: italic;
 }
 
+.i {
+  font-style: italic;
+}
+
 esc-i {
   display: inline;
   font-style: normal;
