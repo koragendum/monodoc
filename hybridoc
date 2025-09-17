@@ -17,19 +17,19 @@ from typing  import Optional
 SOURCE_DIR   = None  # set in main routine
 HYBRIDOC_DIR = path.dirname(path.abspath(argv[0]))
 
-PERMALINK = '#'
+PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
 
 # Functions registered to transform code blocks.
 HANDLERS = {}
 
 # Populated by style elements.
-STYLESHEETS = []
+INLINESTYLES = []
 
 # Populated by module elements.
-LOADEDMODULES = {}
+MODULES = set()
 
 # Maps module name to a CSS file or None.
-MODULES = {
+AVAILABLEMODULES = {
     'base': (1, 'css/base.css'),
     'lite': (2, 'css/lite.css'),
     'dark': (2, 'css/dark.css'),
@@ -53,7 +53,7 @@ MODULES = {
 
 DEPENDENCIES = {
     'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
-    'expo-lite': ('base', 'lite', 'schotis', 'victor'),
+    'expo-lite': ('base', 'lite', 'schotis', 'at-name'),
     'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'victor'),
 }
 
@@ -399,7 +399,7 @@ def _parse(
                             content = external.read()
                         _, extension = path.splitext(attrs['href'])
                         if extension == '.css':
-                            STYLESHEETS.append(content)
+                            INLINESTYLES.append(content)
                             push(index)
                             continue
                         if extension == '.py':
@@ -410,7 +410,7 @@ def _parse(
                         inner, _, _ = _parse(content.strip())
                         push(index, *inner)
                     elif element == 'module':
-                        LOADEDMODULES.update(attrs)
+                        MODULES.update(attrs)
                         push(index)
                     else:
                         push(index, HtmlElement(element, **attrs))
@@ -447,7 +447,7 @@ def _parse(
                     continue
 
                 if element == 'style':
-                    STYLESHEETS.append(inner)
+                    INLINESTYLES.append(inner)
                     push(end + 1)
                     continue
 
@@ -659,8 +659,10 @@ def _tagpair(
 def _head(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     level, anchor, text = lines
     opening, closing = _tagpair(f'h{level}', gap_a, gap_b, _id=anchor)
-    if anchor is not None and level != '1':
-        text = f'<a href="#{anchor}">{PERMALINK}</a> {text}'
+    if anchor is not None:
+        permalink = PERMALINK[int(level)]
+        if permalink is not None:
+            text = f'<a href="#{anchor}">{permalink}</a> {text}'
     output.append(f'{opening}{text}{closing}')
 
 
@@ -994,13 +996,16 @@ def compile(src : str) -> list[str | HtmlElement]:
 
 # Available for python elements. Routines can emit HTML by appending to STREAM.
 GLOBALS = {
-    'HtmlElement': HtmlElement,
-    'parse_css':   parse_css,
-    'parse_math':  parse_math,
-    'parse_text':  parse,
-    'compile':     compile,
-    'HANDLERS':    HANDLERS,
-    'STREAM':      None
+    'HtmlElement':  HtmlElement,
+    'parse_css':    parse_css,
+    'parse_math':   parse_math,
+    'parse_text':   parse,
+    'compile':      compile,
+    'PERMALINK':    PERMALINK,
+    'HANDLERS':     HANDLERS,
+    'INLINESTYLES': INLINESTYLES,
+    'MODULES':      MODULES,
+    'STREAM':       None
 }
 
 
@@ -1078,9 +1083,9 @@ if __name__ == '__main__':
     body = HtmlElement('div',
         HtmlElement('div',
             *content,
-            name='block'
+            name='chase'
         ),
-        name='chase'
+        name='galley'
     )
     body.prune()
     html = render_html(body)
@@ -1097,15 +1102,15 @@ if __name__ == '__main__':
             for dep in DEPENDENCIES[mod]:
                 _add(dep)
 
-    for mod in LOADEDMODULES:
+    for mod in MODULES:
         _add(mod)
 
     modules = [
-        fname for prio, fname in
+        fname for _, fname in
         sorted(
-            MODULES[mod]
+            AVAILABLEMODULES[mod]
             for mod in modules
-            if MODULES[mod] is not None
+            if AVAILABLEMODULES[mod] is not None
         )
     ]
 
@@ -1118,7 +1123,7 @@ if __name__ == '__main__':
             src = fh.read()
         parse_css(src, stylesheet)
 
-    for src in STYLESHEETS:
+    for src in INLINESTYLES:
         parse_css(src, stylesheet)
 
     css = render_css(stylesheet, depth=1)

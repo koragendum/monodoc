@@ -9,6 +9,19 @@ html {
   padding: 0;
 }
 
+@media (width < 632px) {
+  /*
+  width(chase) + 2 × padding(galley)  # but not extended-padding
+    = 37.5rem + 2 × 1rem
+    = 39.5rem
+
+  39.5rem × 16px/rem = 632px
+  */
+  html {
+    font-size: 15px;
+  }
+}
+
 body {
   box-sizing: border-box;
   min-height: 100dvh;
@@ -28,12 +41,33 @@ body {
   /* color            */
 }
 
-#chase {
+#galley {
+  /*
+  total-width(galley)
+    = width(chase) + 2 × padding(galley) + 2 × extended-padding
+    = 37.5rem + 2 × 1rem + 2 × 1rem
+    = 41.5rem
+
+  total-width(galley) + width(margin-note) + padding-right(margin-note)
+    = 41.5rem + 18.75rem + 1rem
+    = 61.25rem
+
+  margin-right(margin-note)
+    = −(width(margin-note) + padding-right(margin-note)
+        + padding-right(galley) + extended-padding)
+    = −(18.75rem + 1rem + 1rem + 1rem)
+    = −21.75rem
+
+  margin-left(galley)
+    = −(width(margin-note) + padding-right(margin-note))
+    = −(18.75rem + 1rem)
+    = −19.75rem
+  */
   box-sizing: border-box;
   max-width: 100%;
-  width: 50rem;
+  width: 41.5rem;
   margin: 0;
-  padding: 2rem;
+  padding: 2rem 1rem 2rem;
 
   display: flex;
   flex-direction: column;
@@ -42,25 +76,25 @@ body {
 
   /* background-color */
 
-  margin-left: -23rem;
+  margin-left: -19.75rem;
 }
 
-@media (width < 73rem) {
-  #chase {
+@media (width < 61.25rem) {
+  #galley {
     margin-left: 0rem;
   }
 }
 
-#block {
-  width: 42rem;
+#chase {
+  width: 37.5rem;
   max-width: 100%;
 }
 
-#block > :nth-child(1) {
+#chase > :nth-child(1) {
   margin-top: 0;
 }
 
-#block > :nth-last-child(1) {
+#chase > :nth-last-child(1) {
   margin-bottom: 0;
 }
 
@@ -161,6 +195,11 @@ b {
   font-weight: 550;
 }
 
+.xb {
+  /* tries 650 then min {wgt | wgt > 650} then max {wgt | wgt < 650} */
+  font-weight: 650;
+}
+
 i {
   font-style: italic;
 }
@@ -199,19 +238,20 @@ margin-note {
   display: inline;
   float: right;
   clear: right;
-  /* margin-right: -23rem; */
-  margin: -1rem -24rem -1rem 0;
-  padding: 1rem 1rem 1rem 0;
-  width: 21rem;
+  margin: -1rem;
+  margin-right: -21.75rem;
+  padding: 1rem;
+  width: 18.75rem;
   font-size: 0.833333rem;
   line-height: 1.75em;
 }
 
-@media (width < 73rem) {
+@media (width < 61.25rem) {
   margin-note {
     float: unset;
     clear: unset; /* no effect */
     margin: 0;
+    margin-right: 0;
     padding: 0;
     width: 100%;  /* no effect */
     font-size: inherit;

@@ -1,12 +1,12 @@
 html {
-  --body-bg:   rgb( 16,  16,  16);
-  --body-fg:   rgb(224, 224, 224);
-  --chase-bg: rgba( 16,  16,  16, 0.5);
-  --pre-bg:    rgb( 16,  16,  16); /* rgb(14, 14, 14) */
-  --table-bd:  rgb( 64,  64,  64);
-  --hr-bd:     rgb(224, 224, 224);
-  --quote-bg:  rgb( 16,  16,  16);
-  --quote-bd:  rgb( 48,  48,  48);
+  --body-bg:    rgb( 16,  16,  16);
+  --body-fg:    rgb(224, 224, 224);
+  --galley-bg: rgba( 16,  16,  16, 0.5);
+  --pre-bg:     rgb( 16,  16,  16); /* rgb(14, 14, 14) */
+  --table-bd:   rgb( 64,  64,  64);
+  --hr-bd:      rgb(224, 224, 224);
+  --quote-bg:   rgb( 16,  16,  16);
+  --quote-bd:   rgb( 48,  48,  48);
 
   --body-img: radial-gradient(rgb(28, 28, 28) 1px, transparent 0);
 
@@ -22,6 +22,7 @@ html {
 
 html {
   font-family: "FF Meta", "FiraGO", "Fira Sans", sans-serif;
+  font-weight: 400;
 }
 
 body {
@@ -31,8 +32,8 @@ body {
   color: var(--body-fg);
 }
 
-#chase {
-  background-color: var(--chase-bg);
+#galley {
+  background-color: var(--galley-bg);
 }
 
 block-note {
@@ -52,7 +53,7 @@ margin-note {
   background-color: var(--mgn-bg);
 }
 
-@media (width < 73rem) {
+@media (width < 61.25rem) {
   margin-note {
     background-color: unset;
     color: var(--note-fg);
@@ -91,9 +92,21 @@ pre {
   font-weight: 500;
 }
 
-@media (width < 42rem) {
+/*
+width(chase) + 2 × padding(galley)  # but not extended-padding
+  = 37.5rem + 2 × 1rem
+  = 39.5rem
+
+39.5rem × 15px/rem = 592.5px
+592.5px × 0.75 = 444.5px
+
+15px × 0.9 = 13.5px
+15px × 0.8 = 12.0px
+*/
+
+@media (width < 444.5px) {
   pre {
-    font-size: 0.75em;
+    font-size: 0.8em;
   }
 }
 
@@ -103,28 +116,16 @@ code {
   font-weight: 500;
 }
 
-pre .sb {
+pre .sb, code .sb, .sb code {
   font-weight: 600;
 }
 
-code .sb {
-  font-weight: 600;
-}
-
-.sb code {
-  font-weight: 600;
-}
-
-pre b {
+pre b, code b, b code {
   font-weight: 650;
 }
 
-code b {
-  font-weight: 650;
-}
-
-b code {
-  font-weight: 650;
+pre .xb, code .xb, .xb code {
+  font-weight: 750;
 }
 
 tr {

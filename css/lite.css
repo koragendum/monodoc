@@ -1,0 +1,251 @@
+html {
+  --body-bg:   rgb(255, 232, 224);
+  --body-fg:   rgb(  0,   0,   0);
+  --galley-bg: rgb(255, 232, 224);
+  --pre-bg:    rgb(248, 224, 216);
+  --table-bd:  rgb( 64,  64,  64);
+  --hr-bd:     rgb(224, 224, 224);
+  --quote-bg:  rgb(248, 224, 216);
+  --quote-bd:  rgb(224, 200, 192);
+
+  --body-img: radial-gradient(rgb(224, 200, 192) 1px, transparent 0);
+
+  --note-fg: rgb(180, 138, 124);
+  --mgn-bg: rgb(255, 232, 224);
+
+  --a-fg:  rgb(192, 32, 32);
+  --a-dec: rgba(180, 138, 124, 0.25);
+
+  --note-a-fg: rgb(192, 32, 32);          /* TODO */
+  --note-a-dec: rgb(180, 138, 124, 0.25); /* TODO */
+}
+
+html {
+  font-family: "Schotis Text", serif;
+  font-weight: 500;
+  font-variant-ligatures: contextual common-ligatures discretionary-ligatures;
+  line-height: 1.5rem;
+}
+
+body {
+  background-color: var(--body-bg);
+  background-image: var(--body-img);
+  background-size: 1rem 1rem;
+  color: var(--body-fg);
+}
+
+#galley {
+  background-color: var(--galley-bg);
+}
+
+p {
+  hanging-punctuation: first last force-end;
+}
+
+@media (width >= 39.5rem) {
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+}
+
+block-note {
+  color: var(--note-fg);
+}
+
+block-quote {
+  margin: 0 0 0 0.1em;
+  padding-top: 0.375em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: 0.25em;
+  background-color: var(--quote-bg);
+  border-left-color: var(--quote-bd);
+}
+
+inline-note {
+  color: var(--note-fg);
+}
+
+margin-note {
+  line-height: 1.5em;
+  background-color: var(--mgn-bg);
+}
+
+@media (width < 61.25rem) {
+  margin-note {
+    background-color: unset;
+    color: var(--note-fg);
+  }
+  margin-note a {
+    color: var(--note-a-fg);
+  }
+  margin-note a:link, margin-note a:visited {
+    text-decoration-color: var(--note-a-dec);
+  }
+}
+
+a {
+  color: var(--a-fg);
+}
+
+a:link, a:visited {
+  text-decoration-color: var(--a-dec);
+}
+
+block-note a, inline-note a {
+  color: var(--note-a-fg);
+}
+
+block-note a:link, block-note a:visited, inline-note a:link, inline-note a:visited {
+  text-decoration-color: var(--note-a-dec);
+}
+
+.sb {
+  /* tries 550 then min {wgt | wgt > 550} then max {wgt | wgt < 550} */
+  font-weight: 550;
+}
+
+b {
+  /* tries 600 then min {wgt | wgt > 600} then max {wgt | wgt < 600} */
+  font-weight: 600;
+}
+
+.xb {
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.5em;
+  text-align: center;
+  font-variant-caps: small-caps;
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: 0.1em;
+}
+
+h1.gap-top {
+  margin-top: 1.5rem;
+}
+
+h1.gap-bottom {
+  margin-bottom: 1.125rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 400;
+  font-style: italic;
+}
+
+h2.gap-top {
+  margin-top: 1.5rem;
+}
+
+h2.gap-bottom {
+  margin-bottom: 1.0rem;
+}
+
+h2 a {
+  font-style: normal;
+}
+
+h2 a:link {
+  text-decoration-line: none;
+}
+
+h3 {
+  font-size: 1.0rem;
+  font-weight: 600;
+}
+
+h3.gap-top {
+  margin-top: 1.0rem;
+}
+
+h3.gap-bottom {
+  margin-bottom: 0.75rem;
+}
+
+block-code {
+  background-color: var(--pre-bg);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+pre {
+  font-family: "AT Name Mono", monospace;
+  font-size: 0.9em; /* TODO */
+  font-weight: 400;
+}
+
+/*
+width(chase) + 2 × padding(galley)  # but not extended-padding
+  = 37.5rem + 2 × 1rem
+  = 39.5rem
+
+39.5rem × 15px/rem = 592.5px
+592.5px × 0.75 = 444.5px
+
+15px × 0.9 = 13.5px
+15px × 0.8 = 12.0px
+*/
+
+@media (width < 444.5px) {
+  pre {
+    font-size: 0.8em;
+  }
+}
+
+code {
+  font-family: "AT Name Mono", monospace;
+  font-size: 0.9em;
+  font-weight: 400;
+}
+
+pre .sb, code .sb, .sb code {
+  font-weight: 500;
+}
+
+pre b, code b, b code {
+  font-weight: 550;
+}
+
+pre .xb, code .xb, .xb code {
+  font-weight: 650;
+}
+
+ul {
+  list-style-type: "›  ";
+}
+
+li > ul {
+  list-style-type: "•  ";
+}
+
+li::marker {
+  color: var(--a-fg);
+}
+
+tr {
+  border-bottom-color: var(--table-bd);
+}
+
+hr {
+  border-color: var(--hr-bd);
+}
+
+details {
+  background-color: var(--pre-bg);
+}
+
+details summary::marker {
+  color: var(--a-fg);
+}
+
+details summary > span {
+  text-decoration-color: var(--a-dec);
+}
