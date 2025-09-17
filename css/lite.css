@@ -21,10 +21,10 @@ html {
 }
 
 html {
-  font-family: "Schotis Text", serif;
+  font-family: "Schotis Text", "Century Schoolbook", serif;
   font-weight: 500;
   font-variant-ligatures: contextual common-ligatures discretionary-ligatures;
-  line-height: 1.5rem;
+  line-height: 1.6rem;
 }
 
 body {
@@ -67,8 +67,25 @@ inline-note {
   color: var(--note-fg);
 }
 
+/*
+inline-note::before {
+  content: " ◊";
+  content: " 〚";
+  font-family: "Century Schoolbook";
+  line-height: 0;
+  margin-right: -0.1em;
+}
+
+inline-note::after {
+  content: "〛 ";
+  font-family: "Century Schoolbook";
+  line-height: 0;
+  margin-left: -0.1em;
+}
+*/
+
 margin-note {
-  line-height: 1.5em;
+  line-height: 1.6em;
   background-color: var(--mgn-bg);
 }
 
@@ -77,6 +94,21 @@ margin-note {
     background-color: unset;
     color: var(--note-fg);
   }
+  /*
+  margin-note::before {
+    content: " ◊";
+    content: " 〚";
+    font-family: "Century Schoolbook";
+    line-height: 0;
+    margin-right: -0.1em;
+  }
+  margin-note::after {
+    content: "〛 ";
+    font-family: "Century Schoolbook";
+    line-height: 0;
+    margin-left: -0.1em;
+  }
+  */
   margin-note a {
     color: var(--note-a-fg);
   }
@@ -118,7 +150,7 @@ b {
 h1 {
   font-size: 1.25rem;
   font-weight: 400;
-  line-height: 1.5em;
+  line-height: 1.6em;
   text-align: center;
   font-variant-caps: small-caps;
   font-variant-numeric: oldstyle-nums;
@@ -166,6 +198,10 @@ h3.gap-top {
 
 h3.gap-bottom {
   margin-bottom: 0.75rem;
+}
+
+h3 a:link {
+  text-decoration-line: none;
 }
 
 block-code {

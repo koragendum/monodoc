@@ -5,7 +5,7 @@ import re
 from css     import StyleSheet
 from css     import parse as parse_css
 from css     import render as render_css
-from html    import ELEMENTS, VOID, HtmlElement
+from html    import ELEMENTS, VOID, HtmlElement, extant
 from html    import render as render_html
 from mathml  import parse as parse_math
 from inspect import currentframe, getframeinfo
@@ -53,7 +53,7 @@ AVAILABLEMODULES = {
 
 DEPENDENCIES = {
     'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
-    'expo-lite': ('base', 'lite', 'schotis', 'at-name'),
+    'expo-lite': ('base', 'lite', 'schotis', 'century', 'at-name'),
     'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'victor'),
 }
 
@@ -723,6 +723,7 @@ def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
 
 SIGIL = {
     '*': 'note',
+    '†': 'note',
     '"': 'quot',
     '>': 'iden',
     '•': 'list',
@@ -912,7 +913,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 if pre.strip():
                     block_kind = 'para'
                     block_lines.append(pre)
-                    finish()
+                finish()
                 block_kind = 'math'
                 block_meta = 'left' if line[start+1] == '>' else 'center'
                 if post.strip():
@@ -1088,6 +1089,7 @@ if __name__ == '__main__':
         name='galley'
     )
     body.prune()
+    elements, classes = extant(body)
     html = render_html(body)
 
     # Modules  - - - - - - - - - - - - -
@@ -1104,6 +1106,9 @@ if __name__ == '__main__':
 
     for mod in MODULES:
         _add(mod)
+
+    if 'math' in elements:
+        _add('math')
 
     modules = [
         fname for _, fname in

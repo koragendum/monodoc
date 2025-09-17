@@ -82,6 +82,14 @@ block-note a:link, block-note a:visited, inline-note a:link, inline-note a:visit
   text-decoration-color: var(--note-a-dec);
 }
 
+h2 a:link {
+  text-decoration-line: none;
+}
+
+h3 a:link {
+  text-decoration-line: none;
+}
+
 block-code {
   background-color: var(--pre-bg);
 }
