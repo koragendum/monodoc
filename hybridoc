@@ -45,6 +45,7 @@ AVAILABLEMODULES = {
     'new-cm':   (0, 'css/font/new-cm.css'  ),
     'operator': (0, 'css/font/operator.css'),
     'schotis':  (0, 'css/font/schotis.css' ),
+    'sudo':     (0, 'css/font/sudo.css'    ),
     'victor':   (0, 'css/font/victor.css'  ),
     # presets
     'expo-lite': None,
@@ -54,7 +55,7 @@ AVAILABLEMODULES = {
 DEPENDENCIES = {
     'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
     'expo-lite': ('base', 'lite', 'schotis', 'century', 'at-name'),
-    'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'victor'),
+    'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'sudo'),
 }
 
 

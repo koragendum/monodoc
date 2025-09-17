@@ -274,12 +274,13 @@ class HtmlElement:
                     or (index > 0 and flexible_item(index - 1))
                 flex_trailing = (index == L and flexible) \
                     or (index < L and flexible_item(index + 1))
-                if flex_leading or (multiline and item.startswith(' ')):
+                space_leading = item.startswith(' ')
+                if flex_leading or (multiline and space_leading):
                     item = item.removeprefix(' ')
                 if flex_trailing or (multiline and item.endswith(' ')):
                     item = item.removesuffix(' ')
                 if item:
-                    if multiline and (flex_leading or item.startswith(' ')):
+                    if multiline and (flex_leading or space_leading):
                         buffer.append('\n')
                         buffer.append(margin)
                     buffer.append(item)

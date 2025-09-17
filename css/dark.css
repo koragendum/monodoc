@@ -95,9 +95,15 @@ block-code {
 }
 
 pre {
+/*
   font-family: "Victor Mono", monospace;
   font-size: 0.9em;
   font-weight: 500;
+*/
+  font-family: "Sudo", monospace;
+  font-size: 0.935em; /* between 14/15 and 15/16 */
+  font-weight: 400;
+  line-height: 1.666667em;
 }
 
 /*
@@ -119,9 +125,15 @@ width(chase) + 2 × padding(galley)  # but not extended-padding
 }
 
 code {
+/*
   font-family: "Victor Mono", monospace;
   font-size: 0.9em;
   font-weight: 500;
+*/
+  font-family: "Sudo", monospace;
+  font-size: 0.935em;
+  font-weight: 400;
+  line-height: 1.666667em;
 }
 
 pre .sb, code .sb, .sb code {

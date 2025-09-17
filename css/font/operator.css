@@ -4,5 +4,5 @@
 @font-face { font-family: 'Operator Mono'; font-style: italic; font-weight: 400; src: url('/fonts/OperatorMono-BookItalic.otf')   format('opentype'); }
 @font-face { font-family: 'Operator Mono'; font-style: normal; font-weight: 500; src: url('/fonts/OperatorMono-Medium.otf')       format('opentype'); }
 @font-face { font-family: 'Operator Mono'; font-style: italic; font-weight: 500; src: url('/fonts/OperatorMono-MediumItalic.otf') format('opentype'); }
-@font-face { font-family: 'Operator Mono'; font-style: normal; font-weight: 600; src: url('/fonts/OperatorMono-Bold.otf')         format('opentype'); }
-@font-face { font-family: 'Operator Mono'; font-style: italic; font-weight: 600; src: url('/fonts/OperatorMono-BoldItalic.otf')   format('opentype'); }
+@font-face { font-family: 'Operator Mono'; font-style: normal; font-weight: 700; src: url('/fonts/OperatorMono-Bold.otf')         format('opentype'); }
+@font-face { font-family: 'Operator Mono'; font-style: italic; font-weight: 700; src: url('/fonts/OperatorMono-BoldItalic.otf')   format('opentype'); }
