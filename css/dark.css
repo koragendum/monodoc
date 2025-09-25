@@ -100,10 +100,16 @@ pre {
   font-size: 0.9em;
   font-weight: 500;
 */
+/*
   font-family: "Sudo", monospace;
-  font-size: 0.935em; /* between 14/15 and 15/16 */
+  font-size: 0.935em;
   font-weight: 400;
   line-height: 1.666667em;
+*/
+  font-family: "Iosevka", monospace;
+  font-size: 0.9375em;
+  font-weight: 400;
+  line-height: 1.75em;
 }
 
 /*
@@ -130,10 +136,16 @@ code {
   font-size: 0.9em;
   font-weight: 500;
 */
+/*
   font-family: "Sudo", monospace;
   font-size: 0.935em;
   font-weight: 400;
   line-height: 1.666667em;
+*/
+  font-family: "Iosevka", monospace;
+  font-size: 0.9375em;
+  font-weight: 400;
+  line-height: 1.75em;
 }
 
 pre .sb, code .sb, .sb code {
@@ -146,6 +158,66 @@ pre b, code b, b code {
 
 pre .xb, code .xb, .xb code {
   font-weight: 750;
+}
+
+/* hi-group.delimiter { } */
+
+hi-group.paren[data-depth="1"] {
+  color: rgb(224, 192, 255);
+}
+
+hi-group.paren[data-depth="2"] {
+  color: rgb(192, 128, 255);
+}
+
+hi-group.keyword {
+  color: rgb(128, 176, 255);
+}
+
+hi-group.flow {
+  color: rgb(255, 192, 160);
+}
+
+hi-group.constant {
+  color: rgb(208, 160, 255);
+}
+
+hi-group.function {
+  color: rgb(128, 255, 192);
+}
+
+hi-group.operator {
+  color: rgb(128, 255, 192);
+}
+
+hi-group.scope {
+  color: rgb(128, 192, 255);
+}
+
+hi-group.type {
+  color: rgb(0, 255, 192);
+}
+
+/* hi-group.identifier { } */
+
+hi-group.numeric {
+  color: rgb(255, 144, 144);
+}
+
+hi-group.character {
+  color: rgb(255, 128, 160); /* 255, 160, 240 */
+  background-color: rgb(24, 24, 24);
+  border-radius: 0.125em;
+}
+
+hi-group.quote {
+  color: rgb(192, 128, 255);
+  background-color: rgb(24, 24, 24);
+  border-radius: 0.125em;
+}
+
+hi-group.comment {
+  color: rgb(128, 128, 128);
 }
 
 tr {

@@ -114,60 +114,58 @@ mn {
   font-weight: 700;
 }
 
+/* First-level script */
+:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
+  font-size: 0.75rem; /* 12px */
+}
 :is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)):not(.gk) {
   font-weight: 600;
   font-variant-numeric: oldstyle-nums;
 }
-
+:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
+  font-size: 0.75rem; /* 12px */
+}
 :is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(.gk) {
   font-weight: 600;
   font-variant-numeric: oldstyle-nums;
 }
 
-:is(msup, msub, msubsup, munder, mover, munderover) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
-  font-size: 0.75rem; /* 12px */
-}
-
-:is(msup, msub, msubsup, munder, mover, munderover) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
-  font-size: 0.75rem; /* 12px */
-}
-
+/* Second-level script */
 :is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 0.625rem; /* 10px */
 }
-
 :is(msup, msub, msubsup, munder, mover, munderover) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 0.625rem; /* 10px */
 }
 
+/* Fraction second-level script */
 mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 0.5rem; /* 8px */
 }
-
 mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 0.5rem; /* 8px */
 }
 
+/* Inline fraction */
+math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
+  font-size: 0.75rem; /* 12px */
+}
 math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(.gk) {
   font-weight: 600;
 }
 
-math[display="inline"] mfrac :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
-  font-size: 0.75rem; /* 12px */
-}
-
+/* Inline fraction first-level script */
 math[display="inline"] mfrac :is(msup, msub, msubsup) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):nth-last-child(1) {
   font-size: 0.625rem; /* 10px */
 }
-
 math[display="inline"] mfrac :is(msup, msub, msubsup) > :nth-last-child(1) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 0.625rem; /* 10px */
 }
 
+/* Inline fraction second-level script */
 math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 0.5rem; /* 8px */
 }
-
 math[display="inline"] mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :not(:nth-child(1)) :is(mspace, mtext, mi:not(.mf), mn, mo.it) {
   font-size: 0.5rem; /* 8px */
 }

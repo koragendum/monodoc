@@ -7,6 +7,7 @@ from css     import parse as parse_css
 from css     import render as render_css
 from html    import ELEMENTS, VOID, HtmlElement, extant
 from html    import render as render_html
+from hilite  import default_handler
 from mathml  import parse as parse_math
 from inspect import currentframe, getframeinfo
 from os      import getcwd, path
@@ -20,7 +21,7 @@ HYBRIDOC_DIR = path.dirname(path.abspath(argv[0]))
 PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
 
 # Functions registered to transform code blocks.
-HANDLERS = {}
+HANDLERS = {'code': default_handler}
 
 # Populated by style elements.
 INLINESTYLES = []
@@ -56,7 +57,7 @@ AVAILABLEMODULES = {
 DEPENDENCIES = {
     'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
     'expo-lite': ('base', 'lite', 'schotis', 'century', 'at-name'),
-    'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'sudo'),
+    'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'iosevka'),
 }
 
 
@@ -79,8 +80,7 @@ def resolve_include(filename):
     return _resolve(filename, SOURCE_DIR, HYBRIDOC_DIR)
 
 
-def unindent(text):
-    lines = text.splitlines()
+def unindent(lines):
     lengths = ((len(ln), len(ln.lstrip())) for ln in lines)
     leftskip = min(
         (total - trimmed for total, trimmed in lengths if trimmed > 0),
@@ -153,6 +153,7 @@ def parse_error(text) -> HtmlElement:
         return HtmlElement('hybridoc-error', *text, **kwargs)
 
 
+TAGINIT  = re.compile('<')
 INITIAL  = re.compile('[' + re.escape("$%&'*<@^_`{}\u2020\u203B") + ']')
 NONSPACE = re.compile(r'[^ \t\n\r]')
 
@@ -195,10 +196,11 @@ SKIPELEM = {
 # ₈        1/24 em   ws8
 
 def _parse(
-    src    : str,
-    offset : int           = 0,
-    stop   : Optional[str] = None,
-    italic : bool          = False
+    src      : str,
+    offset   : int           = 0,
+    stop     : Optional[str] = None,
+    italic   : bool          = False,
+    verbatim : bool          = False,
 ) -> tuple[list[str | HtmlElement], int, bool]:
     # Returns HTML output, the index following the last character parsed,
     #   and whether the parse ended because the stop pattern was matched.
@@ -225,37 +227,41 @@ def _parse(
     out = []        # output for the slice src[:adv]
     stopped = False
 
-    def emit(text):
-        fragment = []
-        for char in SPECIAL.split(text):
-            if not char:
-                continue
-            match char:
-                case '<':
-                    fragment.append('&lt;')
-                case '>':
-                    fragment.append('&gt;')
-                case '('|')'|'['|']' if italic:
-                    if fragment:
-                        out.append(''.join(fragment))
-                        fragment = []
-                    out.append(HtmlElement('esc-i', char))
-                case '!' if not italic:
-                    if fragment:
-                        out.append(''.join(fragment))
-                        fragment = []
-                    out.append(HtmlElement('i', char))
-                case '₀':
-                    fragment.append('&shy;')
-                case '₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉':
-                    if fragment:
-                        out.append(''.join(fragment))
-                        fragment = []
-                    out.append(HtmlElement(SKIPELEM[char], ' '))
-                case _:
-                    fragment.append(char)
-        if fragment:
-            out.append(''.join(fragment))
+    if verbatim:
+        def emit(text):
+            out.append(text)
+    else:
+        def emit(text):
+            fragment = []
+            for char in SPECIAL.split(text):
+                if not char:
+                    continue
+                match char:
+                    case '<':
+                        fragment.append('&lt;')
+                    case '>':
+                        fragment.append('&gt;')
+                    case '('|')'|'['|']' if italic:
+                        if fragment:
+                            out.append(''.join(fragment))
+                            fragment = []
+                        out.append(HtmlElement('esc-i', char))
+                    case '!' if not italic:
+                        if fragment:
+                            out.append(''.join(fragment))
+                            fragment = []
+                        out.append(HtmlElement('i', char))
+                    case '₀':
+                        fragment.append('&shy;')
+                    case '₁'|'₂'|'₃'|'₄'|'₅'|'₆'|'₇'|'₈'|'₉':
+                        if fragment:
+                            out.append(''.join(fragment))
+                            fragment = []
+                        out.append(HtmlElement(SKIPELEM[char], ' '))
+                    case _:
+                        fragment.append(char)
+            if fragment:
+                out.append(''.join(fragment))
 
     ini = None  # index of the sigil being examined
 
@@ -270,9 +276,11 @@ def _parse(
         offset = post
         adv = post
 
+    initial = TAGINIT if verbatim else INITIAL
+
     length = len(src)
     while offset < length:
-        sigil = INITIAL.search(src, offset)
+        sigil = initial.search(src, offset)
 
         # There are no more sigils that could start a delimited region,
         #   so there can’t be any more delimited regions, so we tidy up
@@ -405,8 +413,10 @@ def _parse(
                             push(index)
                             continue
                         if extension == '.py':
+                            restore = GLOBALS['STREAM']
                             GLOBALS['STREAM'] = out
                             exec(content, GLOBALS)
+                            GLOBALS['STREAM'] = restore
                             push(index)
                             continue
                         inner, _, _ = _parse(content.strip())
@@ -428,8 +438,9 @@ def _parse(
                 else:
                     inner_italic = italic or element == 'i' \
                         or ('class' in attrs and 'i' in attrs['class'].split())
+                    inner_verbatim = verbatim or element == 'pre'
                     inner, post, complete = \
-                        _parse(src, index, '</', inner_italic)
+                        _parse(src, index, '</', inner_italic, inner_verbatim)
 
                 if not complete:
                     push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
@@ -457,8 +468,10 @@ def _parse(
 
                 if element == 'python':
                     push(end + 1)
+                    restore = GLOBALS['STREAM']
                     GLOBALS['STREAM'] = out
-                    exec(unindent(inner), GLOBALS)
+                    exec(unindent(inner.splitlines()), GLOBALS)
+                    GLOBALS['STREAM'] = restore
                     continue
 
                 push(end + 1, HtmlElement(element, *inner, **attrs))
@@ -510,12 +523,11 @@ def _parse(
 
             # Inline code
             case '`':
-                # TODO use _parse
-                end = src.find('`', offset)
-                if end == -1:
-                    push(offset, parse_error('`'))
+                inner, post, complete = _parse(src, offset, '`', italic)
+                if complete:
+                    push(post, HtmlElement('code', *inner))
                 else:
-                    push(end + 1, HtmlElement('code', src[offset:end]))
+                    push(offset, parse_error('`'))
 
             # Small capitals
             case '%':
@@ -698,8 +710,8 @@ def _iden(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     output.append(closing)
 
 
-def _list(output : list[str], items : list[list[str]], gap_a : bool, gap_b : bool):
-    opening, closing = _tagpair('ul', gap_a, gap_b)
+def _list(output : list[str], items : list[list[str]], meta, gap_a : bool, gap_b : bool):
+    opening, closing = _tagpair('ul', gap_a, gap_b, _class=meta)
     output.append(opening)
     for item in items:
         output.append('<li>')
@@ -731,6 +743,7 @@ SIGIL = {
     '"': 'quot',
     '>': 'iden',
     '•': 'list',
+    '-': 'list',
     '#': 'code',
 }
 
@@ -746,8 +759,11 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #
     #       #3 [anchor] Third-level Heading
     #
-    # note  * block note
+    # note  † block note
     #         spanning multiple lines
+    #
+    # note  * block note
+    #         automatically italicized
     #
     # quot  " block quote
     #         spanning multiple lines
@@ -761,6 +777,8 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #         spanning multiple lines
     #       • second list item
     #         • with a nested list
+    #
+    # list  - without markers
     #
     # code  # lang
     #         code block
@@ -881,6 +899,52 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                     blocks.append(('head', [level, anchor, text], None))
                     continue
 
+                words = trimmed[1:].lstrip().split(maxsplit=1)
+                directive = words[0].lower()
+
+                if directive == 'include':
+                    if len(words) > 1:
+                        filename = words[1]
+                        location = resolve_include(filename)
+                        if location is not None:
+                            with open(location) as external:
+                                content = external.read()
+                            _, extension = path.splitext(filename)
+                            match extension:
+                                case '.css':
+                                    INLINESTYLES.append(content)
+                                case '.py':
+                                    restore = GLOBALS['SOURCE']
+                                    GLOBALS['SOURCE'] = []
+                                    exec(content, GLOBALS)
+                                    todo.extend(reversed(GLOBALS['SOURCE']))
+                                    GLOBALS['SOURCE'] = restore
+                                case _:
+                                    todo.extend(reversed(content.splitlines()))
+                            continue
+
+                elif directive == 'module':
+                    if len(words) > 1:
+                        MODULES.update(words[1].split())
+                        continue
+
+                elif directive == 'exec':
+                    if len(words) == 1:
+                        exec_lines = []
+                        while todo:
+                            exec_line = todo.pop()
+                            exec_trimmed = exec_line.lstrip()
+                            if exec_trimmed.startswith('#') and \
+                                    exec_trimmed[1:].strip().lower() == 'end':
+                                break
+                            exec_lines.append(exec_line)
+                        restore = GLOBALS['SOURCE']
+                        GLOBALS['SOURCE'] = []
+                        exec(unindent(exec_lines), GLOBALS)
+                        todo.extend(reversed(GLOBALS['SOURCE']))
+                        GLOBALS['SOURCE'] = restore
+                        continue
+
             content = trimmed[1:].lstrip()
             overhang = len(trimmed) - len(content)
             if overhang > 1:
@@ -888,19 +952,21 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 offset = indent + overhang
 
                 if char == '#':
-                    mods = [mod.lower() for mod in content.split()]
-                    if mods[0] == 'begin':
+                    modifiers = [mod.lower() for mod in content.split()]
+                    if modifiers[0] == 'begin':
                         block_kind = 'verb'
-                        block_meta = mods[1:]
+                        block_meta = modifiers[1:]
                     else:
                         block_kind = 'code'
-                        block_meta = mods
+                        block_meta = modifiers
                     continue
 
                 block_kind = SIGIL[char]
                 block_lines.append(content)
                 if char == '*':
                     block_meta = 'i'
+                if char == '-':
+                    block_meta = 'unmarked'
                 continue
 
         # INVARIANT block_kind is still None or "para".
@@ -939,21 +1005,22 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     filtered = []
     gap = False
     prev_kind = None
+    prev_meta = None
     active_list = None
     for item in blocks:
         if item == 'gap':
             gap = True
             continue
-        kind, lines, _ = item
+        kind, lines, meta = item
         if kind == 'list':
-            if prev_kind == 'list':
+            if prev_kind == 'list' and meta == prev_meta:
                 active_list.append(lines)
                 gap = False
                 continue
             if gap and filtered:
                 filtered.append('gap')
             active_list = [lines]
-            filtered.append(('list', active_list, None))
+            filtered.append(('list', active_list, meta))
         else:
             if kind == 'para' and prev_kind == 'para':
                 enclose = True
@@ -961,6 +1028,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 filtered.append('gap')
             filtered.append(item)
         prev_kind = kind
+        prev_meta = meta
         gap = False
 
     blocks = filtered
@@ -985,7 +1053,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             case 'note': _note(output, lines, meta, gap_above, gap_below)
             case 'quot': _quot(output, lines,       gap_above, gap_below)
             case 'iden': _iden(output, lines,       gap_above, gap_below)
-            case 'list': _list(output, lines,       gap_above, gap_below)
+            case 'list': _list(output, lines, meta, gap_above, gap_below)
             case 'code': _code(output, lines, meta, gap_above, gap_below)
             case 'verb': _code(output, lines, meta, gap_above, gap_below)
             case 'math': _math(output, lines, meta, gap_above, gap_below)
@@ -1001,7 +1069,9 @@ def compile(src : str) -> list[str | HtmlElement]:
 # Globals  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
-# Available for python elements. Routines can emit HTML by appending to STREAM.
+# Available for python elements. Routines can emit HTML by appending lines of
+#   text to SOURCE or appending instances of HtmlElement or str to STREAM
+#   (whichever is not None).
 GLOBALS = {
     'HtmlElement':  HtmlElement,
     'parse_css':    parse_css,
@@ -1012,6 +1082,7 @@ GLOBALS = {
     'HANDLERS':     HANDLERS,
     'INLINESTYLES': INLINESTYLES,
     'MODULES':      MODULES,
+    'SOURCE':       None,
     'STREAM':       None
 }
 

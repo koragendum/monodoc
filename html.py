@@ -37,7 +37,8 @@ ELEMENTS = {
     'block-indent'              ,
     'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
     'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
-    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
+    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hi-group'   ,
+    'hybridoc-error'
 }
 
 VOID = {
@@ -75,7 +76,8 @@ SINGLELINE = {
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
     'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
-    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
+    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hi-group'   ,
+    'hybridoc-error'
 }
 
 # Ordinarily, leading or trailing whitespace within an element may be stripped
@@ -93,7 +95,8 @@ RESPECTING = {
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
     'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
-    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hybridoc-error'
+    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hi-group'   ,
+    'hybridoc-error'
 }
 
 COMPACTSP = re.compile(r'[ \t\r\n]+')

@@ -396,6 +396,10 @@ code {
   font-weight: 400;
 }
 
+hi-group {
+  display: inline;
+}
+
 /* Lists  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 ul {
@@ -411,6 +415,22 @@ li > ul {
 
 li {
   margin: 0.25em 0 0.25em;
+}
+
+li li {
+  margin: 0;
+}
+
+ul.unmarked {
+  list-style-type: none;
+}
+
+li > ul.unmarked {
+  list-style-type: none;
+}
+
+ul.unmarked > li {
+  margin: 0;
 }
 
 /* Tables * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
