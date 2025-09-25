@@ -1,13 +1,13 @@
-@font-face { font-family: 'Iosevka'; font-weight: 400; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-Condensed.woff2')               format('woff2'); }
-@font-face { font-family: 'Iosevka'; font-weight: 400; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedItalic.woff2')         format('woff2'); }
-@font-face { font-family: 'Iosevka'; font-weight: 700; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-CondensedBold.woff2')           format('woff2'); }
-@font-face { font-family: 'Iosevka'; font-weight: 700; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedBoldItalic.woff2')     format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 300; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-CondensedLight.woff2')          format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 300; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedLightItalic.woff2')    format('woff2'); }
+@font-face { font-family: 'Iosevka'; font-weight: 400; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-Condensed.woff2')               format('woff2'); }
+@font-face { font-family: 'Iosevka'; font-weight: 400; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedItalic.woff2')         format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 500; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-CondensedMedium.woff2')         format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 500; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedMediumItalic.woff2')   format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 600; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-CondensedSemiBold.woff2')       format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 600; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedSemiBoldItalic.woff2') format('woff2'); }
+@font-face { font-family: 'Iosevka'; font-weight: 700; font-stretch: condensed; font-style: normal; src: url('/fonts/IosevkaCustom-CondensedBold.woff2')           format('woff2'); }
+@font-face { font-family: 'Iosevka'; font-weight: 700; font-stretch: condensed; font-style: italic; src: url('/fonts/IosevkaCustom-CondensedBoldItalic.woff2')     format('woff2'); }
 
 @font-face { font-family: 'Iosevka'; font-weight: 300; font-stretch: semi-condensed; font-style: normal; src: url('/fonts/IosevkaCustom-SemiCondensedLight.woff2')          format('woff2'); }
 @font-face { font-family: 'Iosevka'; font-weight: 300; font-stretch: semi-condensed; font-style: italic; src: url('/fonts/IosevkaCustom-SemiCondensedLightItalic.woff2')    format('woff2'); }

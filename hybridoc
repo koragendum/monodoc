@@ -38,6 +38,7 @@ AVAILABLEMODULES = {
     # fonts
     'alegreya': (0, 'css/fonts/alegreya.css'),
     'at-name':  (0, 'css/fonts/at-name.css' ),
+    'berkeley': (0, 'css/fonts/berkeley.css'),
     'bodoni':   (0, 'css/fonts/bodoni.css'  ),
     'century':  (0, 'css/fonts/century.css' ),
     'fira':     (0, 'css/fonts/fira.css'    ),
@@ -56,7 +57,7 @@ AVAILABLEMODULES = {
 
 DEPENDENCIES = {
     'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
-    'expo-lite': ('base', 'lite', 'schotis', 'century', 'at-name'),
+    'expo-lite': ('base', 'lite', 'schotis', 'century', 'berkeley', 'iosevka'),
     'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'iosevka'),
 }
 

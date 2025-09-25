@@ -213,9 +213,10 @@ block-code {
 }
 
 pre {
-  font-family: "AT Name Mono", monospace;
-  font-size: 0.9em; /* TODO */
+  font-family: "Berkeley Mono", "Iosevka", monospace;
+  font-size: 0.9375em;
   font-weight: 400;
+  font-stretch: semi-condensed;
 }
 
 /*
@@ -237,9 +238,10 @@ width(chase) + 2 × padding(galley)  # but not extended-padding
 }
 
 code {
-  font-family: "AT Name Mono", monospace;
-  font-size: 0.9em;
+  font-family: "Berkeley Mono", "Iosevka", monospace;
+  font-size: 0.9375em;
   font-weight: 400;
+  font-stretch: condensed;
 }
 
 pre .sb, code .sb, .sb code {

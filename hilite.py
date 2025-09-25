@@ -112,7 +112,7 @@ FLOW = {
     'break', 'loop', 'for', 'next', 'while', 'until',
 }
 
-FUNCTION = {'and', 'or', 'not', 'xor', 'mod'}
+FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as'}
 
 CONSTANT = {'NONE', 'None', 'none', 'NULL', 'null', 'nil', 'TAU', 'tau'}
 
@@ -170,7 +170,7 @@ def default_handler(lang, lines, modifiers=None):
                     if ITALIC.fullmatch(text): italic = True
                 else:
                     if ITALIC.fullmatch(text): italic = True
-                    if index+1 < length and tokens[index+1][1] == '(':
+                    if index+1 < length and tokens[index+1][1] in ('(', '⟨'):
                         _class = "function"
                     else:
                         _class = "identifier"
