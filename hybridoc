@@ -328,7 +328,7 @@ def _parse(
                     offset += 3
                     end = src.find('-->', offset)
                     if end == -1:
-                        push(offset, parse_error('&lt;!--'))
+                        push(offset, parse_error('<!--'))
                     else:
                         push(end + 3)
                     continue
@@ -337,7 +337,7 @@ def _parse(
                 #   (Note that we’re overly restrictive here.)
                 if src[offset:offset+1] == '/':
                     offset += 1
-                    push(offset, parse_error('&lt;/'))
+                    push(offset, parse_error('</'))
                     continue
 
                 # Less-than operator
@@ -368,14 +368,14 @@ def _parse(
                         index += 1
                         delim = src.find(char, index)
                         if delim == -1:
-                            err = parse_error('&lt;' + src[offset:index])
+                            err = parse_error('<' + src[offset:index])
                             push(index, err)
                             break
                         index = delim + 1
                         continue
                     raise AssertionError
                 else:
-                    push(offset, parse_error('&lt;'))
+                    push(offset, parse_error('<'))
                     continue
 
                 if element is None:
@@ -386,12 +386,12 @@ def _parse(
                     # This isn’t an HTML tag, although it looks like one.
                     #   We’re a little more strict than we need to be; see
                     #   https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
-                    push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
+                    push(index, parse_error(f'<{src[offset:index-1]}>'))
                     continue
 
                 if attrs is None:
                     # The attributes are not well-formed.
-                    push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
+                    push(index, parse_error(f'<{src[offset:index-1]}>'))
                     continue
 
                 # 3 Find the closing tag
@@ -444,7 +444,7 @@ def _parse(
                         _parse(src, index, '</', inner_italic, inner_verbatim)
 
                 if not complete:
-                    push(index, parse_error(f'&lt;{src[offset:index-1]}&gt;'))
+                    push(index, parse_error(f'<{src[offset:index-1]}>'))
                     continue
 
                 # 4 Check that the closing tag matches
@@ -452,14 +452,14 @@ def _parse(
                 if end == -1:
                     interior = f'&lt;{element}&gt;...' if special \
                         else HtmlElement(element, *inner, **attrs)
-                    push(post, interior, parse_error(f'&lt;/'))
+                    push(post, interior, parse_error(f'</'))
                     continue
 
                 tag = src[post:end]
                 if tag.strip() != element:
                     interior = f'&lt;{element}&gt;...' if special \
                         else HtmlElement(element, *inner, **attrs)
-                    push(end + 1, interior, parse_error(f'&lt;/{tag}&gt;'))
+                    push(end + 1, interior, parse_error(f'</{tag}>'))
                     continue
 
                 if element == 'style':

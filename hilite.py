@@ -21,11 +21,54 @@ RIGHT_QUOTE2 = '”'
 COMMENT_CHAR = '#'
 COMMENT_DYAD = '//'
 
+HTML_ENTITY = re.compile(r'&(?:[a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+);')
+
 LEFT_OPERAND = ('word', 'rdelim', 'integer', 'fractional')
+
+def _replace(text):
+    return text.replace('<', '&lt;').replace('>', '&gt;')
+
+def _escape(text):
+    if '<' not in text:
+        return text.replace('>', '&gt;')
+    fragments = []
+    length = len(text)
+    final = length - 1
+    offset = 0
+    taken = 0
+    while offset < length:
+        start = text.find('<', offset)
+        if start == -1:
+            break
+        if start > 0 and text[start-1] == '\\':
+            end = text.find('>', start+1)
+            if end > 0:
+                fragments.append(_replace(text[taken:start-1]))
+                fragments.append(text[start:end+1])
+                offset = end + 1
+                taken = end + 1
+                continue
+
+        elif start < final and text[start+1] == '/':
+            end = text.find('>', start+2)
+            if end > 0:
+                fragments.append(_replace(text[taken:start]))
+                fragments.append(text[start:end+1])
+                offset = end + 1
+                taken = end + 1
+                continue
+
+        offset = start + 1
+
+    if taken < length:
+        fragments.append(text[taken:])
+
+    return ''.join(fragments)
 
 def lex(lines):
     text = '\n'.join(lines)
     length = len(text)
+    final = length - 1
     tokens = []
     offset = 0
     while offset < length:
@@ -57,6 +100,20 @@ def lex(lines):
             continue
 
         char = text[offset]
+
+        if char == '\\' and offset < final and text[offset+1] == '<':
+            end = text.find('>', offset+2)
+            if end > 0:
+                tokens.append(('tag', text[offset+1:end+1]))
+                offset = end + 1
+                continue
+
+        if char == '<' and offset < final and text[offset+1] == '/':
+            end = text.find('>', offset+2)
+            if end > 0:
+                tokens.append(('tag', text[offset:end+1]))
+                offset = end + 1
+                continue
 
         if char in LEFT_DELIM:
             tokens.append(('ldelim', char))
@@ -91,6 +148,12 @@ def lex(lines):
                 offset = end
                 continue
 
+        match = HTML_ENTITY.match(text, offset)
+        if match:
+            tokens.append(('entity', match.group(0)))
+            offset = match.end()
+            continue
+
         if pair in DYAD:
             tokens.append(('symbol', pair))
             offset += 2
@@ -104,7 +167,7 @@ def lex(lines):
 
 KEYWORD = {
     'define', 'def', 'fn', 'const', 'mutable', 'mut', 'public', 'pub',
-    'raw', 'let', 'use', 'in', 'with',
+    'raw', 'let', 'use', 'in', 'with', 'impl',
 }
 
 FLOW = {
@@ -150,6 +213,9 @@ def default_handler(lang, lines, modifiers=None):
     var_depth = [0, 0, 0, 0]
     for index, (kind, text) in enumerate(tokens):
         match kind:
+            case 'tag' | 'entity':
+                output.append(text)
+
             case 'space':
                 output.append(text)
 
@@ -179,7 +245,7 @@ def default_handler(lang, lines, modifiers=None):
                 output.append(f'<{ELEM} class="{_class}">{text}</{ELEM}>')
 
             case 'symbol':
-                esc = text.replace('<', '&lt;').replace('>', '&gt;')
+                esc = _replace(text)
                 if text == SCOPE:
                     output.append(f'<{ELEM} class="scope">{esc}</{ELEM}>')
                 elif OPERATOR.fullmatch(text):
@@ -210,12 +276,15 @@ def default_handler(lang, lines, modifiers=None):
                 output.append(f'<{ELEM} class="numeric">{text}</{ELEM}>')
 
             case 'quote1':
-                output.append(f'<{ELEM} class="character">{text}</{ELEM}>')
+                esc = _escape(text)
+                output.append(f'<{ELEM} class="character">{esc}</{ELEM}>')
 
             case 'quote2':
-                output.append(f'<{ELEM} class="quote">{text}</{ELEM}>')
+                esc = _escape(text)
+                output.append(f'<{ELEM} class="quote">{esc}</{ELEM}>')
 
             case 'comment':
-                output.append(f'<{ELEM} class="comment">{text}</{ELEM}>')
+                esc = _escape(text)
+                output.append(f'<{ELEM} class="comment">{esc}</{ELEM}>')
 
     return ''.join(output).splitlines()

@@ -18,6 +18,9 @@ html {
 
   --note-a-fg: rgb(96, 72, 144);
   --note-a-dec: rgba(144, 144, 144, 0.25);
+
+  --error-fg: rgb(256, 64, 64);
+  --error-bg: rgb(24, 24, 24);
 }
 
 html {
@@ -64,6 +67,11 @@ margin-note {
   margin-note a:link, margin-note a:visited {
     text-decoration-color: var(--note-a-dec);
   }
+}
+
+hybridoc-error {
+  color: var(--error-fg);
+  background-color: var(--error-bg);
 }
 
 a {
