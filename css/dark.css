@@ -90,6 +90,15 @@ block-note a:link, block-note a:visited, inline-note a:link, inline-note a:visit
   text-decoration-color: var(--note-a-dec);
 }
 
+h1 {
+  background-image: linear-gradient(to right, oklch(60% 0.16 300deg), oklch(80% 0.16 15deg));
+/*background-image: linear-gradient(to right, oklch(60% 0.20 285deg), oklch(80% 0.20 30deg));*/
+/*background-image: linear-gradient(to right, oklch(70% 0.30 285deg), oklch(80% 0.25 30deg));*/
+  background-clip: text;
+  color: transparent;
+  width: fit-content;
+}
+
 h2 a:link {
   text-decoration-line: none;
 }

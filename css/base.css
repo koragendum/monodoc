@@ -231,8 +231,9 @@ inline-note {
   display: inline;
 }
 
+/*
 inline-note::before {
-  /* content: " ※"; */
+  content: " ※";
   content: " ";
   margin-right: 0.166667em;
 }
@@ -240,6 +241,7 @@ inline-note::before {
 inline-note::after {
   content: " ";
 }
+*/
 
 margin-note {
   display: inline;

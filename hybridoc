@@ -802,6 +802,9 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #
     #       $> left-aligned and indented MathML block $
 
+    # TODO ^ small block note (faint and size of margin note)
+    # TODO ! inset or centered block
+
     # This is a list of "gap" or ("head", [level, anchor, text], None)
     # or ("kind", [line, ...], meta) triples where kind is one of the
     # following: para, note, quot, iden, list, code verb, or math.
