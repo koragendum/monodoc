@@ -27,6 +27,11 @@ class Map:
             self.keys.append(key)
         self.data[key] = value
 
+    def delete(self, key):
+        if key in self.data:
+            self.keys.remove(key)
+            del self.data[key]
+
     def __iter__(self):
         return iter(self.keys)
 
@@ -44,6 +49,9 @@ class CssRules:
 
     def __getitem__(self, selector):
         return self.ruleset[selector]
+
+    def delete(self, selector):
+        self.ruleset.delete(selector)
 
     def render(self, buffer, depth=0):
         # NOTE that unlike HtmlElement.render, the elements of the buffer are
@@ -86,9 +94,9 @@ class StyleSheet:
         for other in self.other:
             buffer.extend(margin + ln for ln in other.split('\n'))
         self.base.render(buffer, depth)
-        for query, ruleset in self.media.items():
+        for query, css_rules in self.media.items():
             buffer.append(f'{margin}@media {query} {{')
-            ruleset.render(buffer, depth + 1)
+            css_rules.render(buffer, depth + 1)
             buffer.append(f'{margin}}}')
         for linenum, error in self.errors:
             buffer.append(margin + f'/* HYBRIDOC ERROR {linenum}')
@@ -285,7 +293,10 @@ def _parse(
                         case '@media':
                             assert len(tokens) > 1
                             query = canonicalize_query(tokens[1])
-                            offset = _parse(stylesheet.media[query], src, offset)
+                            css_rules = stylesheet.media[query]
+                            offset = _parse(css_rules, src, offset)
+                            if not css_rules.ruleset and not css_rules.errors:
+                                stylesheet.media.delete(query)
 
                         case '@font-face' | '@font-feature-values':
                             end = _closing_brace(src, offset)
@@ -336,7 +347,12 @@ def _parse(
                     value, end = dec
                     value = value.strip()
                     if value:
-                        ruleset[prop] = value
+                        if value == 'delete':
+                            ruleset.delete(prop)
+                            if not ruleset:
+                                stylesheet.delete(selector)
+                        else:
+                            ruleset[prop] = value
                     else:
                         stylesheet.errors.append(LN(f'{prop}:'))
                     offset = end

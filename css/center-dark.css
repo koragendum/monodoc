@@ -1,0 +1,25 @@
+@media (width < 61.25rem) {
+  margin-note {
+    background-color: delete;
+    color: delete;
+  }
+  margin-note a {
+    color: delete;
+  }
+  margin-note a:link, margin-note a:visited {
+    text-decoration-color: delete;
+  }
+}
+
+@media (width < 81.0rem) {
+  margin-note {
+    background-color: unset;
+    color: var(--note-fg);
+  }
+  margin-note a {
+    color: var(--note-a-fg);
+  }
+  margin-note a:link, margin-note a:visited {
+    text-decoration-color: var(--note-a-dec);
+  }
+}

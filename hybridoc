@@ -34,34 +34,37 @@ MODULES = set()
 
 # Maps module name to a CSS file or None.
 AVAILABLEMODULES = {
-    'base': (1, 'css/base.css'),
-    'lite': (2, 'css/lite.css'),
-    'dark': (2, 'css/dark.css'),
-    'math': (3, 'css/math.css'),
+    'base':        (4, 'css/base.css'),
+    'lite':        (5, 'css/lite.css'),
+    'dark':        (5, 'css/dark.css'),
+    'math':        (6, 'css/math.css'),
+    'center':      (7, 'css/center.css'),
+    'center-dark': (7, 'css/center-dark.css'),
     # fonts
     'alegreya': (0, 'css/fonts/alegreya.css'),
-    'at-name':  (0, 'css/fonts/at-name.css' ),
-    'berkeley': (0, 'css/fonts/berkeley.css'),
-    'bodoni':   (0, 'css/fonts/bodoni.css'  ),
-    'century':  (0, 'css/fonts/century.css' ),
+    'at-name':  (1, 'css/fonts/at-name.css' ),
+    'berkeley': (1, 'css/fonts/berkeley.css'),
+    'bodoni':   (2, 'css/fonts/bodoni.css'  ),
+    'century':  (2, 'css/fonts/century.css' ),
     'fira':     (0, 'css/fonts/fira.css'    ),
     'ff-meta':  (0, 'css/fonts/ff-meta.css' ),
-    'iosevka':  (0, 'css/fonts/iosevka.css' ),
+    'iosevka':  (1, 'css/fonts/iosevka.css' ),
     'inter':    (0, 'css/fonts/inter.css'   ),
-    'new-cm':   (0, 'css/fonts/new-cm.css'  ),
-    'operator': (0, 'css/fonts/operator.css'),
+    'new-cm':   (3, 'css/fonts/new-cm.css'  ),
+    'operator': (1, 'css/fonts/operator.css'),
     'schotis':  (0, 'css/fonts/schotis.css' ),
-    'sudo':     (0, 'css/fonts/sudo.css'    ),
-    'victor':   (0, 'css/fonts/victor.css'  ),
+    'sudo':     (1, 'css/fonts/sudo.css'    ),
+    'victor':   (1, 'css/fonts/victor.css'  ),
     # presets
-    'expo-lite': None,
-    'expo-dark': None,
+    'default-lite': None,
+    'default-dark': None,
 }
 
 DEPENDENCIES = {
-    'math':      ('schotis', 'bodoni', 'new-cm', 'century'),
-    'expo-lite': ('base', 'lite', 'schotis', 'century', 'berkeley', 'iosevka'),
-    'expo-dark': ('base', 'dark', 'ff-meta', 'fira', 'iosevka'),
+    'math':         ('schotis', 'bodoni', 'new-cm', 'century'),
+    'default-lite': ('base', 'lite', 'schotis', 'century', 'berkeley', 'iosevka'),
+    'default-dark': ('base', 'dark', 'ff-meta', 'fira', 'iosevka'),
+    'center-dark':  ('center', ),
 }
 
 
@@ -657,10 +660,11 @@ def parse(src : str) -> list[str | HtmlElement]:
 
 def _tagpair(
     element : str,
-    gap_a : bool,
-    gap_b : bool,
-    _id   : Optional[str] = None,
-    _class: Optional[str] = None,
+    gap_a  : bool,
+    gap_b  : bool,
+    _id    : Optional[str] = None,
+    _class : Optional[str] = None,
+    extra  : Optional[str] = None,
 ) -> tuple[str, str]:
     opening = [element]
     if _id is not None:
@@ -672,6 +676,8 @@ def _tagpair(
     if classes:
         classes = " ".join(classes)
         opening.append(f'class="{classes}"')
+    if extra:
+        opening.append(extra)
     opening = " ".join(opening)
     return (f'<{opening}>', f'</{element}>')
 
@@ -725,10 +731,15 @@ def _list(output : list[str], items : list[list[str]], meta, gap_a : bool, gap_b
 
 
 def _code(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
-    if meta and (lang := meta[0]) in HANDLERS:
-        modifiers = meta[1:] or None
-        lines = HANDLERS[lang](lang, lines, modifiers=modifiers)
-    opening, closing = _tagpair('block-code', gap_a, gap_b)
+    if meta:
+        lang = meta[0].lower()
+        if lang in HANDLERS:
+            modifiers = meta[1:] or None
+            lines = HANDLERS[lang](lang, lines, modifiers=modifiers)
+        extra = f'data-lang="{lang}"'
+    else:
+        extra = None
+    opening, closing = _tagpair('block-code', gap_a, gap_b, extra=extra)
     output.append(opening + '<pre>')
     output.extend(lines)
     output.append('</pre>' + closing)

@@ -1,0 +1,57 @@
+/*
+total-width(galley)
+  = width(chase) + 2 × padding(galley) + 2 × extended-padding
+  = 37.5rem + 2 × 1rem + 2 × 1rem
+  = 41.5rem
+
+total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
+  = 41.5rem + 2 × (18.75rem + 1rem)
+  = 81.0rem
+*/
+
+#galley {
+  margin-left: delete;
+}
+
+@media (width < 61.25rem) {
+  #galley {
+    margin-left: delete;
+  }
+  margin-note {
+    float: delete;
+    clear: delete;
+    margin: delete;
+    margin-right: delete;
+    padding: delete;
+    width: delete;
+    font-size: delete;
+    line-height: delete;
+  }
+  margin-note::before {
+    content: delete;
+    margin-right: delete;
+  }
+  margin-note::after {
+    content: delete;
+  }
+}
+
+@media (width < 81.0rem) {
+  margin-note {
+    float: unset;
+    clear: unset;
+    margin: 0;
+    margin-right: 0;
+    padding: 0;
+    width: 100%;
+    font-size: inherit;
+    line-height: inherit;
+  }
+  margin-note::before {
+    content: " ";
+    margin-right: 0.166667em;
+  }
+  margin-note::after {
+    content: " ";
+  }
+}
