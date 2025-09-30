@@ -206,6 +206,8 @@ DELIM_NAME = {
 ELEM = 'hi-group'
 
 def default_handler(lang, lines, modifiers=None):
+    # The less-than character “<” is escaped as “&lt;”
+    #   unless it is preceded by “\” or followed by “/”.
     tokens = lex(lines)
     length = len(tokens)
     output = []

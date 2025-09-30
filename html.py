@@ -324,3 +324,62 @@ def extant(node):
     elements, classes = set(), set()
     _extant(elements, classes, node)
     return (elements, classes)
+
+
+def replace(
+    element, expr, repl,
+    origin=None, exempt=None,
+    final=False, recurse=False
+):
+    # When final is True, do not restart at origin nodes in exempt subtrees.
+    # When recurse is True, examine newly created nodes.
+    def _replace(elem, active):
+        if (not active) and origin is not None and origin(elem):
+            active = True
+        if (active or final) and exempt is not None and exempt(elem):
+            if final: return
+            active = False
+        inner = elem.inner
+        if active:
+            expanded = []
+            modified = False
+
+            if isinstance(expr, str):
+                for item in inner:
+                    if isinstance(item, str) and expr in item:
+                        fragments = iter(item.split(expr))
+                        expanded.append(next(fragments))
+                        for fragment in fragments:
+                            expanded.append(repl(expr))
+                            expanded.append(fragment)
+                        modified = True
+                    else:
+                        expanded.append(item)
+
+            if isinstance(expr, re.Pattern):
+                for item in inner:
+                    if isinstance(item, str):
+                        length = len(item)
+                        offset = 0
+                        while offset < length:
+                            match = expr.search(item, offset)
+                            if match is None:
+                                expanded.append(item[offset:])
+                                break
+                            expanded.append(item[offset:match.start()])
+                            expanded.append(repl(match))
+                            offset = match.end()
+                            modified = True
+                    else:
+                        expanded.append(item)
+
+            if modified:
+                elem.inner = expanded
+                elem._size = None
+                elem._compact = False
+
+        for item in (elem.inner if recurse else inner):
+            if isinstance(item, HtmlElement):
+                _replace(item, active)
+
+    _replace(element, origin is None)

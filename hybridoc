@@ -5,7 +5,7 @@ import re
 from css     import StyleSheet
 from css     import parse as parse_css
 from css     import render as render_css
-from html    import ELEMENTS, VOID, HtmlElement, extant
+from html    import ELEMENTS, VOID, HtmlElement, extant, replace
 from html    import render as render_html
 from hilite  import default_handler
 from mathml  import parse as parse_math
@@ -22,6 +22,9 @@ PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
 
 # Functions registered to transform code blocks.
 HANDLERS = {'code': default_handler}
+
+# Functions to call at the end of rendering.
+FILTERS = []
 
 # Populated by style elements.
 INLINESTYLES = []
@@ -1074,17 +1077,21 @@ def compile(src : str) -> list[str | HtmlElement]:
 #   text to SOURCE or appending instances of HtmlElement or str to STREAM
 #   (whichever is not None).
 GLOBALS = {
+    'regex':        re.compile,
     'HtmlElement':  HtmlElement,
     'parse_css':    parse_css,
     'parse_math':   parse_math,
     'parse_text':   parse,
     'compile':      compile,
+    'extant':       extant,
+    'replace':      replace,
     'PERMALINK':    PERMALINK,
     'HANDLERS':     HANDLERS,
+    'FILTERS':      FILTERS,
     'INLINESTYLES': INLINESTYLES,
     'MODULES':      MODULES,
     'SOURCE':       None,
-    'STREAM':       None
+    'STREAM':       None,
 }
 
 
@@ -1166,6 +1173,7 @@ if __name__ == '__main__':
         ),
         name='galley'
     )
+    for f in FILTERS: f(body)
     body.prune()
     elements, classes = extant(body)
     html = render_html(body)
