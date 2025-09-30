@@ -350,7 +350,11 @@ def replace(
                         fragments = iter(item.split(expr))
                         expanded.append(next(fragments))
                         for fragment in fragments:
-                            expanded.append(repl(expr))
+                            insert = repl(expr)
+                            if isinstance(insert, (str, HtmlElement)):
+                                expanded.append(insert)
+                            else:
+                                expanded.extend(insert)
                             expanded.append(fragment)
                         modified = True
                     else:
@@ -367,7 +371,11 @@ def replace(
                                 expanded.append(item[offset:])
                                 break
                             expanded.append(item[offset:match.start()])
-                            expanded.append(repl(match))
+                            insert = repl(match)
+                            if isinstance(insert, (str, HtmlElement)):
+                                expanded.append(insert)
+                            else:
+                                expanded.extend(insert)
                             offset = match.end()
                             modified = True
                     else:

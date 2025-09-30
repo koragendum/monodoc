@@ -177,7 +177,10 @@ FLOW = {
 
 FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as'}
 
-CONSTANT = {'NONE', 'None', 'none', 'NULL', 'null', 'nil', 'TAU', 'tau'}
+CONSTANT = {
+    'NONE', 'None', 'none', 'NULL', 'null', 'nil',
+    'True', 'true', 'False', 'false', 'TAU', 'tau'
+}
 
 GENERIC_TYPE = re.compile('[A-ZΑ-Ω][a-zA-Zα-ωΑ-Ω0-9]*')
 
