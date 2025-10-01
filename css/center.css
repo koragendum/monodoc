@@ -27,13 +27,6 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
     font-size: delete;
     line-height: delete;
   }
-  margin-note::before {
-    content: delete;
-    margin-right: delete;
-  }
-  margin-note::after {
-    content: delete;
-  }
 }
 
 @media (width < 81.0rem) {
@@ -46,12 +39,5 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
     width: 100%;
     font-size: inherit;
     line-height: inherit;
-  }
-  margin-note::before {
-    content: " ";
-    margin-right: 0.166667em;
-  }
-  margin-note::after {
-    content: " ";
   }
 }

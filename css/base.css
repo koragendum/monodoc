@@ -231,18 +231,6 @@ inline-note {
   display: inline;
 }
 
-/*
-inline-note::before {
-  content: " ※";
-  content: " ";
-  margin-right: 0.166667em;
-}
-
-inline-note::after {
-  content: " ";
-}
-*/
-
 margin-note {
   display: inline;
   float: right;
@@ -265,14 +253,6 @@ margin-note {
     width: 100%;  /* no effect */
     font-size: inherit;
     line-height: inherit;
-  }
-  margin-note::before {
-    /* content: " ※"; */
-    content: " ";
-    margin-right: 0.166667em;
-  }
-  margin-note::after {
-    content: " ";
   }
 }
 

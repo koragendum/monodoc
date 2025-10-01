@@ -67,23 +67,6 @@ inline-note {
   color: var(--note-fg);
 }
 
-/*
-inline-note::before {
-  content: " ◊";
-  content: " 〚";
-  font-family: "Century Schoolbook";
-  line-height: 0;
-  margin-right: -0.1em;
-}
-
-inline-note::after {
-  content: "〛 ";
-  font-family: "Century Schoolbook";
-  line-height: 0;
-  margin-left: -0.1em;
-}
-*/
-
 margin-note {
   line-height: 1.6em;
   background-color: var(--mgn-bg);
@@ -94,21 +77,6 @@ margin-note {
     background-color: unset;
     color: var(--note-fg);
   }
-  /*
-  margin-note::before {
-    content: " ◊";
-    content: " 〚";
-    font-family: "Century Schoolbook";
-    line-height: 0;
-    margin-right: -0.1em;
-  }
-  margin-note::after {
-    content: "〛 ";
-    font-family: "Century Schoolbook";
-    line-height: 0;
-    margin-left: -0.1em;
-  }
-  */
   margin-note a {
     color: var(--note-a-fg);
   }
