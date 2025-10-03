@@ -13,7 +13,7 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
   margin-left: delete;
 }
 
-@media (width < 61.25rem) {
+@media (width < LAYOUT-STEP-WIDTH) {
   #galley {
     margin-left: delete;
   }
@@ -22,6 +22,7 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
     clear: delete;
     margin: delete;
     margin-right: delete;
+    margin-top: delete;
     padding: delete;
     width: delete;
     font-size: delete;
@@ -29,12 +30,13 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
   }
 }
 
-@media (width < 81.0rem) {
+@media (width < CTR-LAYOUT-STEP-WD) {
   margin-note {
     float: unset;
     clear: unset;
     margin: 0;
     margin-right: 0;
+    margin-top: 0;
     padding: 0;
     width: 100%;
     font-size: inherit;

@@ -147,12 +147,8 @@ h2.gap-bottom {
   margin-bottom: 1.0rem;
 }
 
-h2 a {
+h2 a.permalink {
   font-style: normal;
-}
-
-h2 a:link {
-  text-decoration-line: none;
 }
 
 h3 {
@@ -168,7 +164,7 @@ h3.gap-bottom {
   margin-bottom: 0.75rem;
 }
 
-h3 a:link {
+a.permalink:link {
   text-decoration-line: none;
 }
 
@@ -199,7 +195,7 @@ width(chase) + 2 × padding(galley)  # but not extended-padding
 15px × 0.8 = 12.0px
 */
 
-@media (width < 444.5px) {
+@media (width < PRE-STEP-WIDTH) {
   pre {
     font-size: 0.8em;
   }

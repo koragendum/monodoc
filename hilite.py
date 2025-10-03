@@ -3,14 +3,18 @@ import re
 
 WHITESPACE = re.compile(r'\s+')
 
-WORD = re.compile("'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9'-]*[!?]?")
+WORD = re.compile("'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9'·-]*[!?]?")
 
 NUMERIC = re.compile(r'([+−])?(\d+)(\.\d+)?')
 
 LEFT_DELIM  = {'(', '[', '⟨', '{'}
 RIGHT_DELIM = {')', ']', '⟩', '}'}
 
-DYAD = {'->', '<-', '=>', '<=', '::', '||', '&&', '<<', '>>', '//', '++', '<>'}
+DYAD = {
+    '->', '<-', '=>', '<=', '::', ':=',
+    '||', '&&', '<<', '>>', '++', '<>',
+    '//',
+}
 
 LEFT_QUOTE1  = '‘'
 RIGHT_QUOTE1 = '’'
@@ -173,13 +177,16 @@ KEYWORD = {
 FLOW = {
     'end', 'return', 'if', 'then', 'else', 'unless',
     'break', 'loop', 'for', 'next', 'while', 'until',
+    'from', 'to'
 }
 
 FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as'}
 
 CONSTANT = {
     'NONE', 'None', 'none', 'NULL', 'null', 'nil',
-    'True', 'true', 'False', 'false', 'TAU', 'tau'
+    'True', 'true', 'False', 'false', 'TAU', 'tau',
+    'UNKNOWN', 'unknown', 'UNDEFINED', 'undefined',
+    'UNINIT', 'uninit', 'UNINITIALIZED', 'uninitialized'
 }
 
 GENERIC_TYPE = re.compile('[A-ZΑ-Ω][a-zA-Zα-ωΑ-Ω0-9]*')
@@ -263,6 +270,7 @@ def default_handler(lang, lines, modifiers=None):
                 if kind == 'rdelim':
                     depth -= 1
                     var_depth[var] -= 1
+                    output.append('</span>')
                 output.append(
                     f'<{ELEM} class="delimiter {DELIM_NAME[text]}"'
                     # f' data-depth="{depth}"'
@@ -271,6 +279,10 @@ def default_handler(lang, lines, modifiers=None):
                     f'{text}</{ELEM}>'
                 )
                 if kind == 'ldelim':
+                    output.append(
+                        f'<span class="region {DELIM_NAME[text]}-delimited"'
+                        f' data-depth="{var_depth[var]}">'
+                    )
                     depth += 1
                     var_depth[var] += 1
 

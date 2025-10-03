@@ -1,25 +1,31 @@
-@media (width < 61.25rem) {
+@media (width < LAYOUT-STEP-WIDTH) {
   margin-note {
     background-color: delete;
-    color: delete;
+    /* color: delete; */
+    filter: delete;
   }
+/*
   margin-note a {
     color: delete;
   }
   margin-note a:link, margin-note a:visited {
     text-decoration-color: delete;
   }
+*/
 }
 
-@media (width < 81.0rem) {
+@media (width < CTR-LAYOUT-STEP-WD) {
   margin-note {
     background-color: unset;
-    color: var(--note-fg);
+    /* color: var(--note-fg); */
+    filter: var(--note-f);
   }
+/*
   margin-note a {
     color: var(--note-a-fg);
   }
   margin-note a:link, margin-note a:visited {
     text-decoration-color: var(--note-a-dec);
   }
+*/
 }

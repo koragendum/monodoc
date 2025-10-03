@@ -20,6 +20,8 @@ HYBRIDOC_DIR = path.dirname(path.abspath(argv[0]))
 
 PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
 
+SECTION = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+
 # Functions registered to transform code blocks.
 HANDLERS = {'code': default_handler}
 
@@ -66,6 +68,35 @@ DEPENDENCIES = {
     'default-dark': ('base', 'dark', 'ff-meta', 'fira', 'iosevka'),
     'center-dark':  ('center', ),
 }
+
+CONSTANTS = {
+    'ROOT-SIZE':        16,     # pixels
+    'NARROW-ROOT-SIZE': 15,     # pixels
+    'CHASE-WIDTH':      42.5,   # rem
+    'NOTE-WIDTH':       18.75,  # rem
+}
+
+DIMENSIONS = {
+    'NARROW-ROOT-SIZE':   'px',
+    'ROOT-SIZE':          'px',
+    'CHASE-WIDTH':        'rem',
+    'NOTE-WIDTH':         'rem',
+    'GALLEY-WIDTH':       'rem',
+    'GALLEY-MARGIN':      'rem',
+    'NOTE-MARGIN':        'rem',
+    'LAYOUT-STEP-WIDTH':  'rem',
+    'CTR-LAYOUT-STEP-WD': 'rem',
+    'NARROW-STEP-WIDTH':  'px',
+    'PRE-STEP-WIDTH':     'px',
+}
+
+# GALLEY-WIDTH       =  CHASE-WIDTH + 4
+# GALLEY-MARGIN      = −(NOTE-WIDTH + 1)
+# NOTE-MARGIN        = −(NOTE-WIDTH + 3)
+# LAYOUT-STEP-WIDTH  = GALLEY-WIDTH + NOTE-WIDTH + 1
+# CTR-LAYOUT-STEP-WD = GALLEY-WIDTH + 2 × (NOTE-WIDTH + 1)
+# NARROW-STEP-WIDTH  = (CHASE-WIDTH + 2) × ROOT-SIZE
+# PRE-STEP-WIDTH     = (CHASE-WIDTH + 2) × NARROW-ROOT-SIZE × 0.75
 
 
 # General Utilities  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
@@ -171,6 +202,7 @@ TAGBRK  = re.compile('[>"\']')
 WORD    = re.compile('[a-zA-Z]+(?:-[a-zA-Z]+)*')
 LETTER  = re.compile('[a-zA-Zα-ωΑ-Ω]')
 NUMERAL = re.compile('[+−]?[0-9]+') # U+2212 MINUS SIGN not U+002D HYPHEN-MINUS
+CORRECT = re.compile('[+-]?[0-9]+(?:\\.[0-9]+)?')   # U+002D HYPHEN-MINUS
 
 SPECIAL = re.compile('([' + re.escape('<>[]()!₀₁₂₃₄₅₆₇₈₉') + '])')
 
@@ -207,6 +239,7 @@ def _parse(
     offset   : int           = 0,
     stop     : Optional[str] = None,
     italic   : bool          = False,
+    onlyhtml : bool          = False,
     verbatim : bool          = False,
 ) -> tuple[list[str | HtmlElement], int, bool]:
     # Returns HTML output, the index following the last character parsed,
@@ -216,7 +249,7 @@ def _parse(
     #
     # hyperlinks               @{...}{...}
     # inline math               $...$
-    # inline code               `...`
+    # inline code       `...`  `{...}
     # small capitals    %word  %{...}
     # variables         'letr  '{...}
     # superscripts      ^nmrl  ^{...}
@@ -283,7 +316,7 @@ def _parse(
         offset = post
         adv = post
 
-    initial = TAGINIT if verbatim else INITIAL
+    initial = TAGINIT if onlyhtml else INITIAL
 
     length = len(src)
     while offset < length:
@@ -426,7 +459,10 @@ def _parse(
                             GLOBALS['STREAM'] = restore
                             push(index)
                             continue
-                        inner, _, _ = _parse(content.strip())
+                        inner, _, _ = _parse(
+                            content.strip(),
+                            italic=italic, onlyhtml=onlyhtml, verbatim=verbatim
+                        )
                         push(index, *inner)
                     elif element == 'module':
                         MODULES.update(attrs)
@@ -445,9 +481,12 @@ def _parse(
                 else:
                     inner_italic = italic or element == 'i' \
                         or ('class' in attrs and 'i' in attrs['class'].split())
+                    inner_onlyhtml = onlyhtml or element in ('code', 'pre')
                     inner_verbatim = verbatim or element == 'pre'
-                    inner, post, complete = \
-                        _parse(src, index, '</', inner_italic, inner_verbatim)
+                    inner, post, complete = _parse(
+                        src, index, '</',
+                        inner_italic, inner_onlyhtml, inner_verbatim
+                    )
 
                 if not complete:
                     push(index, parse_error(f'<{src[offset:index-1]}>'))
@@ -488,7 +527,10 @@ def _parse(
                 if src[offset:offset+1] != '{':
                     continue
                 offset += 1
-                inner, post, complete = _parse(src, offset, '}', italic)
+                inner, post, complete = _parse(
+                    src, offset, '}',
+                    italic, onlyhtml, verbatim
+                )
                 if not complete:
                     push(offset, parse_error('@{'))
                     continue
@@ -530,17 +572,36 @@ def _parse(
 
             # Inline code
             case '`':
-                inner, post, complete = _parse(src, offset, '`', italic)
-                if complete:
-                    push(post, HtmlElement('code', *inner))
+                if src[offset:offset+1] == '{':
+                    offset += 1
+                    inner, post, complete = _parse(
+                        src, offset, '}',
+                        italic, True, verbatim
+                    )
+                    if complete:
+                        push(post,
+                            HtmlElement('no-break', HtmlElement('code', *inner))
+                        )
+                    else:
+                        push(offset, parse_error('`{'))
                 else:
-                    push(offset, parse_error('`'))
+                    inner, post, complete = _parse(
+                        src, offset, '`',
+                        italic, True, verbatim
+                    )
+                    if complete:
+                        push(post, HtmlElement('code', *inner))
+                    else:
+                        push(offset, parse_error('`'))
 
             # Small capitals
             case '%':
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = _parse(src, offset, '}', italic)
+                    inner, post, complete = _parse(
+                        src, offset, '}',
+                        italic, onlyhtml, verbatim
+                    )
                     if complete:
                         push(post, HtmlElement('small-caps', *inner))
                     else:
@@ -556,7 +617,10 @@ def _parse(
             case "'":
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = _parse(src, offset, '}', italic)
+                    inner, post, complete = _parse(
+                        src, offset, '}',
+                        italic, onlyhtml, verbatim
+                    )
                     if complete:
                         push(post, HtmlElement('var', *inner))
                     else:
@@ -571,7 +635,10 @@ def _parse(
             case '^' | '_':
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = _parse(src, offset, '}', italic)
+                    inner, post, complete = _parse(
+                        src, offset, '}',
+                        italic, onlyhtml, verbatim
+                    )
                     if complete:
                         element = 'sub' if sigil.group() == '_' else 'sup'
                         push(post, HtmlElement(element, *inner))
@@ -589,7 +656,10 @@ def _parse(
             case '*':
                 if src[offset:offset+1] == '{':
                     offset += 1
-                    inner, post, complete = _parse(src, offset, '}', True)
+                    inner, post, complete = _parse(
+                        src, offset, '}',
+                        True, onlyhtml, verbatim
+                    )
                     if complete:
                         push(post, HtmlElement('i', *inner))
                     else:
@@ -605,7 +675,10 @@ def _parse(
                 if src[offset:offset+1] != '{':
                     continue
                 offset += 1
-                inner, post, complete = _parse(src, offset, '}', italic)
+                inner, post, complete = _parse(
+                    src, offset, '}',
+                    italic, onlyhtml, verbatim
+                )
                 if complete:
                     push(post, HtmlElement('b', *inner))
                 else:
@@ -613,12 +686,25 @@ def _parse(
 
             # Margin notes
             case '†':
-                if src[offset:offset+1] != '{':
+                correction = CORRECT.match(src, offset)
+                if correction:
+                    pointer = correction.end()
+                else:
+                    pointer = offset
+                if src[pointer:pointer+1] != '{':
                     continue
-                offset += 1
-                inner, post, complete = _parse(src, offset, '}', italic)
+                offset = pointer + 1
+                inner, post, complete = _parse(
+                    src, offset, '}',
+                    italic, onlyhtml, verbatim
+                )
                 if complete:
-                    push(post, HtmlElement('margin-note', *inner))
+                    if correction:
+                        style = f'--correction: {correction.group()}rem;'
+                        elem = HtmlElement('margin-note', *inner, style=style)
+                    else:
+                        elem = HtmlElement('margin-note', *inner)
+                    push(post, elem)
                 else:
                     push(offset, parse_error('†{'))
 
@@ -630,7 +716,10 @@ def _parse(
                     offset += 1
                 else:
                     continue
-                inner, post, complete = _parse(src, offset, '}', italic)
+                inner, post, complete = _parse(
+                    src, offset, '}',
+                    italic, onlyhtml, verbatim
+                )
                 if complete:
                     push(post, HtmlElement('inline-note', *inner))
                 else:
@@ -638,7 +727,10 @@ def _parse(
 
             # No-break spans
             case '{':
-                inner, post, complete = _parse(src, offset, '}', italic)
+                inner, post, complete = _parse(
+                    src, offset, '}',
+                    italic, onlyhtml, verbatim
+                )
                 if complete:
                     push(post, HtmlElement('no-break', *inner))
                 else:
@@ -685,10 +777,17 @@ def _tagpair(
 def _head(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     level, anchor, text = lines
     opening, closing = _tagpair(f'h{level}', gap_a, gap_b, _id=anchor)
+    level = int(level)
+    SECTION[level] += 1
+    for s in range(level+1, 7):
+        SECTION[s] = 0
     if anchor is not None:
-        permalink = PERMALINK[int(level)]
-        if permalink is not None:
-            text = f'<a href="#{anchor}">{permalink}</a> {text}'
+        link = PERMALINK[level]
+        if link is not None:
+            if link == 'numeral': link = SECTION[level]
+            if isinstance(link, (tuple, list)):
+                link = link[(SECTION[level] - 1) % len(link)]
+            text = f'<a href="#{anchor}" class="permalink">{link}</a> {text}'
     output.append(f'{opening}{text}{closing}')
 
 
@@ -715,6 +814,13 @@ def _quot(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
 
 def _iden(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     opening, closing = _tagpair('block-indent', gap_a, gap_b)
+    output.append(opening)
+    output.extend(_preprocess(lines))
+    output.append(closing)
+
+
+def _cntr(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    opening, closing = _tagpair('block-center', gap_a, gap_b)
     output.append(opening)
     output.extend(_preprocess(lines))
     output.append(closing)
@@ -757,6 +863,7 @@ SIGIL = {
     '†': 'note',
     '"': 'quot',
     '>': 'iden',
+    '^': 'cntr',
     '•': 'list',
     '-': 'list',
     '#': 'code',
@@ -788,6 +895,9 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #         > containing a
     #           nested block
     #
+    # cntr  ^ centered block
+    #         spanning multiple lines
+    #
     # list  • first list item
     #         spanning multiple lines
     #       • second list item
@@ -813,8 +923,8 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #
     #       $> left-aligned and indented MathML block $
 
-    # TODO ^ small block note (faint and size of margin note)
-    # TODO ! inset or centered block
+    # TODO ! inset or important block
+    # TODO ~ small block note (faint and size of margin note)
 
     # This is a list of "gap" or ("head", [level, anchor, text], None)
     # or ("kind", [line, ...], meta) triples where kind is one of the
@@ -892,7 +1002,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             continue
 
         # INVARIANT block_kind is now None, "para", or
-        #   "note", "quot", "iden", "list", or "code".
+        #   "note", "quot", "iden", "cntr", "list", or "code".
 
         indent = len(line) - len(line.lstrip())
 
@@ -961,6 +1071,19 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                         exec(unindent(exec_lines), GLOBALS)
                         todo.extend(reversed(GLOBALS['SOURCE']))
                         GLOBALS['SOURCE'] = restore
+                        continue
+
+                elif directive == 'style':
+                    if len(words) == 1:
+                        style_lines = []
+                        while todo:
+                            style_line = todo.pop()
+                            style_trimmed = style_line.lstrip()
+                            if style_trimmed.startswith('#') and \
+                                    style_trimmed[1:].strip().lower() == 'end':
+                                break
+                            style_lines.append(style_line)
+                        INLINESTYLES.append('\n'.join(style_lines))
                         continue
 
             content = trimmed[1:].lstrip()
@@ -1071,6 +1194,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             case 'note': _note(output, lines, meta, gap_above, gap_below)
             case 'quot': _quot(output, lines,       gap_above, gap_below)
             case 'iden': _iden(output, lines,       gap_above, gap_below)
+            case 'cntr': _cntr(output, lines,       gap_above, gap_below)
             case 'list': _list(output, lines, meta, gap_above, gap_below)
             case 'code': _code(output, lines, meta, gap_above, gap_below)
             case 'verb': _code(output, lines, meta, gap_above, gap_below)
@@ -1100,10 +1224,13 @@ GLOBALS = {
     'extant':       extant,
     'replace':      replace,
     'PERMALINK':    PERMALINK,
+    'SECTION':      SECTION,
     'HANDLERS':     HANDLERS,
     'FILTERS':      FILTERS,
     'INLINESTYLES': INLINESTYLES,
     'MODULES':      MODULES,
+    'CONSTANTS':    CONSTANTS,
+    'DIMENSIONS':   DIMENSIONS,
     'SOURCE':       None,
     'STREAM':       None,
 }
@@ -1232,6 +1359,30 @@ if __name__ == '__main__':
         parse_css(src, stylesheet)
 
     css = render_css(stylesheet, depth=1)
+
+    C = CONSTANTS
+
+    C['GALLEY-WIDTH']       =  C['CHASE-WIDTH'] + 4
+    C['GALLEY-MARGIN']      = -(C['NOTE-WIDTH'] + 1)
+    C['NOTE-MARGIN']        = -(C['NOTE-WIDTH'] + 3)
+    C['LAYOUT-STEP-WIDTH']  = C['GALLEY-WIDTH'] +  C['NOTE-WIDTH'] + 1
+    C['CTR-LAYOUT-STEP-WD'] = C['GALLEY-WIDTH'] + (C['NOTE-WIDTH'] + 1) * 2
+    C['NARROW-STEP-WIDTH']  = (C['CHASE-WIDTH'] + 2) * C['ROOT-SIZE']
+    C['PRE-STEP-WIDTH']     = (C['CHASE-WIDTH'] + 2) * C['NARROW-ROOT-SIZE'] * 0.75
+
+    def fmtdimen(x):
+        if isinstance(x, int): return str(x)
+        n = round(x)
+        if abs(x - n) < 0.001: return str(n)
+        return str(round(x, 3))
+
+    def preproc(match):
+        name = match.group()
+        if name in CONSTANTS:
+            return fmtdimen(CONSTANTS[name]) + DIMENSIONS[name]
+        return name
+
+    css = re.sub('[A-Z]+(-[A-Z]+)+', preproc, css)
 
     # Output - - - - - - - - - - - - - -
 

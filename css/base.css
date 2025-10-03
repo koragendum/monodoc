@@ -2,14 +2,15 @@
 
 html {
   font-family: sans-serif;
-  font-size: 16px;
+  font-size: ROOT-SIZE;
   font-weight: 400;
   line-height: 1.75rem;
   margin: 0;
   padding: 0;
+  --correction: 0rem;
 }
 
-@media (width < 632px) {
+@media (width < NARROW-STEP-WIDTH) {
   /*
   width(chase) + 2 × padding(galley)  # but not extended-padding
     = 37.5rem + 2 × 1rem
@@ -18,7 +19,7 @@ html {
   39.5rem × 16px/rem = 632px
   */
   html {
-    font-size: 15px;
+    font-size: NARROW-ROOT-SIZE;
   }
 }
 
@@ -65,7 +66,7 @@ body {
   */
   box-sizing: border-box;
   max-width: 100%;
-  width: 41.5rem;
+  width: GALLEY-WIDTH;
   margin: 0;
   padding: 2rem 1rem 2rem;
 
@@ -76,17 +77,17 @@ body {
 
   /* background-color */
 
-  margin-left: -19.75rem;
+  margin-left: GALLEY-MARGIN;
 }
 
-@media (width < 61.25rem) {
+@media (width < LAYOUT-STEP-WIDTH) {
   #galley {
     margin-left: 0rem;
   }
 }
 
 #chase {
-  width: 37.5rem;
+  width: CHASE-WIDTH;
   max-width: 100%;
 }
 
@@ -119,6 +120,13 @@ block-note {
 block-indent {
   display: block;
   padding-left: 1.5em;
+}
+
+block-center {
+  display: block;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+  text-align: center;
 }
 
 block-quote {
@@ -236,19 +244,21 @@ margin-note {
   float: right;
   clear: right;
   margin: -1rem;
-  margin-right: -21.75rem;
+  margin-right: NOTE-MARGIN;
+  margin-top: calc(-1rem - var(--correction));
   padding: 1rem;
-  width: 18.75rem;
+  width: NOTE-WIDTH;
   font-size: 0.833333rem;
   line-height: 1.75em;
 }
 
-@media (width < 61.25rem) {
+@media (width < LAYOUT-STEP-WIDTH) {
   margin-note {
     float: unset;
     clear: unset; /* no effect */
     margin: 0;
     margin-right: 0;
+    margin-top: 0;
     padding: 0;
     width: 100%;  /* no effect */
     font-size: inherit;
