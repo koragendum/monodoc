@@ -254,6 +254,7 @@ def default_handler(lang, lines, modifiers=None):
                         _class = "identifier"
                 # if italic:
                 #     _class = f'{_class} i'
+                text = text.replace('!', '<i>!</i>')
                 output.append(f'<{ELEM} class="{_class}">{text}</{ELEM}>')
 
             case 'symbol':

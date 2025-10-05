@@ -366,10 +366,11 @@ h3.gap-bottom {
 block-code {
   display: block;
   margin: 0;
-  margin-left: -0.5em;
+  /* margin-left: -0.5em; */
   border-radius: 0.25em;
-  padding: 0em;
-  padding-left: 0.5em;
+  /* padding: 0em; */
+  /* padding-left: 0.5em; */
+  padding: 0.125em 0.5em 0.125em;
   /* background-color */
 }
 
@@ -397,12 +398,13 @@ hi-group {
 ul {
   margin: 0;
   padding: 0 0 0 1.5em;
-  list-style-type: "•  ";
+  list-style-type: "›  ";
+  /* • – › ‣ ▸ */
 }
 
 li > ul {
   margin: 0;
-  list-style-type: "‣  ";
+  list-style-type: "–  ";
 }
 
 li {

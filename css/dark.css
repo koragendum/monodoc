@@ -10,7 +10,7 @@ html {
 
   --body-img: radial-gradient(rgb(28, 28, 28) 1px, transparent 0);
 
-  --note-f: brightness(0.4);
+  --note-f: brightness(0.5);
   --mgn-bg: rgba(16, 16, 16, 0.5);
 
   --a-fg:  rgb(176, 128, 255);
@@ -104,6 +104,10 @@ h1 {
   background-clip: text;
   color: transparent;
   width: fit-content;
+}
+
+h3 {
+  font-weight: 500;
 }
 
 a.permalink:link {
