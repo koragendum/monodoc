@@ -11,13 +11,11 @@ html {
   --body-img: radial-gradient(rgb(28, 28, 28) 1px, transparent 0);
 
   --note-f: brightness(0.5);
+  --mgn-mn: rgb(255, 128, 128); /* manicule */
   --mgn-bg: rgba(16, 16, 16, 0.5);
 
   --a-fg:  rgb(176, 128, 255);
   --a-dec: rgba(224, 224, 224, 0.25);
-
-  /* --note-a-fg: rgb(96, 72, 144); */
-  /* --note-a-dec: rgba(144, 144, 144, 0.25); */
 
   --error-fg: rgb(256, 64, 64);
   --error-bg: rgb(24, 24, 24);
@@ -58,20 +56,27 @@ margin-note {
   background-color: var(--mgn-bg);
 }
 
+margin-note::before {
+  content: "<";
+  color: var(--mgn-mn);
+  font-weight: 500;
+  margin-left: -0.75em;
+  margin-right: 0.375em;
+}
+
 @media (width < LAYOUT-STEP-WIDTH) {
   margin-note {
     background-color: unset;
     /* color: var(--note-fg); */
     filter: var(--note-f);
   }
-/*
-  margin-note a {
-    color: var(--note-a-fg);
+  margin-note::before {
+    content: none;
+    color: unset;
+    font-weight: unset;
+    margin-left: 0;
+    margin-right: 0;
   }
-  margin-note a:link, margin-note a:visited {
-    text-decoration-color: var(--note-a-dec);
-  }
-*/
 }
 
 hybridoc-error {
@@ -87,16 +92,6 @@ a:link, a:visited {
   text-decoration-color: var(--a-dec);
 }
 
-/*
-block-note a, inline-note a {
-  color: var(--note-a-fg);
-}
-
-block-note a:link, block-note a:visited, inline-note a:link, inline-note a:visited {
-  text-decoration-color: var(--note-a-dec);
-}
-*/
-
 h1 {
   background-image: linear-gradient(to right, oklch(60% 0.16 300deg), oklch(80% 0.16 15deg));
 /*background-image: linear-gradient(to right, oklch(60% 0.20 285deg), oklch(80% 0.20 30deg));*/
@@ -107,6 +102,10 @@ h1 {
 }
 
 h3 {
+  font-weight: 500;
+}
+
+h3 code {
   font-weight: 500;
 }
 

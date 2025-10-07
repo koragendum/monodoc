@@ -306,9 +306,9 @@ class HtmlElement:
         buffer.append(f'</{self.element}>')
 
 
-def render(element, depth=0):
+def render(node, depth=0):
     buffer = []
-    element.render(buffer, depth)
+    node.render(buffer, depth)
     return ''.join(buffer)
 
 
@@ -326,20 +326,33 @@ def extant(node):
     return (elements, classes)
 
 
+def annotate(root, predicate, label):
+    index = 0
+    def _annotate(node):
+        nonlocal index
+        if predicate(node) and node.attrs.get('id', None) is None:
+            node.attrs['id'] = f'{label}-{index}'
+            index += 1
+        for item in node.inner:
+            if isinstance(item, HtmlElement):
+                _annotate(item)
+    _annotate(root)
+
+
 def replace(
-    element, expr, repl,
+    root, expr, repl,
     origin=None, exempt=None,
     final=False, recurse=False
 ):
     # When final is True, do not restart at origin nodes in exempt subtrees.
     # When recurse is True, examine newly created nodes.
-    def _replace(elem, active):
-        if (not active) and origin is not None and origin(elem):
+    def _replace(node, active):
+        if (not active) and origin is not None and origin(node):
             active = True
-        if (active or final) and exempt is not None and exempt(elem):
+        if (active or final) and exempt is not None and exempt(node):
             if final: return
             active = False
-        inner = elem.inner
+        inner = node.inner
         if active:
             expanded = []
             modified = False
@@ -382,12 +395,12 @@ def replace(
                         expanded.append(item)
 
             if modified:
-                elem.inner = expanded
-                elem._size = None
-                elem._compact = False
+                node.inner = expanded
+                node._size = None
+                node._compact = False
 
-        for item in (elem.inner if recurse else inner):
+        for item in (node.inner if recurse else inner):
             if isinstance(item, HtmlElement):
                 _replace(item, active)
 
-    _replace(element, origin is None)
+    _replace(root, origin is None)

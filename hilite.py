@@ -3,7 +3,7 @@ import re
 
 WHITESPACE = re.compile(r'\s+')
 
-WORD = re.compile("'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9'·-]*[!?]?")
+WORD = re.compile("[`']?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9'·-]*[!?]?")
 
 NUMERIC = re.compile(r'([+−])?(\d+)(\.\d+)?')
 
@@ -177,7 +177,7 @@ KEYWORD = {
 FLOW = {
     'end', 'return', 'if', 'then', 'else', 'unless',
     'break', 'loop', 'for', 'next', 'while', 'until',
-    'from', 'to'
+    'from', 'to', 'case', 'match', 'when', 'otherwise'
 }
 
 FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as'}
@@ -193,7 +193,7 @@ GENERIC_TYPE = re.compile('[A-ZΑ-Ω][a-zA-Zα-ωΑ-Ω0-9]*')
 
 NUMERIC_TYPE = re.compile('[uif][1-9][0-9]*')
 
-OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|-]*')
+OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|-←→⇐⇒↑↓⇑⇓]*')
 
 SCOPE = '::'
 
@@ -233,7 +233,10 @@ def default_handler(lang, lines, modifiers=None):
 
             case 'word':
                 italic = False
-                if text in KEYWORD:
+                if text.startswith('`'):
+                    _class = "constant"
+                    text = text[1:]
+                elif text in KEYWORD:
                     _class = "keyword"
                 elif text in FLOW:
                     _class = "flow"

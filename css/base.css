@@ -245,8 +245,8 @@ margin-note {
   clear: right;
   margin: -1rem;
   margin-right: NOTE-MARGIN;
-  margin-top: calc(-1rem - var(--correction));
-  padding: 1rem;
+  margin-top: calc(-0.5rem - var(--correction));
+  padding: 0.5rem 1rem 0.5rem;
   width: NOTE-WIDTH;
   font-size: 0.833333rem;
   line-height: 1.75em;

@@ -5,7 +5,7 @@ import re
 from css     import StyleSheet
 from css     import parse as parse_css
 from css     import render as render_css
-from html    import ELEMENTS, VOID, HtmlElement, extant, replace
+from html    import ELEMENTS, VOID, HtmlElement, extant, annotate, replace
 from html    import render as render_html
 from hilite  import default_handler
 from mathml  import parse as parse_math
@@ -48,6 +48,7 @@ AVAILABLEMODULES = {
     'berkeley': (1, 'css/fonts/berkeley.css'),
     'bodoni':   (2, 'css/fonts/bodoni.css'  ),
     'century':  (2, 'css/fonts/century.css' ),
+    'chiaro':   (1, 'css/fonts/chiaro.css'  ),
     'fira':     (0, 'css/fonts/fira.css'    ),
     'ff-meta':  (0, 'css/fonts/ff-meta.css' ),
     'iosevka':  (1, 'css/fonts/iosevka.css' ),
@@ -204,7 +205,7 @@ LETTER  = re.compile('[a-zA-Zα-ωΑ-Ω]')
 NUMERAL = re.compile('[+−]?[0-9]+') # U+2212 MINUS SIGN not U+002D HYPHEN-MINUS
 CORRECT = re.compile('[+-]?[0-9]+(?:\\.[0-9]+)?')   # U+002D HYPHEN-MINUS
 
-SPECIAL = re.compile('([' + re.escape('<>[]()!₀₁₂₃₄₅₆₇₈₉') + '])')
+SPECIAL = re.compile('([<>()\\[\\]₀₁₂₃₄₅₆₇₈₉]|!(?![a-zA-Z0-9{}]))')
 
 SUPERSCRIPT = {
     '+': '⁺', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
@@ -1222,6 +1223,7 @@ GLOBALS = {
     'parse_text':   parse,
     'compile':      compile,
     'extant':       extant,
+    'annotate':     annotate,
     'replace':      replace,
     'PERMALINK':    PERMALINK,
     'SECTION':      SECTION,
