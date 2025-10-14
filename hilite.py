@@ -22,7 +22,7 @@ RIGHT_QUOTE1 = '’'
 LEFT_QUOTE2  = '“'
 RIGHT_QUOTE2 = '”'
 
-COMMENT_CHAR = '#'
+COMMENT_CHAR = ('#', '※')
 COMMENT_DYAD = '//'
 
 HTML_ENTITY = re.compile(r'&(?:[a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+);')
@@ -145,7 +145,7 @@ def lex(lines):
 
         pair = text[offset:offset+2]
 
-        if char == COMMENT_CHAR or pair == COMMENT_DYAD:
+        if char in COMMENT_CHAR or pair == COMMENT_DYAD:
             end = text.find('\n', offset+1)
             if end > 0:
                 tokens.append(('comment', text[offset:end]))

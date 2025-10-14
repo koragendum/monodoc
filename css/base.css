@@ -8,6 +8,7 @@ html {
   margin: 0;
   padding: 0;
   --correction: 0rem;
+  -webkit-text-size-adjust: 100%;
 }
 
 @media (width < NARROW-STEP-WIDTH) {
@@ -365,6 +366,7 @@ h3.gap-bottom {
 
 block-code {
   display: block;
+  overflow-x: auto;
   margin: 0;
   /* margin-left: -0.5em; */
   border-radius: 0.25em;

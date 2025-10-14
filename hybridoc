@@ -16,7 +16,7 @@ from sys     import argv
 from typing  import Optional
 
 SOURCE_DIR   = None  # set in main routine
-HYBRIDOC_DIR = path.dirname(path.abspath(argv[0]))
+HYBRIDOC_DIR = path.dirname(path.realpath(path.abspath(argv[0])))
 
 PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
 
@@ -126,6 +126,43 @@ def unindent(lines):
         default = 0
     )
     return '\n'.join(ln[leftskip:].rstrip() for ln in lines)
+
+
+WHITESPACE = re.compile(r'[ \t\r\n]+')
+
+def map_nonspace(items, container):
+    # items      iterable that yields instance of HtmlElement or str
+    # container  callable that returns an HtmlElement or str given a list
+    compact = []
+    prev = False
+    for item in items:
+        if isinstance(item, str) and prev:
+            joined = compact.pop() + item
+            compact.append(joined)
+            prev = True
+        else:
+            compact.append(item)
+            prev = False
+
+    out = []
+    active = []
+    for item in compact:
+        if isinstance(item, str):
+            words = WHITESPACE.split(item)
+            if words[0]:
+                active.append(words[0])
+            for word in words[1:]:
+                if active:
+                    out.append(container(active))
+                    active.clear()
+                out.append(' ')
+                if word:
+                    active.append(word)
+        else:
+            active.append(item)
+    if active:
+        out.append(container(active))
+    return out
 
 
 # Parsing  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
@@ -580,9 +617,11 @@ def _parse(
                         italic, True, verbatim
                     )
                     if complete:
-                        push(post,
-                            HtmlElement('no-break', HtmlElement('code', *inner))
+                        fragments = map_nonspace(
+                            inner,
+                            lambda ary: HtmlElement('code', *ary)
                         )
+                        push(post, HtmlElement('no-break', *fragments))
                     else:
                         push(offset, parse_error('`{'))
                 else:
@@ -591,7 +630,11 @@ def _parse(
                         italic, True, verbatim
                     )
                     if complete:
-                        push(post, HtmlElement('code', *inner))
+                        fragments = map_nonspace(
+                            inner,
+                            lambda ary: HtmlElement('code', *ary)
+                        )
+                        push(post, *fragments)
                     else:
                         push(offset, parse_error('`'))
 
@@ -997,7 +1040,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 todo.append(post)
             continue
 
-        if trimmed.startswith('//'):
+        if block_kind != 'code' and trimmed.startswith('//'):
             # In addition to <!-- HTML --> style comments, we also support
             #   single-line comments with virgules (at the start of a line).
             continue
@@ -1353,7 +1396,8 @@ if __name__ == '__main__':
     stylesheet = StyleSheet()
 
     for mod in modules:
-        with open(mod) as fh:
+        fn = resolve_module(mod)
+        with open(fn) as fh:
             src = fh.read()
         parse_css(src, stylesheet)
 
