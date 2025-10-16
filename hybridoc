@@ -300,6 +300,8 @@ def _parse(
     # fixed whitespace  ₁₂₃₄₅₆₇₈₉
     # hyphenation point ₀
 
+    # TODO semibold (creating <semi-bold> elements)
+
     # offset        # number of characters scanned
     adv = offset    # number of characters taken (less than or equal to offset)
     out = []        # output for the slice src[:adv]
@@ -688,6 +690,27 @@ def _parse(
                         push(post, HtmlElement(element, *inner))
                     else:
                         push(offset, parse_error(sigil.group() + "{"))
+                elif src[offset:offset+1] == "'":
+                    offset += 1
+                    if src[offset:offset+1] == '{':
+                        offset += 1
+                        inner, post, complete = _parse(
+                            src, offset, '}',
+                            italic, onlyhtml, verbatim
+                        )
+                        if complete:
+                            inner = HtmlElement('var', *inner)
+                            element = 'sub' if sigil.group() == '_' else 'sup'
+                            push(post, HtmlElement(element, inner))
+                        else:
+                            push(offset, parse_error("_'{"))
+                    else:
+                        letter = LETTER.match(src, offset)
+                        if letter is None:
+                            continue
+                        inner = HtmlElement('var', letter.group())
+                        element = 'sub' if sigil.group() == '_' else 'sup'
+                        push(letter.end(), HtmlElement(element, inner))
                 else:
                     numeral = NUMERAL.match(src, offset)
                     if numeral is None:

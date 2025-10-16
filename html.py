@@ -101,6 +101,12 @@ RESPECTING = {
 
 COMPACTSP = re.compile(r'[ \t\r\n]+')
 
+# TODO this list is incomplete
+NONPHRASING = {'div', 'p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
+
+def nonphrasing(node):
+    return isinstance(node, HtmlElement) and node.element in NONPHRASING
+
 class HtmlElement:
     def __init__(self, element, *inner, **attrs):
         self.element = element
@@ -169,8 +175,27 @@ class HtmlElement:
 
         self.compact()
 
-        if self.element == 'p' and self.inner == [' ']:
-            self.inner.clear()
+        if self.element == 'p':
+            match self.inner:
+                case [' ']:
+                    self.inner.clear()
+                case [child] | [' ', child, ' '] if nonphrasing(child):
+                        par_classes = self.attrs.get('class', None)
+                        self.element = child.element
+                        self.inner   = child.inner
+                        self.attrs   = child.attrs
+                        if par_classes is not None:
+                            sub_classes = self.attrs.get('class', None)
+                            if sub_classes is not None:
+                                par_classes = par_classes.split()
+                                # NOTE quadratic time complexity
+                                for cls in sub_classes.split():
+                                    if cls not in par_classes:
+                                        par_classes.append(cls)
+                                par_classes = ' '.join(par_classes)
+                            self.attrs['class'] = par_classes
+                case _:
+                    pass
 
         self._size = None
         self._pruned = True
