@@ -101,13 +101,25 @@ block-note a:link, block-note a:visited, inline-note a:link, inline-note a:visit
   text-decoration-color: var(--note-a-dec);
 }
 
-.sb {
+semi-bold {
   /* tries 550 then min {wgt | wgt > 550} then max {wgt | wgt < 550} */
   font-weight: 550;
 }
 
 b {
   /* tries 600 then min {wgt | wgt > 600} then max {wgt | wgt < 600} */
+  font-weight: 600;
+}
+
+extra-bold {
+  font-weight: 700;
+}
+
+.sb {
+  font-weight: 550;
+}
+
+.b {
   font-weight: 600;
 }
 
@@ -208,11 +220,23 @@ code {
   font-stretch: condensed;
 }
 
-pre .sb, code .sb, .sb code {
+pre semi-bold, code semi-bold, semi-bold code {
   font-weight: 500;
 }
 
 pre b, code b, b code {
+  font-weight: 550;
+}
+
+pre extra-bold, code extra-bold, extra-bold code {
+  font-weight: 650;
+}
+
+pre .sb, code .sb, .sb code {
+  font-weight: 500;
+}
+
+pre .b, code .b, .b code {
   font-weight: 550;
 }
 

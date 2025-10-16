@@ -3,7 +3,7 @@
 html {
   font-family: sans-serif;
   font-size: ROOT-SIZE;
-  font-weight: 400;
+  font-weight: 400; /* Normal (Regular) */
   line-height: 1.75rem;
   margin: 0;
   padding: 0;
@@ -196,18 +196,33 @@ sub {
   /* margin-right: 0.1875em; */
 }
 
-.sb {
+semi-bold {
   /* tries 500 then max {w | wgt < 500} then min {w | wgt > 500} */
+  /* this often resolves to 500 Medium */
   font-weight: 500;
 }
 
 b {
   /* tries 550 then min {wgt | wgt > 550} then max {wgt | wgt < 550} */
+  /* this often resolves to 600 Semi Bold (Demi Bold)*/
+  font-weight: 550;
+}
+
+extra-bold {
+  /* tries 650 then min {wgt | wgt > 650} then max {wgt | wgt < 650} */
+  /* this often resolves to 700 Bold */
+  font-weight: 650;
+}
+
+.sb {
+  font-weight: 500;
+}
+
+.b {
   font-weight: 550;
 }
 
 .xb {
-  /* tries 650 then min {wgt | wgt > 650} then max {wgt | wgt < 650} */
   font-weight: 650;
 }
 

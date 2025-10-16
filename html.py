@@ -33,12 +33,11 @@ ELEMENTS = {
     'munderover' ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'include'    , 'module'     , 'python'     ,
-    'block-note' , 'block-quote', 'block-math' , 'block-code' ,
-    'block-indent'              ,
-    'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
-    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
-    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hi-group'   ,
-    'hybridoc-error'
+    'block-note' , 'block-quote', 'block-math' , 'block-code' , 'block-indent' ,
+    'semi-bold'  , 'extra-bold' , 'esc-i'      , 'em-sp'      , 'en-sp'      ,
+    'sp-3'       , 'sp-4'       , 'sp-5'       , 'sp-6'       , 'sp-7'       ,
+    'sp-8'       , 'small-caps' , 'inline-math', 'margin-note', 'inline-note',
+    'no-break'   , 'hi-group'   , 'hybridoc-error'
 }
 
 VOID = {
@@ -55,35 +54,9 @@ VOID = {
 
 INDENT = 2
 
-# Ordinarily, linebreaks may be inserted between the nodes of an element.
-#   This is suppressed for these elements.
-SINGLELINE = {
-    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'a'          , 'abbr'       , 'address'    , 'audio'      , 'b'          ,
-    'bdi'        , 'bdo'        , 'button'     , 'caption'    , 'cite'       ,
-    'code'       , 'data'       , 'del'        , 'dd'         , 'dfn'        ,
-    'dt'         , 'em'         , 'figcaption' , 'h1'         , 'h2'         ,
-    'h3'         , 'h4'         , 'h5'         , 'h6'         , 'i'          ,
-    'ins'        , 'kbd'        , 'label'      , 'legend'     , 'li'         ,
-    'mark'       , 'meter'      , 'option'     , 'output'     , 'progress'   ,
-    'q'          , 'rp'         , 'rt'         , 'ruby'       , 's'          ,
-    'samp'       , 'slot'       , 'small'      , 'span'       , 'strong'     ,
-    'sub'        , 'summary'    , 'sup'        , 'td'         , 'th'         ,
-    'time'       , 'title'      , 'track'      , 'u'          , 'var'        ,
-    'video'      ,
-    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
-    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
-    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
-    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hi-group'   ,
-    'hybridoc-error'
-}
-
 # Ordinarily, leading or trailing whitespace within an element may be stripped
 #   or added, and whitespace preceding or following an element may be stripped
 #   or added. This is suppressed for these elements.
-# This should be a subset of SINGLELINE.
 RESPECTING = {
     # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'a'          , 'abbr'       , 'b'          , 'bdi'        , 'bdo'        ,
@@ -93,10 +66,24 @@ RESPECTING = {
     'small'      , 'span'       , 'strong'     , 'sub'        , 'sup'        ,
     'time'       , 'u'          , 'var'        , 'wbr'        ,
     # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'esc-i'      , 'em-sp'      , 'en-sp'      , 'sp-3'       , 'sp-4'       ,
-    'sp-5'       , 'sp-6'       , 'sp-7'       , 'sp-8'       , 'small-caps' ,
-    'inline-math', 'margin-note', 'inline-note', 'no-break'   , 'hi-group'   ,
-    'hybridoc-error'
+    'semi-bold'  , 'extra-bold' , 'esc-i'      , 'em-sp'      , 'en-sp'      ,
+    'sp-3'       , 'sp-4'       , 'sp-5'       , 'sp-6'       , 'sp-7'       ,
+    'sp-8'       , 'small-caps' , 'inline-math', 'margin-note', 'inline-note',
+    'no-break'   , 'hi-group'   , 'hybridoc-error'
+}
+
+# Ordinarily, linebreaks may be inserted between the nodes of an element.
+#   This is suppressed for these elements.
+SINGLELINE = RESPECTING | {
+    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'address'    , 'audio'      , 'button'     , 'caption'    , 'dd'         ,
+    'dt'         , 'figcaption' , 'h1'         , 'h2'         , 'h3'         ,
+    'h4'         , 'h5'         , 'h6'         , 'label'      , 'legend'     ,
+    'li'         , 'meter'      , 'option'     , 'output'     , 'progress'   ,
+    'rp'         , 'rt'         , 'summary'    , 'td'         , 'th'         ,
+    'title'      , 'track'      , 'video'
+    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
 }
 
 COMPACTSP = re.compile(r'[ \t\r\n]+')

@@ -172,11 +172,23 @@ code {
   line-height: 1.75em;
 }
 
-pre .sb, code .sb, .sb code {
+pre semi-bold, code semi-bold, semi-bold code {
   font-weight: 600;
 }
 
 pre b, code b, b code {
+  font-weight: 650;
+}
+
+pre extra-bold, code extra-bold, extra-bold code {
+  font-weight: 750;
+}
+
+pre .sb, code .sb, .sb code {
+  font-weight: 600;
+}
+
+pre .b, code .b, .b code {
   font-weight: 650;
 }
 
