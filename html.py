@@ -1,56 +1,6 @@
 import re
 
-ELEMENTS = {
-    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'html'       , 'base'       , 'head'       , 'link'       , 'meta'       ,
-    'style'      , 'title'      , 'body'       , 'address'    , 'article'    ,
-    'aside'      , 'footer'     , 'header'     , 'h1'         , 'h2'         ,
-    'h3'         , 'h4'         , 'h5'         , 'h6'         , 'hgroup'     ,
-    'main'       , 'nav'        , 'section'    , 'search'     , 'blockquote' ,
-    'dd'         , 'div'        , 'dl'         , 'dt'         , 'figcaption' ,
-    'figure'     , 'hr'         , 'li'         , 'menu'       , 'ol'         ,
-    'p'          , 'pre'        , 'ul'         , 'a'          , 'abbr'       ,
-    'b'          , 'bdi'        , 'bdo'        , 'br'         , 'cite'       ,
-    'code'       , 'data'       , 'dfn'        , 'em'         , 'i'          ,
-    'kbd'        , 'mark'       , 'q'          , 'rp'         , 'rt'         ,
-    'ruby'       , 's'          , 'samp'       , 'small'      , 'span'       ,
-    'strong'     , 'sub'        , 'sup'        , 'time'       , 'u'          ,
-    'var'        , 'wbr'        , 'area'       , 'audio'      , 'img'        ,
-    'map'        , 'track'      , 'video'      , 'embed'      , 'fencedframe',
-    'iframe'     , 'object'     , 'picture'    , 'portal'     , 'source'     ,
-    'svg'        , 'math'       , 'canvas'     , 'noscript'   , 'script'     ,
-    'del'        , 'ins'        , 'caption'    , 'col'        , 'colgroup'   ,
-    'table'      , 'tbody'      , 'td'         , 'tfoot'      , 'th'         ,
-    'thead'      , 'tr'         , 'button'     , 'datalist'   , 'fieldset'   ,
-    'form'       , 'input'      , 'label'      , 'legend'     , 'meter'      ,
-    'optgroup'   , 'option'     , 'output'     , 'progress'   , 'select'     ,
-    'textarea'   , 'details'    , 'dialog'     , 'summary'    , 'slot'       ,
-    'template'   ,
-    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'math'       , 'mfrac'      , 'mi'         , 'mn'         , 'mo'         ,
-    'mover'      , 'mroot'      , 'mrow'       , 'mspace'     , 'msqrt'      ,
-    'msub'       , 'msubsup'    , 'msup'       , 'mtext'      , 'munder'     ,
-    'munderover' ,
-    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'module'     , 'python'     ,
-    'block-note' , 'block-quote', 'block-math' , 'block-code' , 'block-indent' ,
-    'semi-bold'  , 'extra-bold' , 'esc-i'      , 'em-sp'      , 'en-sp'      ,
-    'sp-3'       , 'sp-4'       , 'sp-5'       , 'sp-6'       , 'sp-7'       ,
-    'sp-8'       , 'small-caps' , 'inline-math', 'margin-note', 'inline-note',
-    'no-break'   , 'hi-group'   , 'hybridoc-error'
-}
-
-VOID = {
-    # HTML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'area'       , 'base'       , 'br'         , 'col'        , 'embed'      ,
-    'hr'         , 'img'        , 'input'      , 'link'       , 'meta'       ,
-    'source'     , 'track'      , 'wbr'        ,
-    # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'mspace'     ,
-    # Extensions - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    'include'    , 'module'     ,
-}
-
+from categories import ELEMENTS, VOID, PHRASING
 
 INDENT = 2
 
@@ -72,6 +22,8 @@ RESPECTING = {
     'no-break'   , 'hi-group'   , 'hybridoc-error'
 }
 
+# TODO preserve space around an SVG in phrasing contexts but not within
+
 # Ordinarily, linebreaks may be inserted between the nodes of an element.
 #   This is suppressed for these elements.
 SINGLELINE = RESPECTING | {
@@ -81,23 +33,23 @@ SINGLELINE = RESPECTING | {
     'h4'         , 'h5'         , 'h6'         , 'label'      , 'legend'     ,
     'li'         , 'meter'      , 'option'     , 'output'     , 'progress'   ,
     'rp'         , 'rt'         , 'summary'    , 'td'         , 'th'         ,
-    'title'      , 'track'      , 'video'
+    'title'      , 'track'      , 'video'      ,
     # MathML - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     'mi'         , 'mn'         , 'mo'         , 'mtext'      ,
 }
 
 COMPACTSP = re.compile(r'[ \t\r\n]+')
 
-# TODO this list is incomplete
-NONPHRASING = {'div', 'p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
-
 def nonphrasing(node):
-    return isinstance(node, HtmlElement) and node.element in NONPHRASING
+    return isinstance(node, HtmlElement) and node.element not in PHRASING
 
 class HtmlElement:
     def __init__(self, element, *inner, **attrs):
         self.element = element
         self.inner = list(inner)
+        # TODO have class be a str or iterable
+        #   rather than a str that may contain spaces
+        #   and handle it specially in the renderer
         if 'kind' in attrs:
             assert 'class' not in attrs
             attrs['class'] = attrs.pop('kind')
@@ -324,17 +276,16 @@ def render(node, depth=0):
     return ''.join(buffer)
 
 
-def _extant(elements, classes, node):
-    elements.add(node.element)
-    if 'class' in node.attrs:
-        classes.update(node.attrs['class'])
-    for item in node.inner:
-        if isinstance(item, HtmlElement):
-            _extant(elements, classes, item)
-
 def extant(node):
     elements, classes = set(), set()
-    _extant(elements, classes, node)
+    def _extant(node):
+        elements.add(node.element)
+        if 'class' in node.attrs:
+            classes.update(node.attrs['class'])
+        for item in node.inner:
+            if isinstance(item, HtmlElement):
+                _extant(item)
+    _extant(node)
     return (elements, classes)
 
 

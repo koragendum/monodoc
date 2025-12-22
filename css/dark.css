@@ -8,7 +8,7 @@ html {
   --quote-bg:   rgb( 16,  16,  16);
   --quote-bd:   rgb( 48,  48,  48);
 
-  --body-img: radial-gradient(rgb(28, 28, 28) 1px, transparent 0);
+  /* --body-img: radial-gradient(rgb(28, 28, 28) 1px, transparent 0); */
 
   --note-f: brightness(0.5);
   --mgn-mn: rgb(255, 128, 128); /* manicule */
@@ -28,8 +28,9 @@ html {
 
 body {
   background-color: var(--body-bg);
-  background-image: var(--body-img);
-  background-size: 1rem 1rem;
+  background-image: url("/tile.gif");
+  /* background-image: var(--body-img); */
+  /* background-size: 1rem 1rem; */
   color: var(--body-fg);
 }
 
@@ -275,3 +276,9 @@ details summary::marker {
 details summary > span {
   text-decoration-color: var(--a-dec);
 }
+
+/* :target {
+  text-shadow: 0 0 0.125rem var(--body-fg);
+  outline: 1px solid rgba(224, 224, 224, 0.5);
+  outline-offset: 0.5rem;
+} */

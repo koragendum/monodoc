@@ -2,10 +2,12 @@
 
 import re
 
+from categories import ELEMENTS, VOID
+
 from css     import StyleSheet
 from css     import parse as parse_css
 from css     import render as render_css
-from html    import ELEMENTS, VOID, HtmlElement, extant, annotate, replace
+from html    import HtmlElement, extant, annotate, replace
 from html    import render as render_html
 from hilite  import default_handler
 from mathml  import parse as parse_math
@@ -1363,18 +1365,18 @@ if __name__ == '__main__':
     head = []
 
     if title is not None:
-        head.append(f'<title>{title}</title>')
+        head.append(f'    <title>{title}</title>')
 
     if icon is not None:
         _, extension = path.splitext(icon)
         mime = MIME[extension]
-        head.append(f'<link rel="icon" href="{icon}" type="image/{mime}">')
+        head.append(f'    <link rel="icon" href="{icon}" type="image/{mime}">')
 
     for url in link:
         _, extension = path.splitext(icon)
         if extension != '.css':
             raise AssertionError()
-        head.append(f'<link rel="stylesheet" href="{url}" type="image/css">')
+        head.append(f'    <link rel="stylesheet" href="{url}" type="image/css">')
 
     # HTML - - - - - - - - - - - - - - -
 
@@ -1462,17 +1464,23 @@ if __name__ == '__main__':
     # Output - - - - - - - - - - - - - -
 
     page = '\n'.join([
-        '<!DOCTYPE html>',
-        '<meta charset="utf-8">',
-        '<meta name="viewport"'
+        '<!doctype html>',
+        '<html lang="en">'
+        '  <head>'
+        '    <meta charset="utf-8">',
+        '    <meta name="viewport"'
             ' content="width=device-width,'
             ' height=device-height,'
-            ' initial-scale=1.0">',
+            ' initial-scale=1">',
         *head,
-        '<style>',
+        '    <style>',
         css,
-        '</style>',
-        html
+        '    </style>',
+        '  <head>',
+        '  <body>',
+        html,
+        '  </body>',
+        '</html>'
     ])
 
     with open(out, 'w') as fh:
