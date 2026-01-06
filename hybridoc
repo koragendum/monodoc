@@ -222,15 +222,6 @@ def parse_attributes(text : str) -> Optional[dict[str, str]]:
     return attrs
 
 
-def parse_error(text) -> HtmlElement:
-    kwargs = {'line-number': getframeinfo(currentframe().f_back).lineno}
-    if isinstance(text, str):
-        text = text.replace('<', '&lt;').replace('>', '&gt;')
-        return HtmlElement('hybridoc-error', text, **kwargs)
-    else:
-        return HtmlElement('hybridoc-error', *text, **kwargs)
-
-
 TAGINIT  = re.compile('<')
 INITIAL  = re.compile('[' + re.escape("$%&'*<@^_`{}\u2020\u203B") + ']')
 NONSPACE = re.compile(r'[^ \t\n\r]')
@@ -357,6 +348,20 @@ def _parse(
         offset = post
         adv = post
 
+    def parse_error(text):
+        line_number = getframeinfo(currentframe().f_back).lineno
+        print(f"hybridoc: {line_number}: parse error at “{text}”")
+        context = src[:offset].splitlines()
+        context = context[-8:]
+        lengths = ((len(ln), len(ln.lstrip())) for ln in context)
+        leftskip = min(
+            (total - trimmed for total, trimmed in lengths if trimmed > 0),
+            default = 0
+        )
+        for ln in context:
+            print('  ' + ln[leftskip:].rstrip())
+        raise RuntimeError
+
     initial = TAGINIT if onlyhtml else INITIAL
 
     length = len(src)
@@ -408,17 +413,15 @@ def _parse(
                     offset += 3
                     end = src.find('-->', offset)
                     if end == -1:
-                        push(offset, parse_error('<!--'))
-                    else:
-                        push(end + 3)
+                        parse_error('<!--')
+                    push(end + 3)
                     continue
 
                 # Unexpected closing tag
                 #   (Note that we’re overly restrictive here.)
                 if src[offset:offset+1] == '/':
                     offset += 1
-                    push(offset, parse_error('</'))
-                    continue
+                    parse_error('</')
 
                 # Less-than operator
                 if not ELEMINI.fullmatch(src[offset:offset+1]):
@@ -448,15 +451,12 @@ def _parse(
                         index += 1
                         delim = src.find(char, index)
                         if delim == -1:
-                            err = parse_error('<' + src[offset:index])
-                            push(index, err)
-                            break
+                            parse_error('<' + src[offset:index])
                         index = delim + 1
                         continue
                     raise AssertionError
                 else:
-                    push(offset, parse_error('<'))
-                    continue
+                    parse_error('<')
 
                 if element is None:
                     continue
@@ -466,13 +466,11 @@ def _parse(
                     # This isn’t an HTML tag, although it looks like one.
                     #   We’re a little more strict than we need to be; see
                     #   https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
-                    push(index, parse_error(f'<{src[offset:index-1]}>'))
-                    continue
+                    parse_error(f'<{src[offset:index-1]}>')
 
                 if attrs is None:
                     # The attributes are not well-formed.
-                    push(index, parse_error(f'<{src[offset:index-1]}>'))
-                    continue
+                    parse_error(f'<{src[offset:index-1]}>')
 
                 # 3 Find the closing tag
                 if element in VOID:
@@ -530,23 +528,16 @@ def _parse(
                     )
 
                 if not complete:
-                    push(index, parse_error(f'<{src[offset:index-1]}>'))
-                    continue
+                    parse_error(f'<{src[offset:index-1]}>')
 
                 # 4 Check that the closing tag matches
                 end = src.find('>', post)
                 if end == -1:
-                    interior = f'&lt;{element}&gt;...' if special \
-                        else HtmlElement(element, *inner, **attrs)
-                    push(post, interior, parse_error(f'</'))
-                    continue
+                    parse_error(f'</')
 
                 tag = src[post:end]
                 if tag.strip() != element:
-                    interior = f'&lt;{element}&gt;...' if special \
-                        else HtmlElement(element, *inner, **attrs)
-                    push(end + 1, interior, parse_error(f'</{tag}>'))
-                    continue
+                    parse_error(f'</{tag}>')
 
                 if element == 'style':
                     INLINESTYLES.append(inner)
@@ -573,43 +564,37 @@ def _parse(
                     italic, onlyhtml, verbatim
                 )
                 if not complete:
-                    push(offset, parse_error('@{'))
-                    continue
+                    parse_error('@{')
                 delim = NONSPACE.search(src, post)
                 if delim is None:
-                    push(post, parse_error(inner))
-                    continue
+                    parse_error(src[offset:post])
                 if delim.group() != '{':
-                    push(delim.end(), *inner, parse_error(delim.group()))
-                    continue
+                    parse_error(src[post:delim.start()])
                 start = delim.end()
                 end = src.find('}', start)
                 if end == -1:
-                    push(start, *inner, parse_error('{'))
-                    continue
+                    parse_error('{')
                 url = src[start:end].strip()
                 if '{' in url or '"' in url or "'" in url:
-                    push(end + 1, *inner, parse_error(url))
-                else:
-                    push(end + 1, HtmlElement('a', *inner, href=url))
+                    parse_error(url)
+                push(end + 1, HtmlElement('a', *inner, href=url))
 
             # Inline mathematics
             case '$':
                 end = src.find('$', offset)
                 if end == -1:
-                    push(offset, parse_error('$'))
+                    parse_error('$')
+                expr = src[offset:end]
+                block = expr[:1] == '#'
+                if block: expr = expr[1:]
+                math = parse_math(expr)
+                if math is None:
+                    parse_error(f'${src[offset:end]}$')
+                if block:
+                    push(end + 1, math.html(inline=False))
                 else:
-                    expr = src[offset:end]
-                    block = expr[:1] == '#'
-                    if block: expr = expr[1:]
-                    math = parse_math(expr)
-                    if math is None:
-                        push(end + 1, parse_error(f'${src[offset:end]}$'))
-                    elif block:
-                        push(end + 1, math.html(inline=False))
-                    else:
-                        inner = math.html(inline=True)
-                        push(end + 1, HtmlElement('inline-math', inner))
+                    inner = math.html(inline=True)
+                    push(end + 1, HtmlElement('inline-math', inner))
 
             # Inline code
             case '`':
@@ -619,27 +604,25 @@ def _parse(
                         src, offset, '}',
                         italic, True, verbatim
                     )
-                    if complete:
-                        fragments = map_nonspace(
-                            inner,
-                            lambda ary: HtmlElement('code', *ary)
-                        )
-                        push(post, HtmlElement('no-break', *fragments))
-                    else:
-                        push(offset, parse_error('`{'))
+                    if not complete:
+                        parse_error('`{')
+                    fragments = map_nonspace(
+                        inner,
+                        lambda ary: HtmlElement('code', *ary)
+                    )
+                    push(post, HtmlElement('no-break', *fragments))
                 else:
                     inner, post, complete = _parse(
                         src, offset, '`',
                         italic, True, verbatim
                     )
-                    if complete:
-                        fragments = map_nonspace(
-                            inner,
-                            lambda ary: HtmlElement('code', *ary)
-                        )
-                        push(post, *fragments)
-                    else:
-                        push(offset, parse_error('`'))
+                    if not complete:
+                        parse_error('`')
+                    fragments = map_nonspace(
+                        inner,
+                        lambda ary: HtmlElement('code', *ary)
+                    )
+                    push(post, *fragments)
 
             # Small capitals
             case '%':
@@ -649,10 +632,9 @@ def _parse(
                         src, offset, '}',
                         italic, onlyhtml, verbatim
                     )
-                    if complete:
-                        push(post, HtmlElement('small-caps', *inner))
-                    else:
-                        push(offset, parse_error('%{'))
+                    if not complete:
+                        parse_error('%{')
+                    push(post, HtmlElement('small-caps', *inner))
                 else:
                     word = WORD.match(src, offset)
                     if word is None:
@@ -668,10 +650,9 @@ def _parse(
                         src, offset, '}',
                         italic, onlyhtml, verbatim
                     )
-                    if complete:
-                        push(post, HtmlElement('var', *inner))
-                    else:
-                        push(offset, parse_error("'{"))
+                    if not complete:
+                        parse_error("'{")
+                    push(post, HtmlElement('var', *inner))
                 else:
                     letter = LETTER.match(src, offset)
                     if letter is None:
@@ -686,11 +667,10 @@ def _parse(
                         src, offset, '}',
                         italic, onlyhtml, verbatim
                     )
-                    if complete:
-                        element = 'sub' if sigil.group() == '_' else 'sup'
-                        push(post, HtmlElement(element, *inner))
-                    else:
-                        push(offset, parse_error(sigil.group() + "{"))
+                    if not complete:
+                        parse_error(sigil.group() + "{")
+                    element = 'sub' if sigil.group() == '_' else 'sup'
+                    push(post, HtmlElement(element, *inner))
                 elif src[offset:offset+1] == "'":
                     offset += 1
                     if src[offset:offset+1] == '{':
@@ -699,12 +679,11 @@ def _parse(
                             src, offset, '}',
                             italic, onlyhtml, verbatim
                         )
-                        if complete:
-                            inner = HtmlElement('var', *inner)
-                            element = 'sub' if sigil.group() == '_' else 'sup'
-                            push(post, HtmlElement(element, inner))
-                        else:
-                            push(offset, parse_error("_'{"))
+                        if not complete:
+                            parse_error("_'{")
+                        inner = HtmlElement('var', *inner)
+                        element = 'sub' if sigil.group() == '_' else 'sup'
+                        push(post, HtmlElement(element, inner))
                     else:
                         letter = LETTER.match(src, offset)
                         if letter is None:
@@ -728,10 +707,9 @@ def _parse(
                         src, offset, '}',
                         True, onlyhtml, verbatim
                     )
-                    if complete:
-                        push(post, HtmlElement('i', *inner))
-                    else:
-                        push(offset, parse_error('*{'))
+                    if not complete:
+                        parse_error('*{')
+                    push(post, HtmlElement('i', *inner))
                 else:
                     word = WORD.match(src, offset)
                     if word is None:
@@ -751,13 +729,12 @@ def _parse(
                     src, offset, '}',
                     italic, onlyhtml, verbatim
                 )
-                if complete:
-                    weight = min(weight, 2)
-                    element = ['semi-bold', 'b', 'extra-bold'][weight]
-                    push(post, HtmlElement(element, *inner))
-                else:
+                if not complete:
                     prefix = '&' * (weight + 1)
-                    push(offset, parse_error(prefix+'{'))
+                    parse_error(prefix+'{')
+                weight = min(weight, 2)
+                element = ['semi-bold', 'b', 'extra-bold'][weight]
+                push(post, HtmlElement(element, *inner))
 
             # Margin notes
             case '†':
@@ -773,15 +750,14 @@ def _parse(
                     src, offset, '}',
                     italic, onlyhtml, verbatim
                 )
-                if complete:
-                    if correction:
-                        style = f'--correction: {correction.group()}rem;'
-                        elem = HtmlElement('margin-note', *inner, style=style)
-                    else:
-                        elem = HtmlElement('margin-note', *inner)
-                    push(post, elem)
+                if not complete:
+                    parse_error('†{')
+                if correction:
+                    style = f'--correction: {correction.group()}rem;'
+                    elem = HtmlElement('margin-note', *inner, style=style)
                 else:
-                    push(offset, parse_error('†{'))
+                    elem = HtmlElement('margin-note', *inner)
+                push(post, elem)
 
             # Inline notes
             case '※':
@@ -795,10 +771,9 @@ def _parse(
                     src, offset, '}',
                     italic, onlyhtml, verbatim
                 )
-                if complete:
-                    push(post, HtmlElement('inline-note', *inner))
-                else:
-                    push(offset, parse_error(src[ini:offset]))
+                if not complete:
+                    parse_error(src[ini:offset])
+                push(post, HtmlElement('inline-note', *inner))
 
             # No-break spans
             case '{':
@@ -806,13 +781,12 @@ def _parse(
                     src, offset, '}',
                     italic, onlyhtml, verbatim
                 )
-                if complete:
-                    push(post, HtmlElement('no-break', *inner))
-                else:
-                    push(offset, parse_error('{'))
+                if not complete:
+                    parse_error('{')
+                push(post, HtmlElement('no-break', *inner))
 
             case '}':
-                push(offset, parse_error('}'))
+                parse_error('}')
 
     return (out, adv, stopped)
 

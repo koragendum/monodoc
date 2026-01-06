@@ -80,11 +80,6 @@ margin-note::before {
   }
 }
 
-hybridoc-error {
-  color: var(--error-fg);
-  background-color: var(--error-bg);
-}
-
 a {
   color: var(--a-fg);
 }

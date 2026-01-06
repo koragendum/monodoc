@@ -24,9 +24,9 @@ ELEMENTS = {
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
     # Extensions (phrasing)
-    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'hybridoc-error',
-    'inline-math', 'inline-note', 'margin-note', 'no-break', 'semi-bold',
-    'small-caps', 'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
+    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
+    'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
+    'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
 }
 
 VOID = {
@@ -68,9 +68,9 @@ FLOW = {
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
     # Extensions (phrasing)
-    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'hybridoc-error',
-    'inline-math', 'inline-note', 'margin-note', 'no-break', 'semi-bold',
-    'small-caps', 'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
+    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
+    'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
+    'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
 }
 
 SECTIONING = {
@@ -100,9 +100,9 @@ PHRASING = {
     'math', 'mfrac', 'mi', 'mn', 'mo', 'mover', 'mroot', 'mrow', 'mspace',
     'msqrt', 'msub', 'msubsup', 'msup', 'mtext', 'munder', 'munderover',
     # Extensions (phrasing)
-    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'hybridoc-error',
-    'inline-math', 'inline-note', 'margin-note', 'no-break', 'semi-bold',
-    'small-caps', 'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
+    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
+    'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
+    'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
 }
 
 # The following are also palpable content:
@@ -127,8 +127,8 @@ PALPABLE = {
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
     # Extensions (phrasing)
-    'esc-i', 'extra-bold', 'hi-group', 'hybridoc-error', 'inline-math',
-    'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps'
+    'esc-i', 'extra-bold', 'hi-group', 'inline-math', 'inline-note',
+    'margin-note', 'no-break', 'semi-bold', 'small-caps'
 }
 
 # OUTER DISPLAY TYPE - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -165,9 +165,9 @@ INLINE = {
     # Extensions (metadata)
     'include',
     # Extensions (phrasing)
-    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'hybridoc-error',
-    'inline-math', 'inline-note', 'margin-note', 'no-break', 'semi-bold',
-    'small-caps', 'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
+    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
+    'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
+    'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8'
 }
 
 
@@ -183,7 +183,7 @@ FORMATTING = {
     # Extensions (metadata)
     'include',
     # Extensions (phrasing)
-    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'hybridoc-error',
-    'inline-math', 'inline-note', 'margin-note', 'no-break', 'semi-bold',
-    'small-caps', 'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8',
+    'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
+    'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
+    'sp-3', 'sp-4', 'sp-5', 'sp-6', 'sp-7', 'sp-8',
 }

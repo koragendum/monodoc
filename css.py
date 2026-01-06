@@ -42,7 +42,6 @@ class Map:
 class CssRules:
     def __init__(self):
         self.ruleset = Map(Map) # maps selector to declarations
-        self.errors = []
 
     def __contains__(self, selector):
         return selector in self.ruleset
@@ -63,10 +62,6 @@ class CssRules:
             for prop, value in declarations.items():
                 buffer.append(f'{innermargin}{prop}: {value};')
             buffer.append(f'{outermargin}}}')
-        for linenum, error in self.errors:
-            buffer.append(outermargin + f'/* HYBRIDOC ERROR {linenum}')
-            buffer.extend(f'{outermargin} | {ln}' for ln in error.split('\n'))
-            buffer.append(outermargin + '*/')
 
 
 class StyleSheet:
@@ -79,7 +74,6 @@ class StyleSheet:
         #   the last line has no trailing whitespace).
         # The list is used for block at-rules other than @media, such as
         #   @font-face and @font-feature-values.
-        self.errors  = []
 
     def __contains__(self, selector):
         return selector in self.base.ruleset
@@ -98,10 +92,6 @@ class StyleSheet:
             buffer.append(f'{margin}@media {query} {{')
             css_rules.render(buffer, depth + 1)
             buffer.append(f'{margin}}}')
-        for linenum, error in self.errors:
-            buffer.append(margin + f'/* HYBRIDOC ERROR {linenum}')
-            buffer.extend(f'{margin} | {ln}' for ln in error.split('\n'))
-            buffer.append(margin + '*/')
 
 
 def render(stylesheet, depth=0):
@@ -258,16 +248,26 @@ def _parse_value(src : str, offset : int) -> Optional[tuple[str, int]]:
                 return (value, ini + 1)
 
 
-def LN(text):
-    return (getframeinfo(currentframe().f_back).lineno, text)
-
-
 def _parse(
     stylesheet : StyleSheet | CssRules,
     src    : str,
     offset : int = 0,
 ) -> int:
     # Returns the index following the last character parsed.
+
+    def parse_error(text):
+        line_number = getframeinfo(currentframe().f_back).lineno
+        print(f"css: {line_number}: parse error at “{text}”")
+        context = src[:offset].splitlines()
+        context = context[-8:]
+        lengths = ((len(ln), len(ln.lstrip())) for ln in context)
+        leftskip = min(
+            (total - trimmed for total, trimmed in lengths if trimmed > 0),
+            default = 0
+        )
+        for ln in context:
+            print('  ' + ln[leftskip:].rstrip())
+        raise RuntimeError
 
     uncomment = []
     length = len(src)
@@ -295,16 +295,13 @@ def _parse(
                             query = canonicalize_query(tokens[1])
                             css_rules = stylesheet.media[query]
                             offset = _parse(css_rules, src, offset)
-                            if not css_rules.ruleset and not css_rules.errors:
+                            if not css_rules.ruleset:
                                 stylesheet.media.delete(query)
 
                         case '@font-face' | '@font-feature-values':
                             end = _closing_brace(src, offset)
                             if end is None:
-                                inner = src[offset:]
-                                stylesheet.errors.append(LN(f'{label} {{{inner}'))
-                                offset = length
-                                break
+                                parse_error(f'{label} {{{src[offset:]}')
                             inner = src[offset:end-1]
                             stylesheet.other.append(f'{label} {{{inner}}}')
                             offset = end
@@ -327,12 +324,10 @@ def _parse(
                     if prop is None:
                         dec = _parse_value(src, offset)
                         if dec is None:
-                            stylesheet.errors.append(LN(src[offset:]))
-                            offset = length
-                            break
+                            parse_error(src[offset:])
                         excess, end = dec
                         if excess.strip():
-                            stylesheet.errors.append(LN(excess))
+                            parse_error(excess)
                         offset = end
                         if src[end-1] == '}':
                             break
@@ -341,20 +336,17 @@ def _parse(
                     prop, offset = prop
                     dec = _parse_value(src, offset)
                     if dec is None:
-                        stylesheet.errors.append(LN(src[offset:]))
-                        offset = length
-                        break
+                        parse_error(src[offset:])
                     value, end = dec
                     value = value.strip()
-                    if value:
-                        if value == 'delete':
-                            ruleset.delete(prop)
-                            if not ruleset:
-                                stylesheet.delete(selector)
-                        else:
-                            ruleset[prop] = value
+                    if not value:
+                        parse_error(f'{prop}:')
+                    if value == 'delete':
+                        ruleset.delete(prop)
+                        if not ruleset:
+                            stylesheet.delete(selector)
                     else:
-                        stylesheet.errors.append(LN(f'{prop}:'))
+                        ruleset[prop] = value
                     offset = end
                     # NOTE we allow the omission of the final semicolon!
                     if src[end-1] == '}':
@@ -364,7 +356,7 @@ def _parse(
                 label = ''.join(uncomment)
                 uncomment.clear()
                 if label.strip():
-                    stylesheet.errors.append(LN(label))
+                    parse_error(label)
                 offset = ini + 1
                 break
 
@@ -381,7 +373,9 @@ def _parse(
                 break
 
     if uncomment:
-        stylesheet.errors.append(LN(''.join(uncomment).strip()))
+        extraneous = ''.join(uncomment).strip()
+        if extraneous:
+            parse_error(extraneous)
 
     return offset
 

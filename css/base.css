@@ -287,10 +287,6 @@ inline-math {
   text-wrap-mode: nowrap;
 }
 
-hybridoc-error {
-  display: inline;
-}
-
 /* Fixed-width spaces * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 em-sp {

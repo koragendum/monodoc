@@ -19,7 +19,7 @@ RESPECTING = {
     'semi-bold'  , 'extra-bold' , 'esc-i'      , 'em-sp'      , 'en-sp'      ,
     'sp-3'       , 'sp-4'       , 'sp-5'       , 'sp-6'       , 'sp-7'       ,
     'sp-8'       , 'small-caps' , 'inline-math', 'margin-note', 'inline-note',
-    'no-break'   , 'hi-group'   , 'hybridoc-error'
+    'no-break'   , 'hi-group'   ,
 }
 
 # TODO preserve space around an SVG in phrasing contexts but not within
