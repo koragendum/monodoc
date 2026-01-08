@@ -1,0 +1,11 @@
+@font-face { font-family: "Minion"; font-weight: 400; font-stretch: normal; font-style: normal; src: url("/fonts/MinionPro-Regular.otf")    format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 400; font-stretch: normal; font-style: italic; src: url("/fonts/MinionPro-It.otf")         format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 500; font-stretch: normal; font-style: normal; src: url("/fonts/MinionPro-Medium.otf")     format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 500; font-stretch: normal; font-style: italic; src: url("/fonts/MinionPro-MediumIt.otf")   format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 600; font-stretch: normal; font-style: normal; src: url("/fonts/MinionPro-Semibold.otf")   format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 600; font-stretch: normal; font-style: italic; src: url("/fonts/MinionPro-SemiboldIt.otf") format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 700; font-stretch: normal; font-style: normal; src: url("/fonts/MinionPro-Bold.otf")       format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 700; font-stretch: normal; font-style: italic; src: url("/fonts/MinionPro-BoldIt.otf")     format("opentype"); }
+
+@font-face { font-family: "Minion"; font-weight: 700; font-stretch: condensed; font-style: normal; src: url("/fonts/MinionPro-BoldCn.otf  ") format("opentype"); }
+@font-face { font-family: "Minion"; font-weight: 700; font-stretch: condensed; font-style: italic; src: url("/fonts/MinionPro-BoldCnIt.otf") format("opentype"); }

@@ -44,6 +44,7 @@ AVAILABLEMODULES = {
     'math':        (6, 'css/math.css'),
     'center':      (7, 'css/center.css'),
     'center-dark': (7, 'css/center-dark.css'),
+    'justify':     (7, 'css/justify.css'),
     # fonts
     'alegreya': (0, 'css/fonts/alegreya.css'),
     'at-name':  (1, 'css/fonts/at-name.css' ),
@@ -55,6 +56,7 @@ AVAILABLEMODULES = {
     'ff-meta':  (0, 'css/fonts/ff-meta.css' ),
     'iosevka':  (1, 'css/fonts/iosevka.css' ),
     'inter':    (0, 'css/fonts/inter.css'   ),
+    'minion':   (2, 'css/fonts/minion.css'  ),
     'new-cm':   (3, 'css/fonts/new-cm.css'  ),
     'operator': (1, 'css/fonts/operator.css'),
     'schotis':  (0, 'css/fonts/schotis.css' ),
@@ -350,7 +352,11 @@ def _parse(
 
     def parse_error(text):
         line_number = getframeinfo(currentframe().f_back).lineno
-        print(f"hybridoc: {line_number}: parse error at “{text}”")
+        text = text.strip()
+        newline = text.rfind('\n')
+        if newline != -1:
+            text = text[newline+1:].lstrip()
+        print(f"hybridoc: {line_number}: parse error near “{text}”")
         context = src[:offset].splitlines()
         context = context[-8:]
         lengths = ((len(ln), len(ln.lstrip())) for ln in context)
@@ -359,7 +365,7 @@ def _parse(
             default = 0
         )
         for ln in context:
-            print('  ' + ln[leftskip:].rstrip())
+            print(f"  \x1B[2m{ln[leftskip:].rstrip()}\x1B[22m")
         raise RuntimeError
 
     initial = TAGINIT if onlyhtml else INITIAL

@@ -257,7 +257,11 @@ def _parse(
 
     def parse_error(text):
         line_number = getframeinfo(currentframe().f_back).lineno
-        print(f"css: {line_number}: parse error at “{text}”")
+        text = text.strip()
+        newline = text.rfind('\n')
+        if newline != -1:
+            text = text[newline:].lstrip()
+        print(f"css: {line_number}: parse error near “{text}”")
         context = src[:offset].splitlines()
         context = context[-8:]
         lengths = ((len(ln), len(ln.lstrip())) for ln in context)
@@ -266,7 +270,7 @@ def _parse(
             default = 0
         )
         for ln in context:
-            print('  ' + ln[leftskip:].rstrip())
+            print(f"  \x1B[2m{ln[leftskip:].rstrip()}\x1B[22m")
         raise RuntimeError
 
     uncomment = []

@@ -88,6 +88,9 @@ OPERATORS = {
     '∙': None,  # U+2219 BULLET OPERATOR
     '∧': None,  # U+2227 LOGICAL AND
     '∨': None,  # U+2228 LOGICAL OR
+    '≠': None,  # U+2260 NOT EQUAL TO
+    '≤': None,  # U+2264 LESS-THAN OR EQUAL TO
+    '≥': None,  # U+2265 GREATER-THAN OR EQUAL TO
     '⊕': None,  # U+2295 CIRCLED PLUS
     '⊗': None,  # U+2297 CIRCLED TIMES
     '⋅': None,  # U+22C5 DOT OPERATOR
@@ -100,6 +103,8 @@ OPERATORS = {
 }
 
 DIGRAPHS = {
+    '\\{': '{',
+    '\\}': '}',
     '<-': '←',  # U+2190 LEFTWARDS ARROW
     '->': '→',  # U+2192 RIGHTWARDS ARROW
     '<=': '⇐',  # U+21D0 LEFTWARDS DOUBLE ARROW
@@ -128,7 +133,7 @@ SPACE = {
     #         ( display,  inline )
     'shelf':  ( '0.2em',  '0.1em'),    # fraction rule
     'sadj':   ('-0.4em', '-0.4em'),    # fraction superscript
-    'ladj':   ('-0.2em', '-0.3em'),    # integral lower bound
+    'ladj':   ('-0.1em', '-0.2em'),    # integral lower bound
     'uadj':   ( '0.1em',   None  ),    # integral upper bound
 
     'neg':    ('-0.1em', '-0.1em'),
@@ -158,7 +163,7 @@ ESCAPE = {
 
 LATIN = re.compile(r'[a-zA-Zſ][a-zA-Zſ\u0300-\u036F]*')
 GREEK = re.compile(r'[α-ωΑ-Ω]+')
-DELIMITERS = {'(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫', '|'}
+DELIMITERS = {'(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫', '|', '{', '}'}
 
 # Tokens that can appear as the left-hand argument
 #   of a variadic operator (e.g. plus and minus)

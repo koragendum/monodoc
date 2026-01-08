@@ -16,8 +16,8 @@ math {
   display: inline math; /* for Chromium */
   font-family: "New Computer Modern Math";
   font-size: 1.125rem; /* 18px */
-  math-style: normal;
   font-weight: 500;
+  math-style: normal;
 }
 
 math[display="block"] {
@@ -56,24 +56,24 @@ mtext {
   font-weight: 500;
 }
 
-mo {
+/* mo {
   font-family: "New Computer Modern Math";
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem;
   math-style: normal;
   font-weight: 500;
-}
+} */
 
 mo.it {
   font-family: "Schotis Text";
   font-style: italic;
 }
 
-mi {
+/* mi {
   font-family: "New Computer Modern Math";
-  font-size: 1.125rem; /* 18px */
+  font-size: 1.125rem;
   math-style: normal;
   font-weight: 500;
-}
+} */
 
 mi:not(.mf) {
   font-family: "Schotis Text";

@@ -42,13 +42,6 @@ p {
   hanging-punctuation: first last force-end;
 }
 
-@media (width >= 39.5rem) {
-  p {
-    text-align: justify;
-    text-justify: inter-word;
-  }
-}
-
 block-note {
   color: var(--note-fg);
 }
