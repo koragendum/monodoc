@@ -4,10 +4,11 @@ html {
   font-family: sans-serif;
   font-size: ROOT-SIZE;
   font-weight: 400; /* Normal (Regular) */
-  line-height: 1.75rem;
+  --line-height: 1.75rem;
+  line-height: var(--line-height);
   margin: 0;
   padding: 0;
-  --correction: 0rem;
+  --correction: 0;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -251,7 +252,7 @@ no-break {
   text-wrap-mode: nowrap;
 }
 
-inline-note {
+inline-note:not(.narrow) {
   display: inline;
 }
 
@@ -261,7 +262,7 @@ margin-note {
   clear: right;
   margin: -1rem;
   margin-right: NOTE-MARGIN;
-  margin-top: calc(-0.5rem - var(--correction));
+  margin-top: calc(-0.5rem + 1rem - 1em - var(--line-height) * var(--correction));
   padding: 0.5rem 1rem 0.5rem;
   width: NOTE-WIDTH;
   font-size: 0.833333rem;
@@ -269,7 +270,10 @@ margin-note {
 }
 
 @media (width < LAYOUT-STEP-WIDTH) {
-  margin-note {
+  inline-note.narrow {
+    display: inline;
+  }
+  margin-note:not(.wide) {
     float: unset;
     clear: unset; /* no effect */
     margin: 0;
@@ -279,6 +283,9 @@ margin-note {
     width: 100%;  /* no effect */
     font-size: inherit;
     line-height: inherit;
+  }
+  margin-note.wide {
+    display: none;
   }
 }
 

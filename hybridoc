@@ -290,8 +290,8 @@ def _parse(
     # italic            *word  *{...}
     # semibold                 &{...}
     # bold                    &&{...}
-    # margin notes             †{...}
-    # inline notes            ※ {...}
+    # margin notes             †{...}    †?{} wide-only margin note
+    # inline notes            ※ {...}   ※ ?{} narrow-only inline note
     # no-break spans            {...}
     # fixed whitespace  ₁₂₃₄₅₆₇₈₉
     # hyphenation point ₀
@@ -749,6 +749,8 @@ def _parse(
                     pointer = correction.end()
                 else:
                     pointer = offset
+                alternate = src[pointer:pointer+1] == '?'
+                if alternate: pointer += 1
                 if src[pointer:pointer+1] != '{':
                     continue
                 offset = pointer + 1
@@ -758,28 +760,32 @@ def _parse(
                 )
                 if not complete:
                     parse_error('†{')
+                kwargs = {}
+                if alternate:
+                    kwargs['class'] = 'wide'
                 if correction:
-                    style = f'--correction: {correction.group()}rem;'
-                    elem = HtmlElement('margin-note', *inner, style=style)
-                else:
-                    elem = HtmlElement('margin-note', *inner)
-                push(post, elem)
+                    kwargs['style'] = f'--correction: {correction.group()};'
+                push(post, HtmlElement('margin-note', *inner, **kwargs))
 
             # Inline notes
             case '※':
-                if src[offset:offset+2] == ' {':
-                    offset += 2
-                elif src[offset:offset+1] == '{':
-                    offset += 1
-                else:
+                pointer = offset
+                if src[pointer:pointer+1] == ' ': pointer += 1
+                alternate = src[pointer:pointer+1] == '?'
+                if alternate: pointer += 1
+                if src[pointer:pointer+1] != '{':
                     continue
+                offset = pointer + 1
                 inner, post, complete = _parse(
                     src, offset, '}',
                     italic, onlyhtml, verbatim
                 )
                 if not complete:
                     parse_error(src[ini:offset])
-                push(post, HtmlElement('inline-note', *inner))
+                kwargs = {}
+                if alternate:
+                    kwargs['class'] = 'narrow'
+                push(post, HtmlElement('inline-note', *inner, **kwargs))
 
             # No-break spans
             case '{':
