@@ -653,15 +653,19 @@ def parse(text):
 
             trip = block[offset:offset+3]
             if trip == '...':
+                space = not(len(tokens) > 0 and tokens[-1] == '\\')
+                if not space: tokens.pop()
                 tokens.append(Atom('mtext', '. . .'))
-                tokens.append(Space('period'))
+                if space: tokens.append(Space('period'))
                 offset += 3
                 continue
 
             if trip == '···':
-                tokens.append(Space('dots'))
+                space = not(len(tokens) > 0 and tokens[-1] == '\\')
+                if not space: tokens.pop()
+                if space: tokens.append(Space('dots'))
                 tokens.append(Atom('mtext', '· · ·'))
-                tokens.append(Space('dots'))
+                if space: tokens.append(Space('dots'))
                 offset += 3
                 continue
 
@@ -683,7 +687,7 @@ def parse(text):
                 continue
 
             if len(tokens) > 0 and tokens[-1] == '\\' and char in PUNCTUATION:
-                tokens.append(Atom('mtext', char))
+                tokens[-1] = Atom('mtext', char)
                 tokens.append(Space(PUNCTUATION[char]))
                 offset += 1
                 continue
