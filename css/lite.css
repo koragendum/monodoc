@@ -6,6 +6,7 @@ html {
   --table-bd:  rgb( 64,  64,  64);
   --hr-bd:     rgb(224, 224, 224);
   --quote-bg:  rgb(248, 224, 216);
+  --q-quot-bg: rgb(240, 216, 208);
   --quote-bd:  rgb(224, 200, 192);
 
   --body-img: radial-gradient(rgb(224, 200, 192) 1px, transparent 0);
@@ -54,6 +55,10 @@ block-quote {
   padding-bottom: 0.25em;
   background-color: var(--quote-bg);
   border-left-color: var(--quote-bd);
+}
+
+block-quote block-quote {
+  background-color: var(--q-quot-bg);
 }
 
 inline-note {

@@ -28,7 +28,7 @@ html {
 
 body {
   background-color: var(--body-bg);
-  background-image: url("/tile.gif");
+  background-image: url("/img/tile.gif");
   /* background-image: var(--body-img); */
   /* background-size: 1rem 1rem; */
   color: var(--body-fg);

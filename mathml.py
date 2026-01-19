@@ -40,8 +40,14 @@ KEYWORDS = {
     'prod':   '∏',  # U+220F N-ARY PRODUCT
     'sum':    '∑',  # U+2211 N-ARY SUMMATION
     'inf':    '∞',  # U+221E INFINITY
+    'and':    '∧',  # U+2227 LOGICAL AND
+    'meet':   '∧',  # U+2227 LOGICAL AND
+    'or':     '∨',  # U+2228 LOGICAL OR
+    'join':   '∨',  # U+2228 LOGICAL OR
     'int':    '∫',  # U+222B INTEGRAL
     'ent':    '⊢',  # U+22A2 RIGHT TACK
+    'varand': '⋀',  # U+22C0 N-ARY LOGICAL AND
+    'varor':  '⋁',  # U+22C1 N-ARY LOGICAL OR
     'star':   '⋆',  # U+22C6 STAR OPERATOR
 }
 
@@ -93,6 +99,8 @@ OPERATORS = {
     '≥': None,  # U+2265 GREATER-THAN OR EQUAL TO
     '⊕': None,  # U+2295 CIRCLED PLUS
     '⊗': None,  # U+2297 CIRCLED TIMES
+    '⋀': None,  # U+22C0 N-ARY LOGICAL AND
+    '⋁': None,  # U+22C1 N-ARY LOGICAL OR
     '⋅': None,  # U+22C5 DOT OPERATOR
     '⋮': None,  # U+22EE VERTICAL ELLIPSIS
     '⋯': None,  # U+22EF MIDLINE HORIZONTAL ELLIPSIS

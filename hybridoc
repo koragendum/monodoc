@@ -232,7 +232,7 @@ ELEMINI = re.compile('[a-z]')
 CUSTOM  = re.compile('[a-z][a-z0-9-]*')
 TAGBRK  = re.compile('[>"\']')
 
-WORD    = re.compile('[a-zA-Z]+(?:-[a-zA-Z]+)*')
+WORD    = re.compile('[a-zA-Zα-ωΑ-Ω]+')
 LETTER  = re.compile('[a-zA-Zα-ωΑ-Ω]')
 NUMERAL = re.compile('[+−]?[0-9]+') # U+2212 MINUS SIGN not U+002D HYPHEN-MINUS
 CORRECT = re.compile('[+-]?[0-9]+(?:\\.[0-9]+)?')   # U+002D HYPHEN-MINUS

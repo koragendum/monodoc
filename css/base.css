@@ -256,6 +256,10 @@ inline-note:not(.narrow) {
   display: inline;
 }
 
+inline-note.narrow {
+  display: none;
+}
+
 margin-note {
   display: inline;
   float: right;
@@ -273,6 +277,7 @@ margin-note {
   inline-note.narrow {
     display: inline;
   }
+
   margin-note:not(.wide) {
     float: unset;
     clear: unset; /* no effect */
@@ -284,6 +289,7 @@ margin-note {
     font-size: inherit;
     line-height: inherit;
   }
+
   margin-note.wide {
     display: none;
   }
