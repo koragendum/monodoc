@@ -98,6 +98,7 @@ OPERATORS = {
     '≤': None,  # U+2264 LESS-THAN OR EQUAL TO
     '≥': None,  # U+2265 GREATER-THAN OR EQUAL TO
     '⊕': None,  # U+2295 CIRCLED PLUS
+    '⊖': None,  # U+2296 CIRCLED MINUS
     '⊗': None,  # U+2297 CIRCLED TIMES
     '⋀': None,  # U+22C0 N-ARY LOGICAL AND
     '⋁': None,  # U+22C1 N-ARY LOGICAL OR
@@ -113,6 +114,7 @@ OPERATORS = {
 DIGRAPHS = {
     '\\{': '{',
     '\\}': '}',
+    '//': '⁄',  # U+2044 FRACTION SLASH
     '<-': '←',  # U+2190 LEFTWARDS ARROW
     '->': '→',  # U+2192 RIGHTWARDS ARROW
     '<=': '⇐',  # U+21D0 LEFTWARDS DOUBLE ARROW
@@ -123,7 +125,9 @@ DIGRAPHS = {
     '/=': '≠',  # U+2260 NOT EQUAL TO
     '<=': '≤',  # U+2264 LESS-THAN OR EQUAL TO
     '>=': '≥',  # U+2265 GREATER-THAN OR EQUAL TO
-    '//': '⁄',  # U+2044 FRACTION SLASH
+    '@+': '⊕',  # U+2295 CIRCLED PLUS
+    '@−': '⊖',  # U+2296 CIRCLED MINUS
+    '@×': '⊗',  # U+2297 CIRCLED TIMES
 }
 
 # TODO digraphs for U+2061 FUNCTION APPLICATION

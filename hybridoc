@@ -43,7 +43,6 @@ AVAILABLEMODULES = {
     'dark':        (5, 'css/dark.css'),
     'math':        (6, 'css/math.css'),
     'center':      (7, 'css/center.css'),
-    'center-dark': (7, 'css/center-dark.css'),
     'justify':     (7, 'css/justify.css'),
     # fonts
     'alegreya': (0, 'css/fonts/alegreya.css'),
@@ -65,13 +64,16 @@ AVAILABLEMODULES = {
     # presets
     'default-lite': None,
     'default-dark': None,
+    'center-lite':  None,
+    'center-dark':  (7, 'css/center-dark.css'),
 }
 
 DEPENDENCIES = {
     'math':         ('schotis', 'bodoni', 'new-cm', 'century'),
     'default-lite': ('base', 'lite', 'schotis', 'century', 'berkeley', 'iosevka'),
     'default-dark': ('base', 'dark', 'ff-meta', 'fira', 'iosevka'),
-    'center-dark':  ('center', ),
+    'center-lite':  ('center', 'default-lite'),
+    'center-dark':  ('center', 'default-dark'),
 }
 
 CONSTANTS = {
