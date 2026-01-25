@@ -700,7 +700,6 @@ def parse(text):
 
             if len(tokens) > 0 and tokens[-1] == '\\' and char in PUNCTUATION:
                 tokens[-1] = Atom('mtext', char)
-                tokens.append(Space(PUNCTUATION[char]))
                 offset += 1
                 continue
 

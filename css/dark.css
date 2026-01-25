@@ -236,6 +236,10 @@ hi-group.numeric {
   color: rgb(255, 144, 144);
 }
 
+hi-group.radix, hi-group .radix {
+  filter: brightness(0.666667);
+}
+
 hi-group.character {
   color: rgb(255, 128, 160); /* 255, 160, 240 */
   background-color: rgb(24, 24, 24);

@@ -74,7 +74,7 @@ class HtmlElement:
             raise TypeError('not an instance of str or HtmlElement: '
                 f'{item} has type {type(item)}')
 
-    def compact(self):
+    def compact(self, collapse=True):
         if self._compact:
             return
 
@@ -88,31 +88,34 @@ class HtmlElement:
             else:
                 prev = item
 
-        if self.element == 'pre':
-            self.inner = [item for item in self.inner if item is not None]
-        else:
+        if collapse:
             self.inner = [
                 COMPACTSP.sub(' ', item) if isinstance(item, str) else item
                 for item in self.inner
                 if item is not None
             ]
+        else:
+            self.inner = [item for item in self.inner if item is not None]
 
         self._size = None
         self._compact = True
 
-    def prune(self):
+    def prune(self, collapse=True):
         if self._pruned:
             return
 
+        if self.element == 'pre':
+            collapse = False
+
         for index, item in enumerate(self.inner):
             if isinstance(item, HtmlElement):
-                item.prune()
+                item.prune(collapse)
                 if item.element == 'p' and not item.inner:
                     self.inner[index] = None
 
         self.inner = [item for item in self.inner if item is not None]
 
-        self.compact()
+        self.compact(collapse)
 
         if self.element == 'p':
             match self.inner:

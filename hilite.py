@@ -3,27 +3,33 @@ import re
 
 WHITESPACE = re.compile(r'\s+')
 
-WORD = re.compile("[`']?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9'·-]*[!?]?")
+WORD = re.compile("`?'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9-]*['!?]?")
 
-NUMERIC = re.compile(r'([+−])?(\d+)(\.\d+)?')
+NONUMERIC_WORD = re.compile("`?'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω-]*['!?]?")
+
+NUMERIC = re.compile(r'([+−-])?(\d+)(\.\d+)?')
+
+SUFFIXED_NUMERIC = re.compile(r'([+−-])?(\d+)(\.\d+)?([_a-zA-Z][_a-zA-Z0-9]*)?')
+
+HEXADECIMAL = re.compile(r"([+−-])?(0x)([0-9a-fA-F]+(?:['_][0-9a-fA-F]+)*)")
 
 LEFT_DELIM  = {'(', '[', '⟨', '{'}
 RIGHT_DELIM = {')', ']', '⟩', '}'}
 
 DYAD = {
-    '->', '<-', '=>', '<=', '::', ':=',
-    '||', '&&', '<<', '>>', '++', '<>',
-    '//',
+    '->', '<-', '=>', '<=',
+    '||', '&&', '<<', '>>',
+    '++', '--', '**', '//',
+    '+=', '-=', '*=',
+    '==', '!=', '/=',
+    ':=', '::',
 }
 
-LEFT_QUOTE1  = '‘'
-RIGHT_QUOTE1 = '’'
+QUOTE1 = ('‘', '’')
+QUOTE2 = ('“', '”')
 
-LEFT_QUOTE2  = '“'
-RIGHT_QUOTE2 = '”'
-
-COMMENT_CHAR = ('#', '※')
-COMMENT_DYAD = '//'
+COMMENT_CHAR = '※'
+COMMENT_DYAD = None
 
 HTML_ENTITY = re.compile(r'&(?:[a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+);')
 
@@ -65,11 +71,13 @@ def _escape(text):
         offset = start + 1
 
     if taken < length:
-        fragments.append(text[taken:])
+        fragments.append(_replace(text[taken:]))
 
     return ''.join(fragments)
 
-def lex(lines):
+def lex(lines, quote1, quote2, comment_char, comment_dyad, mode='default'):
+    left_quote1, right_quote1 = quote1
+    left_quote2, right_quote2 = quote2
     text = '\n'.join(lines)
     length = len(text)
     final = length - 1
@@ -82,37 +90,64 @@ def lex(lines):
             offset = match.end()
             continue
 
-        match = WORD.match(text, offset)
+        if mode == 'sepr-word-numeric' and tokens and tokens[-1][0] in ('integer', 'fractional'):
+            match = NONUMERIC_WORD.match(text, offset)
+        else:
+            match = WORD.match(text, offset)
         if match:
             tokens.append(('word', match.group(0)))
             offset = match.end()
             continue
 
-        match = NUMERIC.match(text, offset)
+        match = HEXADECIMAL.match(text, offset)
         if match:
-            sign, integer, fractional = match.groups()
+            sign, radix, integer = match.groups()
             if sign and tokens and tokens[-1][0] in LEFT_OPERAND:
                 tokens.append(('symbol', sign))
                 sign = ''
             elif sign is None:
                 sign = ''
-            if fractional:
-                tokens.append(('fractional', sign + integer + fractional))
+            tokens.append(('integer', sign + radix + integer))
+            offset = match.end()
+            continue
+
+        if mode == 'join-numeric-word':
+            match = SUFFIXED_NUMERIC.match(text, offset)
+        else:
+            match = NUMERIC.match(text, offset)
+        if match:
+            if mode == 'join-numeric-word':
+                sign, integer, frac, suffix = match.groups()
+                if suffix is None:
+                    suffix = ''
             else:
-                tokens.append(('integer', sign + integer))
+                sign, integer, frac = match.groups()
+                suffix = ''
+
+            if sign and tokens and tokens[-1][0] in LEFT_OPERAND:
+                tokens.append(('symbol', sign))
+                sign = ''
+            elif sign is None:
+                sign = ''
+
+            if frac:
+                tokens.append(('fractional', sign + integer + frac + suffix))
+            else:
+                tokens.append(('integer', sign + integer + suffix))
+
             offset = match.end()
             continue
 
         char = text[offset]
 
-        if char == '\\' and offset < final and text[offset+1] == '<':
+        if char == '\\' and text[offset+1:offset+2] == '<':
             end = text.find('>', offset+2)
             if end > 0:
                 tokens.append(('tag', text[offset+1:end+1]))
                 offset = end + 1
                 continue
 
-        if char == '<' and offset < final and text[offset+1] == '/':
+        if char == '<' and text[offset+1:offset+2] == '/':
             end = text.find('>', offset+2)
             if end > 0:
                 tokens.append(('tag', text[offset:end+1]))
@@ -129,15 +164,15 @@ def lex(lines):
             offset += 1
             continue
 
-        if char == LEFT_QUOTE1:
-            end = text.find(RIGHT_QUOTE1, offset+1)
+        if char == left_quote1:
+            end = text.find(right_quote1, offset+1)
             if end > 0:
                 tokens.append(('quote1', text[offset:end+1]))
                 offset = end + 1
                 continue
 
-        if char == LEFT_QUOTE2:
-            end = text.find(RIGHT_QUOTE2, offset+1)
+        if char == left_quote2:
+            end = text.find(right_quote2, offset+1)
             if end > 0:
                 tokens.append(('quote2', text[offset:end+1]))
                 offset = end + 1
@@ -145,7 +180,7 @@ def lex(lines):
 
         pair = text[offset:offset+2]
 
-        if char in COMMENT_CHAR or pair == COMMENT_DYAD:
+        if char == comment_char or pair == comment_dyad:
             end = text.find('\n', offset+1)
             if end > 0:
                 tokens.append(('comment', text[offset:end]))
@@ -193,7 +228,7 @@ GENERIC_TYPE = re.compile('[A-ZΑ-Ω][a-zA-Zα-ωΑ-Ω0-9]*')
 
 NUMERIC_TYPE = re.compile('[uif][1-9][0-9]*')
 
-OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|-←→⇐⇒↑↓⇑⇓]*')
+OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|←→↑↓-]*')
 
 SCOPE = '::'
 
@@ -215,10 +250,7 @@ DELIM_NAME = {
 
 ELEM = 'hi-group'
 
-def default_handler(lang, lines, modifiers=None):
-    # The less-than character “<” is escaped as “&lt;”
-    #   unless it is preceded by “\” or followed by “/”.
-    tokens = lex(lines)
+def default_parser(tokens):
     length = len(tokens)
     output = []
     depth = 0
@@ -291,6 +323,7 @@ def default_handler(lang, lines, modifiers=None):
                     var_depth[var] += 1
 
             case 'integer':
+                text = text.replace('0x', '<span class="radix">0x</span>')
                 output.append(f'<{ELEM} class="numeric">{text}</{ELEM}>')
 
             case 'fractional':
@@ -309,3 +342,192 @@ def default_handler(lang, lines, modifiers=None):
                 output.append(f'<{ELEM} class="comment">{esc}</{ELEM}>')
 
     return ''.join(output).splitlines()
+
+ASM_INSTRUCTION = {
+  'vmovups', 'vaddps', 'vsubps', 'vmulps', 'vdivps',
+  'vxorps', 'vbroadcastss', 'vcmpltps',
+  'vzeroupper', 'ret',
+  'vfmadd213ps', 'vcvttps2udq',
+}
+
+ASM_REGISTER = {
+    'al', 'ah', 'ax', 'eax', 'rax',
+    'bl', 'bh', 'bx', 'ebx', 'rbx',
+    'cl', 'ch', 'cx', 'ecx', 'rcx',
+    'dl', 'dh', 'dx', 'edx', 'rdx',
+
+    'sil', 'si', 'esi', 'rsi',
+    'dil', 'di', 'edi', 'rdi',
+    'spl', 'sp', 'esp', 'rsp',
+    'bpl', 'bp', 'ebp', 'rbp',
+           'ip', 'eip', 'rip',
+
+    'r8b',  'r8w',  'r8d',  'r8',
+    'r9b',  'r9w',  'r9d',  'r9',
+    'r10b', 'r10w', 'r10d', 'r10',
+    'r11b', 'r11w', 'r11d', 'r11',
+    'r12b', 'r12w', 'r12d', 'r12',
+    'r13b', 'r13w', 'r13d', 'r13',
+    'r14b', 'r14w', 'r14d', 'r14',
+    'r15b', 'r15w', 'r15d', 'r15',
+
+    'xmm0', 'xmm1', 'xmm2', 'xmm3',
+    'xmm4', 'xmm5', 'xmm6', 'xmm7',
+    'ymm0', 'ymm1', 'ymm2', 'ymm3',
+    'ymm4', 'ymm5', 'ymm6', 'ymm7',
+    'zmm0', 'zmm1', 'zmm2', 'zmm3',
+    'zmm4', 'zmm5', 'zmm6', 'zmm7',
+
+    'k0', 'k1', 'k2', 'k3',
+}
+
+ASM_KEYWORD = {
+    'ptr', 'byte', 'word', 'dword', 'qword', 'xmmword', 'ymmword', 'zmmword',
+}
+
+ASM_DIRECTIVE = {
+    'long',
+}
+
+ASM_OPERATOR = re.compile('[+−×/<>=~!*&|-]*')
+
+def assembly_parser(tokens):
+    length = len(tokens)
+    output = []
+    depth = 0
+    var_depth = [0, 0, 0, 0]
+    index = 0
+    while index < length:
+        kind, text = tokens[index]
+        match kind:
+            case 'tag' | 'entity':
+                output.append(text)
+
+            case 'space':
+                output.append(text)
+
+            case 'word':
+                if index+1 < length and tokens[index+1][1] == ':':
+                    index += 1
+                    text = text + ':'
+                    _class = 'flow'
+                elif text in ASM_KEYWORD:
+                    _class = 'keyword'
+                elif text in ASM_INSTRUCTION:
+                    _class = 'function'
+                elif text in ASM_REGISTER:
+                    _class = 'identifier'
+                else:
+                    _class = None
+
+                if _class is None:
+                    output.append(text)
+                else:
+                    output.append(f'<{ELEM} class="{_class}">{text}</{ELEM}>')
+
+            case 'symbol':
+                if text == '.' and index+1 < length and tokens[index+1][0] == 'word':
+                    index += 1
+                    word = tokens[index][1]
+                    text = '.' + word
+                    if index+1 < length and tokens[index+1][1] == ':':
+                        index += 1
+                        text = text + ':'
+                        _class = 'flow'
+                    elif word in ASM_DIRECTIVE:
+                        _class = 'keyword'
+                    else:
+                        _class = 'flow'
+                    output.append(f'<{ELEM} class="{_class}">{text}</{ELEM}>')
+
+                elif ASM_OPERATOR.fullmatch(text):
+                    esc = _replace(text)
+                    output.append(f'<{ELEM} class="operator">{esc}</{ELEM}>')
+
+                else:
+                    esc = _replace(text)
+                    output.append(esc)
+
+            case 'ldelim' | 'rdelim':
+                var = DELIM_VARIANT[text]
+                if kind == 'rdelim':
+                    depth -= 1
+                    var_depth[var] -= 1
+                    output.append('</span>')
+                output.append(
+                    f'<{ELEM} class="delimiter {DELIM_NAME[text]}"'
+                    f' data-depth="{var_depth[var]}">'
+                    f'{text}</{ELEM}>'
+                )
+                if kind == 'ldelim':
+                    output.append(
+                        f'<span class="region {DELIM_NAME[text]}-delimited"'
+                        f' data-depth="{var_depth[var]}">'
+                    )
+                    depth += 1
+                    var_depth[var] += 1
+
+            case 'integer':
+                text = text.replace('0x', '<span class="radix">0x</span>')
+                output.append(f'<{ELEM} class="numeric">{text}</{ELEM}>')
+
+            case 'fractional':
+                output.append(f'<{ELEM} class="numeric">{text}</{ELEM}>')
+
+            case 'quote1':
+                esc = _escape(text)
+                output.append(f'<{ELEM} class="character">{esc}</{ELEM}>')
+
+            case 'quote2':
+                esc = _escape(text)
+                output.append(f'<{ELEM} class="quote">{esc}</{ELEM}>')
+
+            case 'comment':
+                esc = _escape(text)
+                output.append(f'<{ELEM} class="comment">{esc}</{ELEM}>')
+
+        index += 1
+
+    return ''.join(output).splitlines()
+
+
+def default_handler(lang, lines, modifiers=None):
+    # The less-than character “<” is escaped as “&lt;”
+    #   unless it is preceded by “\” or followed by “/”.
+    match lang:
+        case 'rs' | 'rust':
+            comment_char = None
+            comment_dyad = '//'
+        case 'rb' | 'ruby' | 'py' | 'python':
+            comment_char = '#'
+            comment_dyad = None
+        case 'asm' | 'assembly':
+            comment_char = ';'
+            comment_dyad = None
+        case _:
+            comment_char = COMMENT_CHAR
+            comment_dyad = COMMENT_DYAD
+
+    match lang:
+        case 'rs' | 'rust' | 'rb' | 'ruby' | 'py' | 'python' | 'asm' | 'assembly':
+            quote1 = ("'", "'")
+            quote2 = ('"', '"')
+        case _:
+            quote1 = QUOTE1
+            quote2 = QUOTE2
+
+    match lang:
+        case 'rs' | 'rust':
+            mode = 'join-numeric-word'
+        case 'asm' | 'assembly':
+            mode = 'sepr-word-numeric'
+        case _:
+            mode = 'default'
+
+    tokens = lex(lines, quote1, quote2, comment_char, comment_dyad, mode)
+
+    match lang:
+        case 'asm' | 'assembly':
+            return assembly_parser(tokens)
+        case _:
+            return default_parser(tokens)

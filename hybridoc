@@ -25,7 +25,17 @@ PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
 SECTION = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
 
 # Functions registered to transform code blocks.
-HANDLERS = {'code': default_handler}
+HANDLERS = {
+    'code':     default_handler,
+    'rs':       default_handler,
+    'rust':     default_handler,
+    'rb':       default_handler,
+    'ruby':     default_handler,
+    'py':       default_handler,
+    'python':   default_handler,
+    'asm':      default_handler,
+    'assembly': default_handler,
+}
 
 # Functions to call at the end of rendering.
 FILTERS = []
@@ -359,6 +369,7 @@ def _parse(
         if newline != -1:
             text = text[newline+1:].lstrip()
         print(f"hybridoc: {line_number}: parse error near “{text}”")
+        MAXLEN = 120
         context = src[:offset].splitlines()
         context = context[-8:]
         lengths = ((len(ln), len(ln.lstrip())) for ln in context)
@@ -367,7 +378,29 @@ def _parse(
             default = 0
         )
         for ln in context:
-            print(f"  \x1B[2m{ln[leftskip:].rstrip()}\x1B[22m")
+            ln = ln[leftskip:].rstrip()
+            if len(ln) > MAXLEN:
+                ln = ln[:MAXLEN]
+                ellipsis = "\x1B[34m...\x1B[39m"
+            else:
+                ellipsis = ''
+            print(f"  \x1B[2m{ln}\x1B[22m{ellipsis}")
+        print("  \x1B[31m↓↓↓\x1B[39m")
+        context = src[offset:].splitlines()
+        context = context[:8]
+        lengths = ((len(ln), len(ln.lstrip())) for ln in context)
+        leftskip = min(
+            (total - trimmed for total, trimmed in lengths if trimmed > 0),
+            default = 0
+        )
+        for ln in context:
+            ln = ln[leftskip:].rstrip()
+            if len(ln) > MAXLEN:
+                ln = ln[:MAXLEN]
+                ellipsis = "\x1B[34m...\x1B[39m"
+            else:
+                ellipsis = ''
+            print(f"  \x1B[2m{ln}\x1B[22m{ellipsis}")
         raise RuntimeError
 
     initial = TAGINIT if onlyhtml else INITIAL
@@ -1287,6 +1320,7 @@ GLOBALS = {
     'extant':       extant,
     'annotate':     annotate,
     'replace':      replace,
+    'default':      default_handler,
     'PERMALINK':    PERMALINK,
     'SECTION':      SECTION,
     'HANDLERS':     HANDLERS,
