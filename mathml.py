@@ -82,6 +82,7 @@ OPERATORS = {
     '·': '⋅',   # U+00B7 MIDDLE DOT -> U+22C5 DOT OPERATOR
     '×': None,  # U+00D7 MULTIPLICATION SIGN
     '÷': None,  # U+00F7 DIVISION SIGN
+    '‖': None,  # U+2016 DOUBLE VERTICAL LINE
     '←': None,  # U+2190 LEFTWARDS ARROW
     '↑': None,  # U+2191 UPWARDS ARROW
     '→': None,  # U+2192 RIGHTWARDS ARROW
@@ -100,6 +101,7 @@ OPERATORS = {
     '⊕': None,  # U+2295 CIRCLED PLUS
     '⊖': None,  # U+2296 CIRCLED MINUS
     '⊗': None,  # U+2297 CIRCLED TIMES
+    '⊙': None,  # U+2299 CIRCLED DOT OPERATOR
     '⋀': None,  # U+22C0 N-ARY LOGICAL AND
     '⋁': None,  # U+22C1 N-ARY LOGICAL OR
     '⋅': None,  # U+22C5 DOT OPERATOR
@@ -114,6 +116,7 @@ OPERATORS = {
 DIGRAPHS = {
     '\\{': '{',
     '\\}': '}',
+    '||': '‖',  # U+2016 DOUBLE VERTICAL LINE   NOTE that this is not U+2225 PARALLEL TO
     '//': '⁄',  # U+2044 FRACTION SLASH
     '<-': '←',  # U+2190 LEFTWARDS ARROW
     '->': '→',  # U+2192 RIGHTWARDS ARROW
@@ -128,6 +131,7 @@ DIGRAPHS = {
     '@+': '⊕',  # U+2295 CIRCLED PLUS
     '@−': '⊖',  # U+2296 CIRCLED MINUS
     '@×': '⊗',  # U+2297 CIRCLED TIMES
+    '@·': '⊙',  # U+2299 CIRCLED DOT OPERATOR
 }
 
 # TODO digraphs for U+2061 FUNCTION APPLICATION
@@ -273,6 +277,10 @@ class Atom:
                 if self.upright:
                     zero_lspace = True
                     zero_rspace = True
+
+            if inner == '‖':
+                zero_lspace = True
+                zero_rspace = True
 
             # map U+2044 FRACTION SLASH back to U+002F SOLIDUS
             if inner == '⁄':

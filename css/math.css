@@ -138,6 +138,27 @@ mn {
   font-size: 0.625rem; /* 10px */
 }
 
+/* TODO the rule above causes problems for things like the “2k” in
+
+    <msub>
+      <mrow>
+        <mo lspace="0" rspace="0">‖</mo>
+        <mspace width="0.1em"></mspace>
+        <msub>
+          <mi class="sb" mathvariant="normal">a</mi>
+          <mrow>
+            <mn>2</mn>
+            <mi class="rm" mathvariant="normal">k</mi>
+          </mrow>
+        </msub>
+        <mo lspace="0" rspace="0">‖</mo>
+      </mrow>
+      <mn>1</mn>
+    </msub>
+
+   for which the rule is mistakenly applied.
+*/
+
 /* Fraction second-level script */
 mfrac :is(msup, msub, msubsup) :is(msup, msub, msubsup):not(:nth-child(1)) > :is(mspace, mtext, mi:not(.mf), mn, mo.it):not(:nth-child(1)) {
   font-size: 0.5rem; /* 8px */

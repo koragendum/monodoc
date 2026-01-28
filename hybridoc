@@ -1487,8 +1487,8 @@ if __name__ == '__main__':
 
     page = '\n'.join([
         '<!doctype html>',
-        '<html lang="en">'
-        '  <head>'
+        '<html lang="en">',
+        '  <head>',
         '    <meta charset="utf-8">',
         '    <meta name="viewport"'
             ' content="width=device-width,'
@@ -1498,7 +1498,7 @@ if __name__ == '__main__':
         '    <style>',
         css,
         '    </style>',
-        '  <head>',
+        '  </head>',
         '  <body>',
         html,
         '  </body>',

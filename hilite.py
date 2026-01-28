@@ -344,10 +344,21 @@ def default_parser(tokens):
     return ''.join(output).splitlines()
 
 ASM_INSTRUCTION = {
-  'vmovups', 'vaddps', 'vsubps', 'vmulps', 'vdivps',
-  'vxorps', 'vbroadcastss', 'vcmpltps',
-  'vzeroupper', 'ret',
-  'vfmadd213ps', 'vcvttps2udq',
+    'ret',
+    'vaddps',
+    'vbroadcastss',
+    'vcmpltps',
+    'vcvtps2dq',
+    'vcvttps2udq',
+    'vdivps',
+    'vfmadd213ps',
+    'vfnmadd231ps',
+    'vmovups',
+    'vmulps',
+    'vrcp14ps',
+    'vsubps',
+    'vxorps',
+    'vzeroupper',
 }
 
 ASM_REGISTER = {
