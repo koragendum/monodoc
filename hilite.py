@@ -206,7 +206,7 @@ def lex(lines, quote1, quote2, comment_char, comment_dyad, mode='default'):
 
 KEYWORD = {
     'define', 'def', 'fn', 'const', 'mutable', 'mut', 'public', 'pub',
-    'raw', 'let', 'use', 'in', 'with', 'impl',
+    'raw', 'let', 'use', 'in', 'with', 'impl', 'unsafe'
 }
 
 FLOW = {
@@ -352,7 +352,10 @@ ASM_INSTRUCTION = {
     'vcvttps2udq',
     'vdivps',
     'vfmadd213ps',
+    'vfmadd231ps',
+    'vfnmadd213ps',
     'vfnmadd231ps',
+    'vmovaps',
     'vmovups',
     'vmulps',
     'vrcp14ps',

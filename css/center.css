@@ -20,9 +20,10 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
   margin-note {
     float: delete;
     clear: delete;
-    margin: delete;
-    margin-right: delete;
     margin-top: delete;
+    margin-bottom: delete;
+    margin-left: delete;
+    margin-right: delete;
     padding: delete;
     width: delete;
     font-size: delete;
@@ -34,9 +35,10 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
   margin-note {
     float: unset;
     clear: unset;
-    margin: 0;
-    margin-right: 0;
     margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
     padding: 0;
     width: 100%;
     font-size: inherit;

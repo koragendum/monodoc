@@ -30,15 +30,15 @@ math[display="inline"] {
   max-height: 1rem; /* 16px */
 }
 
-block-math.left math {
+block-math.left, block-math.left math {
   text-align: left;
 }
 
-block-math.center math {
+block-math.center, block-math.center math {
   text-align: center;
 }
 
-block-math.right math {
+block-math.right, block-math.right math {
   text-align: right;
 }
 

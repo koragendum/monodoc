@@ -107,6 +107,10 @@ OPERATORS = {
     '⋅': None,  # U+22C5 DOT OPERATOR
     '⋮': None,  # U+22EE VERTICAL ELLIPSIS
     '⋯': None,  # U+22EF MIDLINE HORIZONTAL ELLIPSIS
+    '⌈': None,  # U+2308 LEFT CEILING
+    '⌉': None,  # U+2309 RIGHT CEILING
+    '⌊': None,  # U+230A LEFT FLOOR
+    '⌋': None,  # U+230B RIGHT FLOOR
     '⟨': None,  # U+27E8 MATHEMATICAL LEFT ANGLE BRACKET
     '⟩': None,  # U+27E9 MATHEMATICAL RIGHT ANGLE BRACKET
     '⟪': None,  # U+27EA MATHEMATICAL LEFT DOUBLE ANGLE BRACKET
@@ -179,7 +183,16 @@ ESCAPE = {
 
 LATIN = re.compile(r'[a-zA-Zſ][a-zA-Zſ\u0300-\u036F]*')
 GREEK = re.compile(r'[α-ωΑ-Ω]+')
-DELIMITERS = {'(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫', '|', '{', '}'}
+DELIMITERS = {
+    '(', ')',
+    '[', ']',
+    '⟨', '⟩',
+    '⟪', '⟫',
+    '|',
+    '{', '}',
+    '⌈', '⌉',
+    '⌊', '⌋',
+}
 
 # Tokens that can appear as the left-hand argument
 #   of a variadic operator (e.g. plus and minus)
@@ -247,7 +260,7 @@ class Atom:
         self.upright = False    # or unary if operator
         self.smallcaps = False
         self.weight = 0         # 0 regular, 1 semibold, 2 bold
-        self.height = 0
+        self.height = None
         self.variant = False
 
     def tall(self):
@@ -304,10 +317,13 @@ class Atom:
                 attrs['rspace'] = '0.075em'
 
             if delim:
-                if self.height > 0:
-                    SIZES = ['1em', '1.25em', '1.5em', '1.75em', '2em']
-                    height = min(self.height, 4)
-                    size = SIZES[height]
+                if self.height is not None:
+                    SIZES = [
+                        '1em', '1.25em', '1.5em', '1.75em',
+                        '2em', '2.25em', '2.5em', '2.75em',
+                        '3em',           '3.5em',
+                    ]
+                    size = SIZES[self.height]
                     attrs['minsize'] = size
                     attrs['maxsize'] = size
                 elif self.upright:
@@ -494,10 +510,11 @@ class Row:
 
 
 class Space:
-    def __init__(self, width, height=None, depth=None):
+    def __init__(self, width, height=None, depth=None, explicit=False):
         self.width = width
         self.height = None
         self.depth = None
+        self.explicit = explicit
 
     def null(self, inline):
         return all(
@@ -723,21 +740,21 @@ def parse(text):
                 continue
 
             if char in SKIP:
-                tokens.append(Space(SKIP[char]))
+                tokens.append(Space(SKIP[char], explicit=True))
                 offset += 1
                 continue
 
             return None
 
     weight = 0
-    height = 0
+    height = None
     upright   = False
     smallcaps = False
     variant   = False
     coalesced = []
     for token in tokens:
         if isinstance(token, int):
-            height = max(height, token)
+            height = max(height or 0, token)
         elif token == '&':
             weight = max(weight, 1)
         elif token == '&&':
@@ -756,12 +773,13 @@ def parse(text):
             token.variant   = variant
             coalesced.append(token)
             weight = 0
-            height = 0
+            height = None
             upright = False
             smallcaps = False
             variant = False
         else:
-            if weight > 0 or height > 0 or upright or smallcaps or variant:
+            if weight > 0 or height is not None \
+            or upright or smallcaps or variant:
                 return None
             coalesced.append(token)
 
@@ -839,9 +857,11 @@ def parse(text):
             if depth > 0:
                 return (offset, None)
 
-        while len(sequence) > 0 and isinstance(sequence[0], Space):
+        while len(sequence) > 0 and isinstance(sequence[0], Space) \
+        and not sequence[0].explicit:
             sequence.pop(0)
-        while len(sequence) > 0 and isinstance(sequence[-1], Space):
+        while len(sequence) > 0 and isinstance(sequence[-1], Space) \
+        and not sequence[-1].explicit:
             sequence.pop()
 
         if len(sequence) == 0:

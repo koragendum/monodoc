@@ -264,9 +264,10 @@ margin-note {
   display: inline;
   float: right;
   clear: right;
-  margin: -1rem;
-  margin-right: NOTE-MARGIN;
   margin-top: calc(-0.5rem + 1rem - 1em - var(--line-height) * var(--correction));
+  margin-bottom: 0;
+  margin-left: -1rem;
+  margin-right: NOTE-MARGIN;
   padding: 0.5rem 1rem 0.5rem;
   width: NOTE-WIDTH;
   font-size: 0.833333rem;
@@ -281,9 +282,10 @@ margin-note {
   margin-note:not(.wide) {
     float: unset;
     clear: unset; /* no effect */
-    margin: 0;
-    margin-right: 0;
     margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
     padding: 0;
     width: 100%;  /* no effect */
     font-size: inherit;
