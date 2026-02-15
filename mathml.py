@@ -27,6 +27,18 @@ from html import HtmlElement
 #
 #   <mo movablelimits="true"> moves under/over to sub/sup if math-style=compact
 
+# Operator Attributes
+#   fence     true, false
+#   form      prefix, infix, postfix
+#   largeop   true, false
+#   lspace    <length>
+#   rspace    <length>
+#   maxsize   <length>
+#   minsize   <length>
+#   separator true, false
+#   stretchy  true, false
+#   symmetric true, false
+
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 KEYWORDS = {

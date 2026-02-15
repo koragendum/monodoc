@@ -70,7 +70,7 @@ margin-note {
   background-color: var(--mgn-bg);
 }
 
-@media (width < 61.25rem) {
+@media (width < LAYOUT-STEP-WIDTH) {
   margin-note {
     background-color: unset;
     color: var(--note-fg);

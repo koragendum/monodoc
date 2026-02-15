@@ -4,3 +4,10 @@
     text-justify: inter-word;
   }
 }
+
+@media (width >= LAYOUT-STEP-WIDTH) {
+  margin-note {
+    text-align: initial;
+    text-justify: initial;
+  }
+}

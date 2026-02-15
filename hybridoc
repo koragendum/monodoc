@@ -52,8 +52,8 @@ AVAILABLEMODULES = {
     'lite':        (5, 'css/lite.css'),
     'dark':        (5, 'css/dark.css'),
     'math':        (6, 'css/math.css'),
-    'center':      (7, 'css/center.css'),
     'justify':     (7, 'css/justify.css'),
+    'center':      (8, 'css/center.css'),
     # fonts
     'alegreya': (0, 'css/fonts/alegreya.css'),
     'at-name':  (1, 'css/fonts/at-name.css' ),
@@ -70,12 +70,13 @@ AVAILABLEMODULES = {
     'operator': (1, 'css/fonts/operator.css'),
     'schotis':  (0, 'css/fonts/schotis.css' ),
     'sudo':     (1, 'css/fonts/sudo.css'    ),
+    'tweak':    (1, 'css/fonts/tweak.css'   ),
     'victor':   (1, 'css/fonts/victor.css'  ),
     # presets
     'default-lite': None,
     'default-dark': None,
-    'center-lite':  None,
-    'center-dark':  (7, 'css/center-dark.css'),
+    'center-lite':  (9, 'css/center-lite.css'),
+    'center-dark':  (9, 'css/center-dark.css'),
 }
 
 DEPENDENCIES = {

@@ -17,7 +17,10 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
   #galley {
     margin-left: delete;
   }
-  margin-note {
+  inline-note.narrow {
+    display: delete;
+  }
+  margin-note:not(.wide) {
     float: delete;
     clear: delete;
     margin-top: delete;
@@ -29,9 +32,22 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
     font-size: delete;
     line-height: delete;
   }
+  margin-note.wide {
+    display: delete;
+  }
+}
+
+@media (width >= LAYOUT-STEP-WIDTH) {
+  margin-note {
+    text-align: delete;
+    text-justify: delete;
+  }
 }
 
 @media (width < CTR-LAYOUT-STEP-WD) {
+  inline-note.narrow {
+    display: inline;
+  }
   margin-note {
     float: unset;
     clear: unset;
@@ -43,5 +59,15 @@ total-width(galley) + 2 × (width(margin-note) + padding-right(margin-note))
     width: 100%;
     font-size: inherit;
     line-height: inherit;
+  }
+  margin-note.wide {
+    display: none;
+  }
+}
+
+@media (width >= CTR-LAYOUT-STEP-WD) {
+  margin-note {
+    text-align: initial;
+    text-justify: initial;
   }
 }

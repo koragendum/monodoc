@@ -1,5 +1,8 @@
 @media (width < LAYOUT-STEP-WIDTH) {
-  margin-note {
+  inline-note.narrow {
+    display: delete;
+  }
+  margin-note:note(.wide) {
     background-color: delete;
     filter: delete;
   }
@@ -10,9 +13,15 @@
     margin-left: delete;
     margin-right: delete;
   }
+  margin-note.wide {
+    display: delete;
+  }
 }
 
 @media (width < CTR-LAYOUT-STEP-WD) {
+  inline-note.narrow {
+    display: inline;
+  }
   margin-note {
     background-color: unset;
     filter: var(--note-f);
@@ -23,5 +32,8 @@
     font-weight: unset;
     margin-left: 0;
     margin-right: 0;
+  }
+  margin-note.wide {
+    display: none;
   }
 }
