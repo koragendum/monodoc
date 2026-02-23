@@ -78,12 +78,14 @@ class HtmlElement:
         if self._compact:
             return
 
+        rebuild = False
         prev = None
         for index, item in enumerate(self.inner):
             if isinstance(item, str) and isinstance(prev, str):
                 joined = prev + item
                 self.inner[index-1] = None
                 self.inner[index] = joined
+                rebuild = True
                 prev = joined
             else:
                 prev = item
@@ -92,13 +94,66 @@ class HtmlElement:
             self.inner = [
                 COMPACTSP.sub(' ', item) if isinstance(item, str) else item
                 for item in self.inner
-                if item is not None
             ]
-        else:
+
+        if rebuild:
             self.inner = [item for item in self.inner if item is not None]
 
         self._size = None
         self._compact = True
+
+    # Boxes in the normal flow belong to a formatting context, which may
+    #   be block or inline, but not both simultaneously. Block-level boxes
+    #   participate in a block formatting context. Inline-level boxes
+    #   participate in an inline formatting context.
+
+    # In general, generated boxes act as containing blocks for descendant
+    #   boxes; we say that a box "establishes" the containing block for its
+    #   descendants. The phrase "a box's containing block" means "the containing
+    #   block in which the box lives," not the one it generates.
+
+    # Block-level elements are those elements of the source document that are
+    #   formatted visually as blocks (e.g., paragraphs). The following values
+    #   of the display property make an element block-level: block, list-item,
+    #   and table.
+
+    # Block-level boxes are boxes that participate in a block formatting context.
+
+    # Except for table boxes and replaced elements, a block-level box is
+    #   also a block container box. A block container box either contains
+    #   only block-level boxes or establishes an inline formatting context
+    #   and thus contains only inline-level boxes.
+
+    # If a block container box (such as may generated for a div) has a
+    #   block-level box inside it (such as a p), then we force it to have
+    #   only block-level boxes inside it.
+
+    # Inline-level elements are those elements of the source document that do
+    #   not form new blocks of content; the content is distributed in lines
+    #   (e.g., emphasized pieces of text within a paragraph, inline images,
+    #   etc.). The following values of the display property make an element
+    #   inline-level: inline, inline-table, and inline-block.
+
+    # Inline-level elements generate inline-level boxes, which are boxes that
+    #   participate in an inline formatting context.
+
+    # An inline box is one that is both inline-level and whose contents
+    #   participate in its containing inline formatting context. A non-replaced
+    #   element with a 'display' value of 'inline' generates an inline box.
+
+    # When an inline box contains an in-flow block-level box, the inline
+    #   box (and its inline ancestors within the same line box) are broken
+    #   around the block-level box (and any block-level siblings that are
+    #   consecutive or separated only by collapsible whitespace and/or
+    #   out-of-flow elements), splitting the inline box into two boxes
+    #   (even if either side is empty), one on each side of the block-level
+    #   box(es). The line boxes before the break and after the break are
+    #   enclosed in anonymous block boxes, and the block-level box becomes
+    #   a sibling of those anonymous boxes.
+
+    # Any text that is directly contained inside a block container element
+    #   (not inside an inline element) must be treated as an anonymous
+    #   inline element.
 
     def prune(self, collapse=True):
         if self._pruned:
@@ -107,13 +162,15 @@ class HtmlElement:
         if self.element == 'pre':
             collapse = False
 
+        rebuild = False
         for index, item in enumerate(self.inner):
             if isinstance(item, HtmlElement):
                 item.prune(collapse)
                 if item.element == 'p' and not item.inner:
                     self.inner[index] = None
-
-        self.inner = [item for item in self.inner if item is not None]
+                    rebuild = True
+        if rebuild:
+            self.inner = [item for item in self.inner if item is not None]
 
         self.compact(collapse)
 

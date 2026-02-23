@@ -956,6 +956,7 @@ def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
 
 
 SIGIL = {
+    '¶': 'xpar',
     '*': 'note',
     '†': 'note',
     '"': 'quot',
@@ -977,6 +978,9 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     # head  #2 Second-level Heading
     #
     #       #3 [anchor] Third-level Heading
+    #
+    # xpar  ¶ paragraph
+    #         explicitly delimited
     #
     # note  † block note
     #         spanning multiple lines
@@ -1282,7 +1286,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
         gap_below = index < L and blocks[index+1] == 'gap'
         kind, lines, meta = item
         match kind:
-            case 'para':
+            case 'para' | 'xpar':
                 if enclose:
                     _para(output, lines, gap_above, gap_below)
                 else:

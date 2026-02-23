@@ -129,6 +129,7 @@ block-center {
   padding-left: 1.5em;
   padding-right: 1.5em;
   text-align: center;
+  /* text-wrap: balance; */
 }
 
 block-quote {
