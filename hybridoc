@@ -20,7 +20,7 @@ from typing  import Optional
 SOURCE_DIR   = None  # set in main routine
 HYBRIDOC_DIR = path.dirname(path.realpath(path.abspath(argv[0])))
 
-PERMALINK = {1: None, 2: '#', 3: '#', 4: '#', 5: '#', 6: '#'}
+PERMALINK = {1: None, 2: None, 3: None, 4: None, 5: None, 6: None}
 
 SECTION = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
 
@@ -88,7 +88,7 @@ DEPENDENCIES = {
 }
 
 CONSTANTS = {
-    'ROOT-SIZE':        16,     # pixels
+    'ROOT-SIZE':        17,     # pixels
     'NARROW-ROOT-SIZE': 15,     # pixels
     'CHASE-WIDTH':      42.5,   # rem
     'NOTE-WIDTH':       18.75,  # rem
@@ -185,7 +185,7 @@ def map_nonspace(items, container):
 # Parsing  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
-ATTRKEY = re.compile('[a-zA-Z]+(?:-[a-zA-Z]+)*')
+ATTRKEY = re.compile('[a-zA-Z]+(?:[:-][a-zA-Z]+)*')
 ATTRBRK = re.compile('[\\s=\'"]')
 
 def parse_attributes(text : str) -> Optional[dict[str, str]]:
@@ -364,44 +364,62 @@ def _parse(
         adv = post
 
     def parse_error(text):
+        LOC_MAXLEN = 40
+        CTX_MAXLEN = 120
+        ELLIPSIS = "\x1B[34m...\x1B[39m"
+
         line_number = getframeinfo(currentframe().f_back).lineno
         text = text.strip()
         newline = text.rfind('\n')
         if newline != -1:
             text = text[newline+1:].lstrip()
+        if len(text) > LOC_MAXLEN:
+            text = f"{ELLIPSIS}\x1B[2m{text[-LOC_MAXLEN:]}\x1B[22m"
+        else:
+            text = f"\x1B[2m{text}\x1B[22m"
         print(f"hybridoc: {line_number}: parse error near “{text}”")
-        MAXLEN = 120
-        context = src[:offset].splitlines()
-        context = context[-8:]
-        lengths = ((len(ln), len(ln.lstrip())) for ln in context)
+
+        pre_context  = src[:offset].splitlines(keepends=True)[-8:]
+        post_context = src[offset:].splitlines(keepends=True)[:8]
+
+        prev_newline = src.rfind('\n', 0, offset)
+        line_start = prev_newline + 1 if prev_newline != -1 else 0
+
+        pre_error_line, post_error_line = '', ''
+        if pre_context and not pre_context[-1].endswith('\n'):
+            pre_error_line = pre_context.pop()
+        if post_context:
+            post_error_line = post_context.pop(0)
+        error_line = pre_error_line + post_error_line
+
+        lengths = (
+            (len(ln), len(ln.lstrip()))
+            for ln in [*pre_context, error_line, *post_context]
+        )
         leftskip = min(
             (total - trimmed for total, trimmed in lengths if trimmed > 0),
             default = 0
         )
-        for ln in context:
-            ln = ln[leftskip:].rstrip()
-            if len(ln) > MAXLEN:
-                ln = ln[:MAXLEN]
-                ellipsis = "\x1B[34m...\x1B[39m"
-            else:
-                ellipsis = ''
-            print(f"  \x1B[2m{ln}\x1B[22m{ellipsis}")
-        print("  \x1B[31m↓↓↓\x1B[39m")
-        context = src[offset:].splitlines()
-        context = context[:8]
-        lengths = ((len(ln), len(ln.lstrip())) for ln in context)
-        leftskip = min(
-            (total - trimmed for total, trimmed in lengths if trimmed > 0),
-            default = 0
-        )
-        for ln in context:
-            ln = ln[leftskip:].rstrip()
-            if len(ln) > MAXLEN:
-                ln = ln[:MAXLEN]
-                ellipsis = "\x1B[34m...\x1B[39m"
-            else:
-                ellipsis = ''
-            print(f"  \x1B[2m{ln}\x1B[22m{ellipsis}")
+        advance = offset - line_start - leftskip
+
+        def print_abbrev(lines):
+            for ln in lines:
+                ln = ln[leftskip:].rstrip()
+                if len(ln) > CTX_MAXLEN:
+                    ln = ln[:CTX_MAXLEN]
+                    ellipsis = ELLIPSIS
+                else:
+                    ellipsis = ''
+                print(f"  \x1B[2m{ln}\x1B[22m{ellipsis}")
+
+        print()
+        print_abbrev(pre_context)
+        err_ln = error_line[leftskip:].rstrip()
+        print(f"  \x1B[2m{err_ln}\x1B[22m")
+        print(f"  {' ' * advance}\x1B[31m↑\x1B[39m")
+        print_abbrev(post_context)
+        print()
+
         raise RuntimeError
 
     initial = TAGINIT if onlyhtml else INITIAL
@@ -472,6 +490,7 @@ def _parse(
                 # Plausible opening tag
                 index = offset
                 element = None
+                closed = False
                 attrs = {}
 
                 # 1 Find the closing delimiter
@@ -482,6 +501,8 @@ def _parse(
                     index = match.start()
                     char = match.group()
                     if char == '>':
+                        if src[index-1] == '/':
+                            closed = True
                         tag = src[offset:index].removesuffix('/') \
                             .split(maxsplit=1)
                         index += 1
@@ -506,8 +527,10 @@ def _parse(
                 # 2 Check that the opening tag is well-formed
                 if not (element in ELEMENTS or CUSTOM.fullmatch(element)):
                     # This isn’t an HTML tag, although it looks like one.
-                    #   We’re a little more strict than we need to be; see
-                    #   https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name
+                    #   We don’t require a hyphen-minus so that we’ll accept
+                    #   SVG elements, for example, but otherwise we’re a little
+                    #   more strict than we need to be; see the following.
+                    # [https://html.spec.whatwg.org/multipage/custom-elements.html#valid-custom-element-name]
                     parse_error(f'<{src[offset:index-1]}>')
 
                 if attrs is None:
@@ -515,7 +538,7 @@ def _parse(
                     parse_error(f'<{src[offset:index-1]}>')
 
                 # 3 Find the closing tag
-                if element in VOID:
+                if element in VOID or closed:
                     # This is a void element, so there’s
                     #   no corresponding closing tag.
                     if element == 'include':
@@ -902,6 +925,13 @@ def _note(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
     output.append(closing)
 
 
+def _attn(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
+    opening, closing = _tagpair('boxed-note', gap_a, gap_b)
+    output.append(opening)
+    output.extend(_preprocess(lines))
+    output.append(closing)
+
+
 def _quot(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     opening, closing = _tagpair('block-quote', gap_a, gap_b)
     output.append(opening)
@@ -959,6 +989,7 @@ SIGIL = {
     '¶': 'xpar',
     '*': 'note',
     '†': 'note',
+    '!': 'attn',
     '"': 'quot',
     '>': 'iden',
     '^': 'cntr',
@@ -1024,12 +1055,12 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #
     #       $> left-aligned and indented MathML block $
 
-    # TODO ! inset or important block
+    # TODO different box colors/styles (meta)
     # TODO ~ small block note (faint and size of margin note)
 
     # This is a list of "gap" or ("head", [level, anchor, text], None)
     # or ("kind", [line, ...], meta) triples where kind is one of the
-    # following: para, note, quot, iden, list, code verb, or math.
+    # following: para, note, attn, quot, iden, list, code verb, or math.
     blocks = []
 
     block_kind  = None
@@ -1103,7 +1134,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             continue
 
         # INVARIANT block_kind is now None, "para", or
-        #   "note", "quot", "iden", "cntr", "list", or "code".
+        #   "attn", "note", "quot", "iden", "cntr", "list", or "code".
 
         indent = len(line) - len(line.lstrip())
 
@@ -1293,6 +1324,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                     output.extend(lines)
             case 'head': _head(output, lines,       gap_above, gap_below)
             case 'note': _note(output, lines, meta, gap_above, gap_below)
+            case 'attn': _attn(output, lines,       gap_above, gap_below)
             case 'quot': _quot(output, lines,       gap_above, gap_below)
             case 'iden': _iden(output, lines,       gap_above, gap_below)
             case 'cntr': _cntr(output, lines,       gap_above, gap_below)

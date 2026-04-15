@@ -119,6 +119,10 @@ block-note {
   display: block;
 }
 
+boxed-note {
+  display: block;
+}
+
 block-indent {
   display: block;
   padding-left: 1.5em;
@@ -493,6 +497,14 @@ hr {
   border-style: solid;
   /* border-color */
   margin: 1em 0 1em;
+}
+
+hr.gap-top {
+  margin-top: 1.25em;
+}
+
+hr.gap-bottom {
+  margin-bottom: 1.25em;
 }
 
 details {

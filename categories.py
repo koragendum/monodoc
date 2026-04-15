@@ -36,6 +36,7 @@
 # block-math   X     ·     X     ·     ·
 # block-note   X     ·     X     ·     ·
 # block-quote  X     ·     X     ·     ·
+# boxed-note   X     ·     X     ·     ·
 #             ---- ----- ----- ----- ------
 # body         ·     ·     X     ·     ·
 # caption      ·     ·     X     ·     ·
@@ -174,6 +175,7 @@ ELEMENTS = {
     'include', 'module', 'python',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
+    'boxed-note',
     # Extensions (phrasing)
     'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
     'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
@@ -218,6 +220,7 @@ FLOW = {
     'msqrt', 'msub', 'msubsup', 'msup', 'mtext', 'munder', 'munderover',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
+    'boxed-note',
     # Extensions (phrasing)
     'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
     'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
@@ -277,6 +280,7 @@ PALPABLE = {
     'msub', 'msubsup', 'msup', 'mtext', 'munder', 'munderover',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
+    'boxed-note',
     # Extensions (phrasing)
     'esc-i', 'extra-bold', 'hi-group', 'inline-math', 'inline-note',
     'margin-note', 'no-break', 'semi-bold', 'small-caps'
@@ -301,7 +305,8 @@ BLOCK = {
     'nav', 'ol', 'p', 'pre', 'search', 'section', 'summary', 'table', 'tbody',
     'td', 'tfoot', 'th', 'thead', 'tr', 'ul',
     # Extensions (non-phrasing)
-    'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote'
+    'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
+    'boxed-note',
 }
 
 # The MathML elements are not categorized as block or inline.
