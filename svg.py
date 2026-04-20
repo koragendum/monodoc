@@ -1,4 +1,4 @@
-from math import ceil, cos, floor, inf, log, sin, tau
+from math import atan2, ceil, cos, floor, inf, log, sin, tau
 
 def sample(f, a, b, n):
     # divides [a, b] into n regions (returns n + 1 points)
@@ -8,6 +8,71 @@ def sample(f, a, b, n):
     xs.extend((a * (n - i) + b * i) * d for i in range(1, n))
     xs.append(b)
     return [(x, f(x)) for x in xs]
+
+def adaptive_sample(f, a, b, n, r=0.015625, limit=10):
+    # divides [a, b] into n regions (returns n + 1 points)
+    #   and then subdivides as needed so that adjacent line
+    #   segments are r radians or less from being colinear
+    d = 1.0 / n
+    xs = []
+    xs.append(a)
+    xs.extend((a * (n - i) + b * i) * d for i in range(1, n))
+    xs.append(b)
+    points = [(x, f(x)) for x in xs]
+    angles = []
+    for i in range(len(points) - 1):
+        x0, y0 = points[i]
+        x1, y1 = points[i + 1]
+        angles.append(atan2(y1 - y0, x1 - x0))
+
+    for _ in range(limit):
+        stable = True
+        subdiv_points = []
+        subdiv_angles = []
+        div_next = False
+        for i in range(len(angles) - 1):
+            t0 = angles[i]
+            t1 = angles[i + 1]
+            over = abs(t1 - t0) > r
+            # subdivide points[i] to points[i + 1] and mark
+            #   points[i + 1] to points[i + 2] for subdivision
+            if div_next or over:
+                x0, y0 = points[i]
+                x1, y1 = points[i + 1]
+                xm = (x0 + x1) * 0.5
+                ym = f(xm)
+                subdiv_points.append((x0, y0))
+                subdiv_angles.append(atan2(xm - x0, ym - y0))
+                subdiv_points.append((xm, ym))
+                subdiv_angles.append(atan2(x1 - xm, y1 - ym))
+                stable = False
+            else:
+                subdiv_points.append(points[i])
+                subdiv_angles.append(t0)
+            div_next = over
+
+        if div_next:
+            x0, y0 = points[-2]
+            x1, y1 = points[-1]
+            xm = (x0 + x1) * 0.5
+            ym = f(xm)
+            subdiv_points.append((x0, y0))
+            subdiv_angles.append(atan2(xm - x0, ym - y0))
+            subdiv_points.append((xm, ym))
+            subdiv_angles.append(atan2(x1 - xm, y1 - ym))
+        else:
+            subdiv_points.append(points[-2])
+            subdiv_angles.append(angles[-1])
+
+        subdiv_points.append(points[-1])
+
+        points = subdiv_points
+        angles = subdiv_angles
+
+        if stable:
+            break
+
+    return points
 
 def resize(inp, out):
     # maps [a₀, b₀] to [a₁, b₁]
@@ -352,9 +417,9 @@ class SVG:
 # svg.add_graticule('y', stroke=3, divs=4,  color=0.25)
 # svg.add_rule('x', stroke=5, color=0.25)
 # svg.add_rule('y', stroke=5, color=0.25)
-# svg.add_lines(sample(lambda x: 2 ** x,        -1, 1.414, 128), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
-# svg.add_lines(sample(lambda x: x,             -1, 1.414,   2), color=0.8,              gap=1, gapcolor=0)
-# svg.add_lines(sample(lambda x: x * x,         -1, 1.414, 128), color=(0.7, 0.15, 285), gap=1, gapcolor=0)
-# svg.add_lines(sample(lambda x: x * x * x,     -1, 1.414, 128), color=(0.7, 0.15,  30), gap=1, gapcolor=0)
-# svg.add_lines(sample(lambda x: x * x * x * x, -1, 1.414, 128), color=(0.7, 0.15, 150), gap=1, gapcolor=0)
+# svg.add_lines(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
+# svg.add_lines(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,              gap=1, gapcolor=0)
+# svg.add_lines(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285), gap=1, gapcolor=0)
+# svg.add_lines(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30), gap=1, gapcolor=0)
+# svg.add_lines(adaptive_sample(lambda x: x * x * x * x, -1, 1.4, 8), color=(0.7, 0.15, 150), gap=1, gapcolor=0)
 # print(svg.render())
