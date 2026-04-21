@@ -379,9 +379,10 @@ class SVG:
 
                 if not diameter:
                     interpoint = sqrt(min(square_distances(pairs)))
-                    interpoint = round(interpoint, 2)
-                    interpoint = floor(interpoint * 2) / 2
-                    diameter = min(interpoint / 2, auto_stroke * 3)
+                    # interpoint = round(interpoint, 2)
+                    # interpoint = floor(interpoint * 2) / 2
+                    # diameter = min(interpoint / 2, default_stroke * 2)
+                    diameter = min(round(interpoint) / 2, default_stroke * 2)
                     diameter = max(1, diameter)
 
                 radius = round(diameter / 2, 3)
@@ -441,14 +442,18 @@ class SVG:
         output.append('</svg>')
         return '\n'.join(output)
 
-# svg = SVG(1024, 1024, stroke=3, margin=8)
+# TODO unit for graticule (separate for radix)
+#   e.g. drawing lines at multiples of 15
+# TODO numeric labels
+
+# svg = SVG(1024, 1024, margin=8, stroke=3)
 # svg.add_graticule('x', stroke=1, divs=32, color=0.25)
 # svg.add_graticule('y', stroke=1, divs=32, color=0.25)
 # svg.add_graticule('x', stroke=3, divs=4,  color=0.25)
 # svg.add_graticule('y', stroke=3, divs=4,  color=0.25)
 # svg.add_rule('x', stroke=5, color=0.25)
 # svg.add_rule('y', stroke=5, color=0.25)
-# # svg.add_lines(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
+# svg.add_lines(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
 # # svg.add_lines(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,              gap=1, gapcolor=0)
 # # svg.add_lines(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285), gap=1, gapcolor=0)
 # # svg.add_lines(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30), gap=1, gapcolor=0)
