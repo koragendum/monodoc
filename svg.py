@@ -1,4 +1,4 @@
-from math import atan2, ceil, cos, floor, inf, log, sin, tau
+from math import atan2, ceil, cos, floor, log, sin, sqrt, tau
 
 def sample(f, a, b, n):
     # divides [a, b] into n regions (returns n + 1 points)
@@ -137,6 +137,14 @@ def color_to_rgba(color):
         l, c, h = color
         alpha = 1
     return (lch_to_srgb(l, c, h), alpha)
+
+def square_distances(pairs):
+    for i in range(len(pairs) - 1):
+        x0, y0 = pairs[i]
+        x1, y1 = pairs[i + 1]
+        dx = x1 - x0
+        dy = y1 - y0
+        yield dx * dx + dy * dy
 
 class SVG:
     def __init__(self,
@@ -368,14 +376,37 @@ class SVG:
 
             if kind == 'points':
                 diameter, = miscellania
-                # TODO
+
+                if not diameter:
+                    interpoint = sqrt(min(square_distances(pairs)))
+                    interpoint = round(interpoint, 2)
+                    interpoint = floor(interpoint * 2) / 2
+                    diameter = min(interpoint / 2, auto_stroke * 3)
+                    diameter = max(1, diameter)
+
+                radius = round(diameter / 2, 3)
+
+                attributes = [
+                    'stroke="none"',
+                    f'fill="{color}"',
+                ]
+                if alpha < 1:
+                    attributes.append(f'fill-opacity="{alpha}"')
+                attributes = ' '.join(attributes)
+
+                output.append(f'  <g {attributes}>')
+                for x, y in pairs:
+                    output.append(
+                        f'    <circle cx="{x}" cy="{y}" r="{radius}"/>'
+                    )
+                output.append('  </g>')
 
             if kind == 'lines':
                 stroke, gap, gapcolor = miscellania
 
                 stroke = fallback(stroke, default_stroke)
 
-                data = ' '.join(f'{x},{y}' for x, y, in pairs)
+                data = ' '.join(f'{x},{y}' for x, y in pairs)
 
                 if gap:
                     gapstroke = stroke + gap * 2
@@ -417,9 +448,14 @@ class SVG:
 # svg.add_graticule('y', stroke=3, divs=4,  color=0.25)
 # svg.add_rule('x', stroke=5, color=0.25)
 # svg.add_rule('y', stroke=5, color=0.25)
-# svg.add_lines(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
-# svg.add_lines(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,              gap=1, gapcolor=0)
-# svg.add_lines(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285), gap=1, gapcolor=0)
-# svg.add_lines(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30), gap=1, gapcolor=0)
-# svg.add_lines(adaptive_sample(lambda x: x * x * x * x, -1, 1.4, 8), color=(0.7, 0.15, 150), gap=1, gapcolor=0)
+# # svg.add_lines(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
+# # svg.add_lines(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,              gap=1, gapcolor=0)
+# # svg.add_lines(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285), gap=1, gapcolor=0)
+# # svg.add_lines(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30), gap=1, gapcolor=0)
+# # svg.add_lines(adaptive_sample(lambda x: x * x * x * x, -1, 1.4, 8), color=(0.7, 0.15, 150), gap=1, gapcolor=0)
+# svg.add_points(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45))
+# svg.add_points(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,            )
+# svg.add_points(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285))
+# svg.add_points(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30))
+# svg.add_points(adaptive_sample(lambda x: x * x * x * x, -1, 1.4, 8), color=(0.7, 0.15, 150))
 # print(svg.render())
