@@ -179,7 +179,16 @@ class SVG:
             'margin': None,
             'radix':  None,
         }
+        self.family   = None,
+        self.italic   = None,   # True or False
+        self.fontsize = None,
+        self.weight   = None,   # defaults to 400
+        self.halign   = None,   # "l", "c", "r" or "left", "center", "right"
+        self.valign   = None,   # "t", "c", "b" or "top", "center", "bottom"
+        self.lining   = None,   # True (lining) or False (old-style)
+        self.tabular  = None,   # True (tabular) or False (proportional)
         self.guides   = []
+        self.labels   = []
         self.elements = []
 
     def auto_window(self, axis, **kwargs):
@@ -193,19 +202,52 @@ class SVG:
         axis,
         value=0,
         stroke=None,    # defaults to the global default stroke
+        dash=None,
         color=None,     # defaults to the foreground color
     ):
-        self.guides.append(('rule', axis, stroke, color, value))
+        self.guides.append(('rule', axis, stroke, dash, color, value))
 
     def add_graticule(
         self,
         axis,
         stroke=None,    # defaults to the global default stroke
+        dash=None,
         color=None,     # defaults to the foreground color
+        unit=None,
         divs=32,
         radix=10,
     ):
-        self.guides.append(('graticule', axis, stroke, color, divs, radix))
+        self.guides.append(('graticule', axis, stroke, dash, color, unit, divs, radix))
+
+
+    def add_labels(
+        self,
+        axis,
+        color=None,
+        family=None,
+        italic=None,
+        size=None,
+        weight=None,
+        halign=None,
+        valign=None,
+        lining=None,
+        tabular=None,
+        unit=None,
+        divs=32,
+        radix=10,
+    ):
+        if halign is not None:
+            abbrevs = {'l': 'left', 'c': 'center', 'r': 'right'}
+            halign = abbrevs.get(halign, halign)
+            assert halign in ('left', 'center', 'right')
+        if valign is not None:
+            abbrevs = {'t': 'top', 'c': 'center', 'b': 'bottom'}
+            valign = abbrevs.get(valign, valign)
+            assert valign in ('top', 'center', 'bottom')
+        self.labels.append((
+            axis, color, family, italic, size, weight,
+            halign, valign, lining, tabular, unit, divs, radix
+        ))
 
     def add_points(
         self,
@@ -222,6 +264,7 @@ class SVG:
         self,
         pairs,
         stroke=None,    # defaults to the global default stroke
+        dash=None,
         color=None,     # defaults to the foreground color
         gap=None,       # see below
         gapcolor=None,  # defaults to the background color
@@ -229,7 +272,7 @@ class SVG:
         # If gap is not None, before drawing the line as usual, a line through
         # the same points is drawn with a width of (stroke + gap × 2).
         self.elements.append(
-            ('lines', pairs, color, stroke, gap, gapcolor)
+            ('lines', pairs, color, stroke, dash, gap, gapcolor)
         )
 
     def render(self):
@@ -291,19 +334,26 @@ class SVG:
             output.append(f'  <rect {attributes}/>')
 
         for guide in self.guides:
-            kind, axis, stroke, color, *miscellania = guide
+            kind, axis, stroke, dash, color, *miscellania = guide
 
             stroke = fallback(stroke, default_stroke)
 
             color, alpha = color_to_rgba(fallback(color, self.fgcolor))
 
+            linecap = 'butt' if kind == 'rule' else 'square'
             attributes = [
                 f'stroke-width="{round(stroke, 2)}"',
                 f'stroke="{color}"',
-                'stroke-linecap="square"',
+                f'stroke-linecap="{linecap}"',
             ]
             if alpha < 1:
                 attributes.append(f'stroke-opacity="{alpha}"')
+            if dash is not None:
+                dash = dash * stroke * 2
+                ratio = min(2.5, 1.0 + stroke * 0.125)
+                ndash = dash - stroke
+                ngap = dash / ratio + stroke
+                attributes.append(f'stroke-dasharray="{ndash:.2f} {ngap:.2f}"')
             attributes = ' '.join(attributes)
 
             if kind == 'rule':
@@ -332,7 +382,7 @@ class SVG:
                 )
 
             if kind == 'graticule':
-                divs, radix = miscellania
+                unit, divs, radix = miscellania
 
                 if axis == 'x':
                     divs *= self.width / dimension
@@ -354,15 +404,37 @@ class SVG:
                 if sA >= sB:
                     continue
 
+                if unit:
+                    threshold = min(unit * 0.0078125, step * 0.0009765625)
+
                 output.append(f'  <g {attributes}>')
                 for i in range(sA, sB + 1):
-                    mark = round(conv(i * step), 2)
+                    c = i * step
+                    if unit:
+                        d = round(c / unit) * unit
+                        if abs(d - c) > threshold:
+                            continue
+                    p = round(conv(c), 2)
                     output.append(
                         '    <line'
-                        f' {axis}1="{mark}" {cmpl}1="{u}"'
-                        f' {axis}2="{mark}" {cmpl}2="{v}"/>'
+                        f' {axis}1="{p}" {cmpl}1="{u}"'
+                        f' {axis}2="{p}" {cmpl}2="{v}"/>'
                     )
                 output.append('  </g>')
+
+        for label in self.labels:
+            pass
+
+        # TODO
+        # <text x="62" y="54">abc</text>
+        #   font-family="Berkeley Mono"
+        #   font-size="64"
+        #   font-style="normal"
+        #   font-weight="500"
+        #   fill="#000000"
+        #   text-anchor="middle"    # or "start" or "end"
+        #   text-align="center"     # or "left" or "right"
+        #   font-variant="oldstyle-nums proportional-nums" # lining-nums tabular-nums
 
         for element in self.elements:
             kind, pairs, color, *miscellania = element
@@ -403,7 +475,7 @@ class SVG:
                 output.append('  </g>')
 
             if kind == 'lines':
-                stroke, gap, gapcolor = miscellania
+                stroke, dash, gap, gapcolor = miscellania
 
                 stroke = fallback(stroke, default_stroke)
 
@@ -436,31 +508,38 @@ class SVG:
                 ]
                 if alpha < 1:
                     attributes.append(f'stroke-opacity="{alpha}"')
+                if dash is not None:
+                    dash = dash * stroke * 2
+                    #
+                    # With round line caps,
+                    #   dash-len = nominal-dash-len + stroke
+                    #    gap-len = nominal-gap-len − stroke
+                    #
+                    #   d = dN + s
+                    #   g = gN + s
+                    #   dash-len / gap-len = ratio
+                    #   d / (gN − s) = r
+                    #   gN = d / r + s
+                    #
+                    ratio = min(2.5, 1.0 + stroke * 0.125)
+                    ndash = dash - stroke
+                    ngap = dash / ratio + stroke
+                    attributes.append(f'stroke-dasharray="{ndash:.2f} {ngap:.2f}"')
                 attributes = ' '.join(attributes)
                 output.append(f'  <polyline points="{data}" {attributes}/>')
 
         output.append('</svg>')
         return '\n'.join(output)
 
-# TODO unit for graticule (separate for radix)
-#   e.g. drawing lines at multiples of 15
-# TODO numeric labels
-
-# svg = SVG(1024, 1024, margin=8, stroke=3)
-# svg.add_graticule('x', stroke=1, divs=32, color=0.25)
-# svg.add_graticule('y', stroke=1, divs=32, color=0.25)
+# svg = SVG(1536, 1024, margin=8, stroke=3)
+# svg.add_graticule('x', stroke=1, divs=32, unit=0.2, color=0.25, dash=4)
+# svg.add_graticule('y', stroke=1, divs=32, unit=0.2, color=0.25, dash=4)
 # svg.add_graticule('x', stroke=3, divs=4,  color=0.25)
 # svg.add_graticule('y', stroke=3, divs=4,  color=0.25)
 # svg.add_rule('x', stroke=5, color=0.25)
 # svg.add_rule('y', stroke=5, color=0.25)
-# svg.add_lines(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45), gap=1, gapcolor=0)
-# # svg.add_lines(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,              gap=1, gapcolor=0)
-# # svg.add_lines(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285), gap=1, gapcolor=0)
-# # svg.add_lines(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30), gap=1, gapcolor=0)
-# # svg.add_lines(adaptive_sample(lambda x: x * x * x * x, -1, 1.4, 8), color=(0.7, 0.15, 150), gap=1, gapcolor=0)
-# svg.add_points(adaptive_sample(lambda x: 2 ** x,        -1, 1.4, 8), color=(0.7, 0.15,  45))
-# svg.add_points(adaptive_sample(lambda x: x,             -1, 1.4, 8), color=0.8,            )
-# svg.add_points(adaptive_sample(lambda x: x * x,         -1, 1.4, 8), color=(0.7, 0.15, 285))
-# svg.add_points(adaptive_sample(lambda x: x * x * x,     -1, 1.4, 8), color=(0.7, 0.15,  30))
-# svg.add_points(adaptive_sample(lambda x: x * x * x * x, -1, 1.4, 8), color=(0.7, 0.15, 150))
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.4, -1, 1.4, 8), dash=1, color=0.8             )
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.6, -1, 1.4, 8), dash=2, color=(0.7, 0.15, 285))
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.8, -1, 1.4, 8), dash=3, color=(0.7, 0.15,  30))
+# svg.add_lines(adaptive_sample(lambda x: x * x * 1.0, -1, 1.4, 8), dash=4, color=(0.7, 0.15, 150))
 # print(svg.render())
