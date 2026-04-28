@@ -349,11 +349,13 @@ class SVG:
             if alpha < 1:
                 attributes.append(f'stroke-opacity="{alpha}"')
             if dash is not None:
-                dash = dash * stroke * 2
-                ratio = min(2.5, 1.0 + stroke * 0.125)
-                ndash = dash - stroke
-                ngap = dash / ratio + stroke
-                attributes.append(f'stroke-dasharray="{ndash:.2f} {ngap:.2f}"')
+                dash = max(dash, 1)
+                ratio = 2.0 - 5.0 / (2 + dash)  # TODO this needs adjustment
+                ratio = max(ratio, 1.0)
+                dlen = dash * stroke
+                ndlen = dlen - stroke
+                nglen = dlen / ratio + stroke
+                attributes.append(f'stroke-dasharray="{ndlen:.2f} {nglen:.2f}"')
             attributes = ' '.join(attributes)
 
             if kind == 'rule':
@@ -509,7 +511,6 @@ class SVG:
                 if alpha < 1:
                     attributes.append(f'stroke-opacity="{alpha}"')
                 if dash is not None:
-                    dash = dash * stroke * 2
                     #
                     # With round line caps,
                     #   dash-len = nominal-dash-len + stroke
@@ -521,25 +522,33 @@ class SVG:
                     #   d / (gN − s) = r
                     #   gN = d / r + s
                     #
-                    ratio = min(2.5, 1.0 + stroke * 0.125)
-                    ndash = dash - stroke
-                    ngap = dash / ratio + stroke
-                    attributes.append(f'stroke-dasharray="{ndash:.2f} {ngap:.2f}"')
+                    dash = max(dash, 1)
+                    ratio = 2.0 - 5.0 / (2 + dash)
+                    ratio = max(ratio, 0.6)
+                    dlen = dash * stroke
+                    ndlen = dlen - stroke
+                    nglen = dlen / ratio + stroke
+                    # gap = 1.75 + 0.25 * (x - 1.0 + sqrt(5.0 + (x - 1.0)**2))
+                    # ngap = gap + stroke
+                    attributes.append(
+                        f'stroke-dasharray="{ndlen:.2f} {nglen:.2f}"'
+                    )
                 attributes = ' '.join(attributes)
                 output.append(f'  <polyline points="{data}" {attributes}/>')
 
         output.append('</svg>')
         return '\n'.join(output)
 
-# svg = SVG(1536, 1024, margin=8, stroke=3)
-# svg.add_graticule('x', stroke=1, divs=32, unit=0.2, color=0.25, dash=4)
-# svg.add_graticule('y', stroke=1, divs=32, unit=0.2, color=0.25, dash=4)
+# svg = SVG(1536, 1024, margin=2, stroke=3, bgcolor=0.125)
+# svg.add_graticule('x', stroke=1, divs=32, unit=0.2, color=0.25)
+# svg.add_graticule('y', stroke=1, divs=32, unit=0.2, color=0.25)
 # svg.add_graticule('x', stroke=3, divs=4,  color=0.25)
 # svg.add_graticule('y', stroke=3, divs=4,  color=0.25)
 # svg.add_rule('x', stroke=5, color=0.25)
 # svg.add_rule('y', stroke=5, color=0.25)
-# svg.add_lines(adaptive_sample(lambda x: x * x * 0.4, -1, 1.4, 8), dash=1, color=0.8             )
-# svg.add_lines(adaptive_sample(lambda x: x * x * 0.6, -1, 1.4, 8), dash=2, color=(0.7, 0.15, 285))
-# svg.add_lines(adaptive_sample(lambda x: x * x * 0.8, -1, 1.4, 8), dash=3, color=(0.7, 0.15,  30))
-# svg.add_lines(adaptive_sample(lambda x: x * x * 1.0, -1, 1.4, 8), dash=4, color=(0.7, 0.15, 150))
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.2, -1, 1.4, 8), dash=1, color=0.8             )
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.4, -1, 1.4, 8), dash=2, color=0.8             )
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.6, -1, 1.4, 8), dash=4, color=(0.7, 0.15, 285))
+# svg.add_lines(adaptive_sample(lambda x: x * x * 0.8, -1, 1.4, 8), dash=6, color=(0.7, 0.15,  30))
+# svg.add_lines(adaptive_sample(lambda x: x * x * 1.0, -1, 1.4, 8), dash=8, color=(0.7, 0.15, 150))
 # print(svg.render())
