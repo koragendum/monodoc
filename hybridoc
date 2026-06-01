@@ -1,5 +1,8 @@
 #! /usr/bin/python
 
+import sys
+sys.dont_write_bytecode = True
+
 import re
 
 from categories import ELEMENTS, VOID
@@ -37,7 +40,13 @@ HANDLERS = {
     'assembly': default_handler,
 }
 
-# Functions to call at the end of rendering.
+# Functions to call after preprocessing (after #exec blocks have been run)
+#   before rendering. These take a single argument (text) and return a single
+#   argument (text).
+PREFILTERS = []
+
+# Functions to call at the end of rendering. These take a single argument
+#   (the document tree), which they are allowed to mutate, and return nothing.
 FILTERS = []
 
 # Populated by style elements.
@@ -363,7 +372,7 @@ def _parse(
         offset = post
         adv = post
 
-    def parse_error(text):
+    def parse_error(text, message=None):
         LOC_MAXLEN = 40
         CTX_MAXLEN = 120
         ELLIPSIS = "\x1B[34m...\x1B[39m"
@@ -377,7 +386,11 @@ def _parse(
             text = f"{ELLIPSIS}\x1B[2m{text[-LOC_MAXLEN:]}\x1B[22m"
         else:
             text = f"\x1B[2m{text}\x1B[22m"
-        print(f"hybridoc: {line_number}: parse error near “{text}”")
+
+        info = f"hybridoc: {line_number}: parse error near “{text}”"
+        if message:
+            info = f"{info}: {message}"
+        print(info)
 
         pre_context  = src[:offset].splitlines(keepends=True)[-8:]
         post_context = src[offset:].splitlines(keepends=True)[:8]
@@ -420,7 +433,7 @@ def _parse(
         print_abbrev(post_context)
         print()
 
-        raise RuntimeError
+        raise UserWarning
 
     initial = TAGINIT if onlyhtml else INITIAL
 
@@ -481,7 +494,10 @@ def _parse(
                 #   (Note that we’re overly restrictive here.)
                 if src[offset:offset+1] == '/':
                     offset += 1
-                    parse_error('</')
+                    message = 'unexpected closing tag'
+                    if stop == '}':
+                        message += ' (possibly due to an unmatched brace)'
+                    parse_error('</', message)
 
                 # Less-than operator
                 if not ELEMINI.fullmatch(src[offset:offset+1]):
@@ -863,6 +879,8 @@ def _parse(
 
 
 def parse(src : str) -> list[str | HtmlElement]:
+    for f in PREFILTERS:
+        src = f(src)
     out, _, _ = _parse(src)
     return out
 
@@ -1338,7 +1356,10 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
 
 def compile(src : str) -> list[str | HtmlElement]:
     lines = _preprocess(src.splitlines(), enclose=True)
-    return parse('\n'.join(lines))
+    try:
+        return parse('\n'.join(lines))
+    except UserWarning:
+        return None
 
 
 # Globals  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
@@ -1361,6 +1382,7 @@ GLOBALS = {
     'PERMALINK':    PERMALINK,
     'SECTION':      SECTION,
     'HANDLERS':     HANDLERS,
+    'PREFILTERS':   PREFILTERS,
     'FILTERS':      FILTERS,
     'INLINESTYLES': INLINESTYLES,
     'MODULES':      MODULES,
@@ -1442,6 +1464,8 @@ if __name__ == '__main__':
     with open(inp) as fh:
         src = fh.read()
     content = compile(src)
+    if content is None:
+        sys.exit(1)
     body = HtmlElement('div',
         HtmlElement('div',
             *content,

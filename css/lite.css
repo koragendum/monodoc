@@ -4,7 +4,7 @@ html {
   --galley-bg: rgb(255, 232, 224);
   --pre-bg:    rgb(248, 224, 216);
   --table-bd:  rgb( 64,  64,  64);
-  --hr-bd:     rgb(224, 224, 224);
+  --hr-bd:     rgb(160, 136, 128);
   --quote-bg:  rgb(248, 224, 216);
   --q-quot-bg: rgb(240, 216, 208);
   --quote-bd:  rgb(224, 200, 192);
@@ -14,10 +14,10 @@ html {
   --note-fg: rgb(180, 138, 124);
   --mgn-bg: rgb(255, 232, 224);
 
-  --a-fg:  rgb(192, 32, 32);
+  --a-fg:  rgb(192, 16, 32);
   --a-dec: rgba(180, 138, 124, 0.25);
 
-  --note-a-fg: rgb(192, 32, 32);          /* TODO */
+  --note-a-fg: rgb(232, 96, 96);          /* TODO */
   --note-a-dec: rgb(180, 138, 124, 0.25); /* TODO */
 }
 
@@ -260,6 +260,9 @@ tr {
 
 hr {
   border-color: var(--hr-bd);
+  border-width: 1.5px 0 0;
+  margin: 1em auto 1em;
+  width: 33.333%;
 }
 
 details {

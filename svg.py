@@ -1,4 +1,5 @@
 from math import atan2, ceil, cos, floor, log, sin, sqrt, tau
+from cmath import exp
 
 def sample(f, a, b, n):
     # divides [a, b] into n regions (returns n + 1 points)
@@ -73,6 +74,88 @@ def adaptive_sample(f, a, b, n, r=0.015625, limit=10):
             break
 
     return points
+
+def fft(samples):
+    n = len(samples)
+    if n < 2:
+        return [*samples]
+    if n & (n - 1) != 0:
+        return None
+    evens = fft(samples[::2])
+    odds = fft(samples[1::2])
+    h = n // 2
+    c = complex(0, -tau / n)
+    transform = []
+    for k in range(h):
+        transform.append((evens[k] + odds[k] * exp(k * c)) * 0.5)
+    for k in range(h):
+        transform.append((evens[k] + odds[k] * exp((h + k) * c)) * 0.5)
+    return transform
+
+def ifft(samples):
+    n = len(samples)
+    if n < 2:
+        return [*samples]
+    if n & (n - 1) != 0:
+        return None
+    evens = ifft(samples[::2])
+    odds = ifft(samples[1::2])
+    h = n // 2
+    c = complex(0, tau / n)
+    itransform = []
+    for k in range(h):
+        itransform.append(evens[k] + odds[k] * exp(k * c))
+    for k in range(h):
+        itransform.append(evens[k] + odds[k] * exp((h + k) * c))
+    return itransform
+
+def roundc(z, precision=6):
+    r = round(z.real, precision)
+    i = round(z.imag, precision)
+    return r if i == 0.0 else complex(r, i)
+
+def interpolate(samples, damping, extension=None, precision=6):
+    length = len(samples)
+    if extension is None:
+        extension = length // 8
+    n = 2 ** ceil(log(extension + length + extension, 2))
+
+    prefix = (n - length) // 2
+    suffix = n - length - prefix
+    a, b = samples[0], samples[-1]
+    assert a is not None
+    assert b is not None
+    x = [a] * prefix + samples + [b] * suffix
+
+    left_idx, right_idx, left, right = None, None, None, None
+    for i in range(length):
+        if samples[i] is None:
+            if right_idx is None:
+                for j in range(i + 1, length):
+                    if samples[j] is None:
+                        continue
+                    right_idx = j
+                    break
+                right = samples[right_idx]
+            x[prefix + i] = (
+                (left * (right_idx - i) + right * (i - left_idx))
+                    / (right_idx - left_idx)
+            )
+        else:
+            left_idx, left = i, samples[i]
+            right_idx, right = None, None
+
+    f = fft(x)
+    w = n // damping
+    for k in range(1, w):
+        r = k / w
+        s = 1.0 - r * r
+        f[  k  ] *= s
+        f[n - k] *= s
+    for k in range(w, n - w + 1):
+        f[k] = 0
+    i = [roundc(z, precision) for z in ifft(f)]
+    return i[prefix:prefix+length]
 
 def resize(inp, out):
     # maps [a₀, b₀] to [a₁, b₁]

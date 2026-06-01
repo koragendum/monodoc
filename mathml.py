@@ -1,6 +1,10 @@
 import re
 from html import HtmlElement
 
+# TODO coalesce space
+# TODO allow inline HTML \<tag>...</tag>
+# TODO allow setting displaystyle or math-style for integrals and sums
+
 # Quick Reference
 #
 #   "..."  text
@@ -43,12 +47,15 @@ from html import HtmlElement
 
 KEYWORDS = {
     'on':     'frac',
+    'atop':   'atop',
     'sqrt':   'sqrt',
+    'root':   'root',
     'lt':     '<',  # U+003C LESS-THAN SIGN
     'gt':     '>',  # U+003E GREATER-THAN SIGN
     'all':    '∀',  # U+2200 FOR ALL
     'exists': '∃',  # U+2203 THERE EXISTS
     'null':   '∅',  # U+2205 EMPTY SET
+    'qed':    '∎',  # U+220E END OF PROOF
     'prod':   '∏',  # U+220F N-ARY PRODUCT
     'sum':    '∑',  # U+2211 N-ARY SUMMATION
     'inf':    '∞',  # U+221E INFINITY
@@ -63,7 +70,7 @@ KEYWORDS = {
     'star':   '⋆',  # U+22C6 STAR OPERATOR
 }
 
-KEYCONTAINERS = ('frac', 'sqrt')
+KEYCONTAINERS = ('frac', 'atop', 'sqrt', 'root')
 
 KEYIDENTIFIERS = ('∞', '⋆')
 
@@ -71,13 +78,13 @@ KEYIDENTIFIERS = ('∞', '⋆')
 
 OPERATORS = {
     '!': None,  # U+0021 EXCLAMATION MARK
-    "'": '′',   # U+0027 APOSTROPHE -> U+2032 PRIME
+    "'": '′',   # U+0027 APOSTROPHE → U+2032 PRIME
     '(': None,  # U+0028 LEFT PARENTHESIS
     ')': None,  # U+0029 RIGHT PARENTHESIS
     '+': None,  # U+002B PLUS SIGN
-    '-': '−',   # U+002D HYPHEN-MINUS -> U+2212 MINUS SIGN
+    '-': '−',   # U+002D HYPHEN-MINUS → U+2212 MINUS SIGN
     '.': None,  # U+002E FULL STOP
-#   '/': '∕',   # U+002F SOLIDUS -> U+2215 DIVISION SLASH
+#   '/': '∕',   # U+002F SOLIDUS → U+2215 DIVISION SLASH
     '/': None,  # U+002F SOLIDUS
     ':': None,  # U+003A COLON
     '<': None,  # U+003C LESS-THAN SIGN
@@ -89,9 +96,9 @@ OPERATORS = {
     '{': None,  # U+007B LEFT CURLY BRACKET
     '|': None,  # U+007C VERTICAL LINE
     '}': None,  # U+007D RIGHT CURLY BRACKET
-    '~': '∼',   # U+007E TILDE -> U+223C TILDE OPERATOR
+    '~': '∼',   # U+007E TILDE → U+223C TILDE OPERATOR
     '±': None,  # U+00B1 PLUS-MINUS SIGN
-    '·': '⋅',   # U+00B7 MIDDLE DOT -> U+22C5 DOT OPERATOR
+    '·': '⋅',   # U+00B7 MIDDLE DOT → U+22C5 DOT OPERATOR
     '×': None,  # U+00D7 MULTIPLICATION SIGN
     '÷': None,  # U+00F7 DIVISION SIGN
     '‖': None,  # U+2016 DOUBLE VERTICAL LINE
@@ -102,6 +109,7 @@ OPERATORS = {
     '⇐': None,  # U+21D0 LEFTWARDS DOUBLE ARROW
     '⇒': None,  # U+21D2 RIGHTWARDS DOUBLE ARROW
     '∂': None,  # U+2202 PARTIAL DIFFERENTIAL
+    '∎': None,  # U+220E END OF PROOF
     '−': None,  # U+2212 MINUS SIGN
     '∘': None,  # U+2218 RING OPERATOR
     '∙': None,  # U+2219 BULLET OPERATOR
@@ -110,6 +118,8 @@ OPERATORS = {
     '≠': None,  # U+2260 NOT EQUAL TO
     '≤': None,  # U+2264 LESS-THAN OR EQUAL TO
     '≥': None,  # U+2265 GREATER-THAN OR EQUAL TO
+    '≪': None,  # U+226A MUCH LESS-THAN
+    '≫': None,  # U+226B MUCH GREATER-THAN
     '⊕': None,  # U+2295 CIRCLED PLUS
     '⊖': None,  # U+2296 CIRCLED MINUS
     '⊗': None,  # U+2297 CIRCLED TIMES
@@ -144,6 +154,8 @@ DIGRAPHS = {
     '/=': '≠',  # U+2260 NOT EQUAL TO
     '<=': '≤',  # U+2264 LESS-THAN OR EQUAL TO
     '>=': '≥',  # U+2265 GREATER-THAN OR EQUAL TO
+    '<<': '≪',  # U+226A MUCH LESS-THAN
+    '>>': '≫',  # U+226B MUCH GREATER-THAN
     '@+': '⊕',  # U+2295 CIRCLED PLUS
     '@−': '⊖',  # U+2296 CIRCLED MINUS
     '@×': '⊗',  # U+2297 CIRCLED TIMES
@@ -345,6 +357,9 @@ class Atom:
                 else:
                     attrs['stretchy'] = 'false' # Chromium and Safari
 
+            if inner == '∎' and self.variant:
+                inner = '◻'
+
             inner = ESCAPE.get(inner, inner)
 
         if self.kind == 'mi':
@@ -449,9 +464,10 @@ class Empty:
 
 
 class Frac:
-    def __init__(self, upper, lower):
+    def __init__(self, upper, lower, rule=True):
         self.upper = upper
         self.lower = lower
+        self.rule  = rule
 
     def html(self, inline, prev=None):
         shelf = Space('shelf')
@@ -474,10 +490,13 @@ class Frac:
         else:
             lower = [shelf, self.lower, shelf]
 
-        return HtmlElement('mfrac',
+        frac = HtmlElement('mfrac',
             Row(upper).html(inline),
             Row(lower).html(inline),
         )
+        if not self.rule:
+            frac.attrs['linethickness'] = '0'
+        return frac
 
 
 class Phantom:
@@ -616,11 +635,21 @@ class Sqrt:
     def html(self, inline, prev=None):
         return HtmlElement('msqrt', self.inner.html(inline))
 
+class Root:
+    def __init__(self, degree, inner):
+        self.degree = degree    # index
+        self.inner  = inner     # radicand
+
+    def html(self, inline, prev=None):
+        return HtmlElement('mroot',
+            self.inner.html(inline), self.degree.html(inline)
+        )
+
 #~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def subsumable(item):
     # does not include Space
-    classes = (Atom, Boxed, Empty, Frac, Phantom, Row, Struct, Sqrt)
+    classes = (Atom, Boxed, Empty, Frac, Phantom, Row, Struct, Sqrt, Root)
     return isinstance(item, classes)
 
 letter = r'[a-zA-Zα-ωΑ-Ωſ\U0001D400-\U0001D7CD][\u0300-\u036F]?'
@@ -823,7 +852,7 @@ def parse(text):
                     return (offset, None)
                 sequence.append(Sqrt(arg))
                 continue
-            if item in ('_', '^', '__', '^^', 'frac'):
+            if item in ('_', '^', '__', '^^', 'frac', 'atop', 'root'):
                 if len(sequence) == 0:
                     return (offset, None)
                 prev = sequence[-1]
@@ -836,6 +865,12 @@ def parse(text):
                     return (offset, None)
                 if item == 'frac':
                     sequence[-1] = Frac(prev, arg)
+                    continue
+                if item == 'atop':
+                    sequence[-1] = Frac(prev, arg, rule=False)
+                    continue
+                if item == 'root':
+                    sequence[-1] = Root(prev, arg)
                     continue
                 kind = 'stack' if item in ('__', '^^') else 'script'
                 if isinstance(prev, Struct) and prev.kind == kind:
