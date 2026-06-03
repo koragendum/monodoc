@@ -43,7 +43,7 @@ p {
   hanging-punctuation: first last force-end;
 }
 
-block-note {
+block-note:not(.small) {
   color: var(--note-fg);
 }
 
@@ -91,11 +91,11 @@ a:link, a:visited {
   text-decoration-color: var(--a-dec);
 }
 
-block-note a, inline-note a {
+block-note:not(.small) a, inline-note a {
   color: var(--note-a-fg);
 }
 
-block-note a:link, block-note a:visited, inline-note a:link, inline-note a:visited {
+block-note:not(.small) a:link, block-note:not(.small) a:visited, inline-note a:link, inline-note a:visited {
   text-decoration-color: var(--note-a-dec);
 }
 

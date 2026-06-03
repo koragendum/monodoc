@@ -148,6 +148,7 @@ DIGRAPHS = {
     '->': '→',  # U+2192 RIGHTWARDS ARROW
     '<=': '⇐',  # U+21D0 LEFTWARDS DOUBLE ARROW
     '=>': '⇒',  # U+21D2 RIGHTWARDS DOUBLE ARROW
+    '/~': '≁',  # U+2241 NOT TILDE
     '~-': '≃',  # U+2243 ASYMPTOTICALY EQUAL TO
     '~=': '≅',  # U+2245 APPROXIMATELY EQUAL TO
     '~~': '≈',  # U+2248 ALMOST EQUAL TO

@@ -3,9 +3,9 @@ import re
 
 WHITESPACE = re.compile(r'\s+')
 
-WORD = re.compile("`?'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9-]*['!?]?")
+WORD = re.compile("[`']?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω0-9-]*['!?]?")
 
-NONUMERIC_WORD = re.compile("`?'?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω-]*['!?]?")
+NONUMERIC_WORD = re.compile("[`']?[_a-zA-Zα-ωΑ-Ω][_a-zA-Zα-ωΑ-Ω-]*['!?]?")
 
 NUMERIC = re.compile(r'([+−-])?(\d+)(\.\d+)?')
 
@@ -20,8 +20,8 @@ DYAD = {
     '->', '<-', '=>', '<=',
     '||', '&&', '<<', '>>',
     '++', '--', '**', '//',
-    '+=', '-=', '*=',
-    '==', '!=', '/=',
+    '+=', '-=', '*=', '/=',
+    '==', '!=',
     ':=', '::',
 }
 
@@ -75,9 +75,14 @@ def _escape(text):
 
     return ''.join(fragments)
 
-def lex(lines, quote1, quote2, comment_char, comment_dyad, mode='default'):
-    left_quote1, right_quote1 = quote1
-    left_quote2, right_quote2 = quote2
+def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'):
+    left_quote1, right_quote1  = quote1
+    left_quote2, right_quote2  = quote2
+
+    multiline_comments = bool(delim_comment)
+    if multiline_comments:
+        left_comment, right_comment = delim_comment
+
     text = '\n'.join(lines)
     length = len(text)
     final = length - 1
@@ -180,12 +185,21 @@ def lex(lines, quote1, quote2, comment_char, comment_dyad, mode='default'):
 
         pair = text[offset:offset+2]
 
-        if char == comment_char or pair == comment_dyad:
+        if char == comment1 or pair == comment2:
             end = text.find('\n', offset+1)
             if end > 0:
                 tokens.append(('comment', text[offset:end]))
                 offset = end
                 continue
+
+        if multiline_comments:
+            if char == left_comment or pair == left_comment:
+                end = text.find(right_comment, offset + len(left_comment))
+                if end > 0:
+                    end += len(right_comment)
+                    tokens.append(('comment', text[offset:end]))
+                    offset = end
+                    continue
 
         match = HTML_ENTITY.match(text, offset)
         if match:
@@ -206,7 +220,8 @@ def lex(lines, quote1, quote2, comment_char, comment_dyad, mode='default'):
 
 KEYWORD = {
     'define', 'def', 'fn', 'const', 'mutable', 'mut', 'public', 'pub',
-    'raw', 'let', 'use', 'in', 'with', 'impl', 'unsafe'
+    'raw', 'let', 'use', 'in', 'with', 'impl', 'unsafe',
+    'type', 'struct', 'enum', 'lambda', 'Λ', 'λ'
 }
 
 FLOW = {
@@ -215,20 +230,21 @@ FLOW = {
     'from', 'to', 'case', 'match', 'when', 'otherwise'
 }
 
-FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as'}
+FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as', 'exists', 'forall'}
 
 CONSTANT = {
     'NONE', 'None', 'none', 'NULL', 'null', 'nil',
     'True', 'true', 'False', 'false', 'TAU', 'tau',
     'UNKNOWN', 'unknown', 'UNDEFINED', 'undefined',
-    'UNINIT', 'uninit', 'UNINITIALIZED', 'uninitialized'
+    'UNINIT', 'uninit', 'UNINITIALIZED', 'uninitialized',
+    'self', 'Self', 'unit'
 }
 
-GENERIC_TYPE = re.compile('[A-ZΑ-Ω][a-zA-Zα-ωΑ-Ω0-9]*')
+GENERIC_TYPE = re.compile('[A-Z][a-zA-Z0-9]*')
 
 NUMERIC_TYPE = re.compile('[uif][1-9][0-9]*')
 
-OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|←→↑↓-]*')
+OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|←→↑↓∀∃-]*')
 
 SCOPE = '::'
 
@@ -239,13 +255,17 @@ DELIM_VARIANT = {
     '[': 1, ']': 1,
     '⟨': 2, '⟩': 2,
     '{': 3, '}': 3,
+    '⟦': 4, '⟧': 4,
+    '⟪': 5, '⟫': 5,
 }
 
 DELIM_NAME = {
-    '(': 'paren',   ')': 'paren',
-    '[': 'bracket', ']': 'bracket',
-    '⟨': 'angle',   '⟩': 'angle',
-    '{': 'brace',   '}': 'brace',
+    '(': 'paren',    ')': 'paren',
+    '[': 'bracket',  ']': 'bracket',
+    '⟨': 'angle',    '⟩': 'angle',
+    '{': 'brace',    '}': 'brace',
+    '⟦': 'bracket2', '⟧': 'bracket2',
+    '⟪': 'angle2',   '⟫': 'angle2',
 }
 
 ELEM = 'hi-group'
@@ -510,17 +530,21 @@ def default_handler(lang, lines, modifiers=None):
     #   unless it is preceded by “\” or followed by “/”.
     match lang:
         case 'rs' | 'rust':
-            comment_char = None
-            comment_dyad = '//'
+            comment1 = None
+            comment2 = '//'
+            delimcmt = ('/*', '*/')
         case 'rb' | 'ruby' | 'py' | 'python':
-            comment_char = '#'
-            comment_dyad = None
+            comment1 = '#'
+            comment2 = None
+            delimcmt = None
         case 'asm' | 'assembly':
-            comment_char = ';'
-            comment_dyad = None
+            comment1 = ';'
+            comment2 = None
+            delimcmt = None
         case _:
-            comment_char = COMMENT_CHAR
-            comment_dyad = COMMENT_DYAD
+            comment1 = COMMENT_CHAR
+            comment2 = COMMENT_DYAD
+            delimcmt = None
 
     match lang:
         case 'rs' | 'rust' | 'rb' | 'ruby' | 'py' | 'python' | 'asm' | 'assembly':
@@ -538,7 +562,7 @@ def default_handler(lang, lines, modifiers=None):
         case _:
             mode = 'default'
 
-    tokens = lex(lines, quote1, quote2, comment_char, comment_dyad, mode)
+    tokens = lex(lines, quote1, quote2, comment1, comment2, delimcmt, mode)
 
     match lang:
         case 'asm' | 'assembly':

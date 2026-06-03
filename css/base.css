@@ -119,6 +119,11 @@ block-note {
   display: block;
 }
 
+block-note.small {
+  font-size: 0.833333rem;
+  line-height: 1.75em;
+}
+
 boxed-note {
   display: block;
 }

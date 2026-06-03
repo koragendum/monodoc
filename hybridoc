@@ -922,9 +922,9 @@ def _head(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
     if anchor is not None:
         link = PERMALINK[level]
         if link is not None:
-            if link == 'numeral': link = SECTION[level]
             if isinstance(link, (tuple, list)):
                 link = link[(SECTION[level] - 1) % len(link)]
+            link = link.replace('@', str(SECTION[level]))
             text = f'<a href="#{anchor}" class="permalink">{link}</a> {text}'
     output.append(f'{opening}{text}{closing}')
 
@@ -943,8 +943,8 @@ def _note(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
     output.append(closing)
 
 
-def _attn(output : list[str], lines : list[str], gap_a : bool, gap_b : bool):
-    opening, closing = _tagpair('boxed-note', gap_a, gap_b)
+def _attn(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
+    opening, closing = _tagpair('boxed-note', gap_a, gap_b, _class=meta)
     output.append(opening)
     output.extend(_preprocess(lines))
     output.append(closing)
@@ -1007,8 +1007,9 @@ SIGIL = {
     '¶': 'xpar',
     '*': 'note',
     '†': 'note',
-    '!': 'attn',
+    '~': 'note',
     '"': 'quot',
+    '!': 'attn',
     '>': 'iden',
     '^': 'cntr',
     '•': 'list',
@@ -1020,6 +1021,7 @@ INSET = set(SIGIL.values())
 
 ANCHOR = '([a-zA-Z0-9_-]+)'
 HEADING = re.compile(f'#([123456]) +(?:\\[{ANCHOR}\\] +)?')
+BOXMETA = re.compile('\\[([_a-zA-Z-][_a-zA-Z0-9-]+)\\]')
 
 def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     # Returns lines of hybrid text.
@@ -1037,7 +1039,16 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     # note  * block note
     #         automatically italicized
     #
+    # note  ~ small block note
+    #         spanning multiple lines
+    #
     # quot  " block quote
+    #         spanning multiple lines
+    #
+    # attn  ! boxed note
+    #         spanning multiple lines
+    #
+    #       ! [class] boxed note with class
     #         spanning multiple lines
     #
     # iden  > indented block
@@ -1056,7 +1067,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     # list  - without markers
     #
     # code  # lang
-    #         code block
+    #         code block with attribute
     #         spanning multiple lines
     #
     #       # begin
@@ -1065,7 +1076,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #       # end
     #
     #       # begin lang
-    #       code block
+    #       code block with attribute
     #       spanning multiple lines
     #       # end
     #
@@ -1073,8 +1084,12 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     #
     #       $> left-aligned and indented MathML block $
 
-    # TODO different box colors/styles (meta)
-    # TODO ~ small block note (faint and size of margin note)
+    # TODO columns
+    # <<
+    #   content
+    # --
+    #   content
+    # >>
 
     # This is a list of "gap" or ("head", [level, anchor, text], None)
     # or ("kind", [line, ...], meta) triples where kind is one of the
@@ -1144,11 +1159,6 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             finish()
             if post.strip():
                 todo.append(post)
-            continue
-
-        if block_kind != 'code' and trimmed.startswith('//'):
-            # In addition to <!-- HTML --> style comments, we also support
-            #   single-line comments with virgules (at the start of a line).
             continue
 
         # INVARIANT block_kind is now None, "para", or
@@ -1253,11 +1263,18 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                     continue
 
                 block_kind = SIGIL[char]
-                block_lines.append(content)
                 if char == '*':
                     block_meta = 'i'
+                if char == '~':
+                    block_meta = 'small'
                 if char == '-':
                     block_meta = 'unmarked'
+                if char == '!':
+                    match = BOXMETA.match(content)
+                    if match:
+                        block_meta = match.group(1)
+                        content = content[match.end():].lstrip()
+                block_lines.append(content)
                 continue
 
         # INVARIANT block_kind is still None or "para".
@@ -1303,6 +1320,14 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             gap = True
             continue
         kind, lines, meta = item
+        if kind != 'verb' and kind != 'code':
+            # In addition to <!-- HTML --> style comments, we also support
+            #   single-line comments with virgules (at the start of a line).
+            lines = [
+                ln for ln in lines if not (ln and ln.lstrip().startswith('//'))
+            ]
+            if not lines:
+                continue
         if kind == 'list':
             if prev_kind == 'list' and meta == prev_meta:
                 active_list.append(lines)
@@ -1342,7 +1367,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                     output.extend(lines)
             case 'head': _head(output, lines,       gap_above, gap_below)
             case 'note': _note(output, lines, meta, gap_above, gap_below)
-            case 'attn': _attn(output, lines,       gap_above, gap_below)
+            case 'attn': _attn(output, lines, meta, gap_above, gap_below)
             case 'quot': _quot(output, lines,       gap_above, gap_below)
             case 'iden': _iden(output, lines,       gap_above, gap_below)
             case 'cntr': _cntr(output, lines,       gap_above, gap_below)

@@ -38,7 +38,7 @@ body {
   background-color: var(--galley-bg);
 }
 
-block-note {
+block-note:not(.small) {
   /* color: var(--note-fg); */
   filter: var(--note-f);
 }
