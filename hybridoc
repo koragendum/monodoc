@@ -1003,6 +1003,22 @@ def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
     output.append('$' + closing)
 
 
+def _cols(output : list[str], items : list[list[str]], gap_a : bool, gap_b : bool):
+    opening, closing = _tagpair('column-group', gap_a, gap_b)
+    output.append(opening)
+    for idx, item in enumerate(items):
+        output.append(f'<column-item style="grid-column-start: {idx + 1};">')
+        output.extend(_preprocess(item))
+        output.append('</column-item>')
+    output.append(closing)
+
+
+def preprocess_error(message):
+    line_number = getframeinfo(currentframe().f_back).lineno
+    print(f"hybridoc: {line_number}: {message}")
+    raise UserWarning
+
+
 SIGIL = {
     '¶': 'xpar',
     '*': 'note',
@@ -1015,6 +1031,8 @@ SIGIL = {
     '•': 'list',
     '-': 'list',
     '#': 'code',
+    '<': 'cfst',
+    '|': 'cnxt',
 }
 
 INSET = set(SIGIL.values())
@@ -1083,13 +1101,10 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
     # math  $^ centered MathML block $
     #
     #       $> left-aligned and indented MathML block $
-
-    # TODO columns
-    # <<
-    #   content
-    # --
-    #   content
-    # >>
+    #
+    # cfst  < first column
+    # cnxt  | second column
+    # cnxt  | third column
 
     # This is a list of "gap" or ("head", [level, anchor, text], None)
     # or ("kind", [line, ...], meta) triples where kind is one of the
@@ -1162,7 +1177,8 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             continue
 
         # INVARIANT block_kind is now None, "para", or
-        #   "attn", "note", "quot", "iden", "cntr", "list", or "code".
+        #   "attn", "note", "quot", "iden", "cntr",
+        #   "list", "cfst", "cnxt", or "code".
 
         indent = len(line) - len(line.lstrip())
 
@@ -1175,8 +1191,14 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
         # INVARIANT block_kind is now None or "para".
 
         char = trimmed[0]
-        if char in SIGIL:
 
+        start = char in SIGIL
+        if start and char == '<':
+            following = trimmed[1:2]
+            if following and following != ' ':
+                start = False
+
+        if start:
             if char == '#':
                 match = HEADING.match(trimmed)
                 if match:
@@ -1307,14 +1329,16 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
 
     finish()
 
-    # Before iterating over the blocks, we deduplicate gaps
-    #   and gather list items into lists.
+    # Before iterating over the blocks, we deduplicate gaps,
+    #   gather list items into lists, and gather column items
+    #   into column groups.
 
     filtered = []
     gap = False
     prev_kind = None
     prev_meta = None
     active_list = None
+    active_group = None
     for item in blocks:
         if item == 'gap':
             gap = True
@@ -1337,6 +1361,19 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 filtered.append('gap')
             active_list = [lines]
             filtered.append(('list', active_list, meta))
+        elif kind == 'cfst':
+            if gap and filtered:
+                filtered.append('gap')
+            active_group = [lines]
+            filtered.append(('cols', active_group, meta))
+        elif kind == 'cnxt':
+            if prev_kind != 'cfst':
+                preprocess_error('cannot append new column: column group was not started')
+            if meta != prev_meta:
+                preprocess_error('cannot append new column: column variant does not match')
+            active_group.append(lines)
+            gap = False
+            continue
         else:
             if kind == 'para' and prev_kind == 'para':
                 enclose = True
@@ -1375,6 +1412,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             case 'code': _code(output, lines, meta, gap_above, gap_below)
             case 'verb': _code(output, lines, meta, gap_above, gap_below)
             case 'math': _math(output, lines, meta, gap_above, gap_below)
+            case 'cols': _cols(output, lines,       gap_above, gap_below)
 
     return output
 
