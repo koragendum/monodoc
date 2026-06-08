@@ -1008,8 +1008,12 @@ def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
 def _cols(output : list[str], items : list[list[str]], gap_a : bool, gap_b : bool):
     opening, closing = _tagpair('column-group', gap_a, gap_b)
     output.append(opening)
-    for idx, item in enumerate(items):
-        output.append(f'<column-item style="grid-column-start: {idx + 1};">')
+    # for idx, item in enumerate(items):
+    #     output.append(f'<column-item style="grid-column-start: {idx + 1};">')
+    #     output.extend(_preprocess(item))
+    #     output.append('</column-item>')
+    for item in items:
+        output.append('<column-item>')
         output.extend(_preprocess(item))
         output.append('</column-item>')
     output.append(closing)

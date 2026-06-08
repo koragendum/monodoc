@@ -170,8 +170,10 @@ block-math.right math {
 
 column-group {
   display: grid;
+  grid-auto-flow: column;
   grid-auto-columns: 1fr;
   column-gap: 0.75em;
+  row-gap: 0.75em;
 }
 
 column-item {

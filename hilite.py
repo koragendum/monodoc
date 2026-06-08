@@ -219,9 +219,11 @@ def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'
 
 
 KEYWORD = {
-    'define', 'def', 'fn', 'const', 'mutable', 'mut', 'public', 'pub',
-    'raw', 'let', 'use', 'in', 'with', 'impl', 'unsafe',
-    'type', 'struct', 'enum', 'lambda', 'Λ', 'λ'
+    'define', 'def', 'fn', 'lambda', 'Λ', 'λ',
+    'let', 'in', 'use', 'with',
+    'const', 'mutable', 'mut',
+    'public', 'pub', 'raw', 'unsafe',
+    'type', 'trait', 'impl', 'struct', 'enum'
 }
 
 FLOW = {
