@@ -114,7 +114,15 @@ def roundc(z, precision=6):
     i = round(z.imag, precision)
     return r if i == 0.0 else complex(r, i)
 
-def interpolate(samples, damping, extension=None, precision=6):
+def interpolate(samples, damping, upscale=None, extension=None, precision=6):
+    assert samples
+    if upscale is not None:
+        pad = [None] * (upscale - 1)
+        x = [samples[0]]
+        for sample in samples[1:]:
+            x.extend(pad)
+            x.append(sample)
+        samples = x
     length = len(samples)
     if extension is None:
         extension = length // 8

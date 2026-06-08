@@ -6,20 +6,22 @@ sys.dont_write_bytecode = True
 import re
 
 from categories import ELEMENTS, VOID
+from css        import StyleSheet
+from css        import parse as parse_css
+from css        import render as render_css
+from html       import HtmlElement, extant, annotate, replace
+from html       import render as render_html
+from hilite     import default_handler
+from mathml     import parse as parse_math
+from svg        import SVG, sample, adaptive_sample, interpolate
 
-from css     import StyleSheet
-from css     import parse as parse_css
-from css     import render as render_css
-from html    import HtmlElement, extant, annotate, replace
-from html    import render as render_html
-from hilite  import default_handler
-from mathml  import parse as parse_math
 from inspect import currentframe, getframeinfo
 from os      import getcwd, path
 from re      import Match as MatchObject
 from sys     import argv
 from typing  import Optional
 
+ROOT_DIR     = None  # set in main routine
 SOURCE_DIR   = None  # set in main routine
 HYBRIDOC_DIR = path.dirname(path.realpath(path.abspath(argv[0])))
 
@@ -1428,6 +1430,15 @@ def compile(src : str) -> list[str | HtmlElement]:
 # Globals  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
+def save(filename, text):
+    assert ROOT_DIR
+    res = path.normpath(path.join(ROOT_DIR, filename))
+    # TODO it’d probably be best to check that we’ve not escaped ROOT_DIR
+    #   (not for the sake of security, since we assume the input is trusted,
+    #   but to prevent accidents)
+    with open(res, 'w') as fh:
+        fh.write(text)
+
 # Available for python elements. Routines can emit HTML by appending lines of
 #   text to SOURCE or appending instances of HtmlElement or str to STREAM
 #   (whichever is not None).
@@ -1442,6 +1453,11 @@ GLOBALS = {
     'annotate':     annotate,
     'replace':      replace,
     'default':      default_handler,
+    'SVG':          SVG,
+    'sample':       sample,
+    'adaptive':     adaptive_sample,
+    'interpolate':  interpolate,
+    'save':         save,
     'PERMALINK':    PERMALINK,
     'SECTION':      SECTION,
     'HANDLERS':     HANDLERS,
@@ -1470,6 +1486,7 @@ if __name__ == '__main__':
     icon = None
     title = None
     link = []
+    root = None
     inp = None
     out = None
     while len(args) > 0:
@@ -1481,6 +1498,8 @@ if __name__ == '__main__':
                 title = args.pop()
             case '-l' | '--link':
                 link.append(args.pop())
+            case '-d' | '--dir':
+                root = args.pop()
             case _ if inp is None:
                 inp = arg
             case _ if out is None:
@@ -1488,10 +1507,11 @@ if __name__ == '__main__':
             case _:
                 raise AssertionError(f'unknown argument "{arg}"')
 
-    if inp is None:
-        raise AssertionError(f'missing source path')
-    if out is None:
-        raise AssertionError(f'missing destination path')
+    if root is not None:
+        ROOT_DIR = path.abspath(root)
+        assert path.isdir(ROOT_DIR)
+    assert inp is not None, f'missing source path'
+    assert out is not None, f'missing destination path'
 
     SOURCE_DIR = path.dirname(path.abspath(inp))
 
@@ -1518,8 +1538,7 @@ if __name__ == '__main__':
 
     for url in link:
         _, extension = path.splitext(icon)
-        if extension != '.css':
-            raise AssertionError()
+        assert extension == '.css'
         head.append(f'    <link rel="stylesheet" href="{url}" type="image/css">')
 
     # HTML - - - - - - - - - - - - - - -
