@@ -1434,6 +1434,9 @@ def compile(src : str) -> list[str | HtmlElement]:
 # Globals  · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · ·
 
 
+# TODO utility function to convert SVG to PNG using magick
+#   (save to /tmp, call magick with output at destination)
+
 def save(filename, text):
     assert ROOT_DIR
     res = path.normpath(path.join(ROOT_DIR, filename))

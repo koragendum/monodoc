@@ -315,14 +315,14 @@ class SVG:
         self,
         axis,
         color=None,
-        family=None,
-        italic=None,
-        size=None,
-        weight=None,
-        halign=None,
-        valign=None,
-        lining=None,
-        tabular=None,
+        family=None,    # str
+        italic=None,    # bool
+        size=None,      # int or float
+        weight=None,    # int
+        halign=None,    # 'left', 'center', 'right'
+        valign=None,    # 'top', 'center', 'bottom'
+        lining=None,    # bool
+        tabular=None,   # bool
         unit=None,
         divs=32,
         radix=10,
@@ -516,7 +516,8 @@ class SVG:
                 output.append('  </g>')
 
         for label in self.labels:
-            pass
+            axis, color, family, italic, size, weight, halign, valign, \
+                lining, tabular, unit, divs, radix = label
 
         # TODO
         # <text x="62" y="54">abc</text>

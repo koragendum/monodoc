@@ -187,10 +187,11 @@ def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'
 
         if char == comment1 or pair == comment2:
             end = text.find('\n', offset+1)
-            if end > 0:
-                tokens.append(('comment', text[offset:end]))
-                offset = end
-                continue
+            if end == -1:
+                end = len(text)
+            tokens.append(('comment', text[offset:end]))
+            offset = end
+            continue
 
         if multiline_comments:
             if char == left_comment or pair == left_comment:
