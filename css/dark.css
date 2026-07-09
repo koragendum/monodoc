@@ -202,6 +202,10 @@ hi-group.paren[data-depth="2"] {
   color: rgb(192, 128, 255);
 }
 
+hi-group.to-do {
+  color: rgb(255, 208, 144);
+}
+
 hi-group.keyword {
   color: rgb(128, 176, 255);
 }

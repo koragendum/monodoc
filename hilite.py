@@ -291,6 +291,8 @@ def default_parser(tokens):
                 if text.startswith('`'):
                     _class = "constant"
                     text = text[1:]
+                elif text == 'TODO':
+                    _class = "to-do"
                 elif text in KEYWORD:
                     _class = "keyword"
                 elif text in FLOW:
@@ -361,6 +363,9 @@ def default_parser(tokens):
                 output.append(f'<{ELEM} class="quote">{esc}</{ELEM}>')
 
             case 'comment':
+                text = text.replace(
+                    'TODO', f'\\<{ELEM} class="to-do">TODO</{ELEM}>'
+                )
                 esc = _escape(text)
                 output.append(f'<{ELEM} class="comment">{esc}</{ELEM}>')
 
@@ -520,6 +525,9 @@ def assembly_parser(tokens):
                 output.append(f'<{ELEM} class="quote">{esc}</{ELEM}>')
 
             case 'comment':
+                text = text.replace(
+                    'TODO', f'\\<{ELEM} class="to-do">TODO</{ELEM}>'
+                )
                 esc = _escape(text)
                 output.append(f'<{ELEM} class="comment">{esc}</{ELEM}>')
 
