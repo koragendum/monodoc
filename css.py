@@ -81,6 +81,9 @@ class StyleSheet:
     def __getitem__(self, selector):
         return self.base.ruleset[selector]
 
+    def delete(self, selector):
+        self.base.ruleset.delete(selector)
+
     def render(self, buffer, depth=0):
         # NOTE that unlike HtmlElement.render, the elements of the buffer are
         #   expected to be joined with newlines rather than empty strings.

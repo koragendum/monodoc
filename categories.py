@@ -39,6 +39,8 @@
 # boxed-note   X     ·     X     ·     ·
 # column-group X     ·     X     ·     ·
 # column-item  X     ·     X     ·     ·
+# tab-group    X     ·     X     ·     ·
+# tab-item     X     ·     X     ·     ·
 #             ---- ----- ----- ----- ------
 # body         ·     ·     X     ·     ·
 # caption      ·     ·     X     ·     ·
@@ -177,7 +179,7 @@ ELEMENTS = {
     'include', 'module', 'python',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
-    'boxed-note', 'column-group', 'column-item',
+    'boxed-note', 'column-group', 'column-item', 'tab-group', 'tab-item',
     # Extensions (phrasing)
     'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
     'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
@@ -222,7 +224,7 @@ FLOW = {
     'msqrt', 'msub', 'msubsup', 'msup', 'mtext', 'munder', 'munderover',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
-    'boxed-note', 'column-group', 'column-item',
+    'boxed-note', 'column-group', 'column-item', 'tab-group', 'tab-item',
     # Extensions (phrasing)
     'em-sp', 'en-sp', 'esc-i', 'extra-bold', 'hi-group', 'inline-math',
     'inline-note', 'margin-note', 'no-break', 'semi-bold', 'small-caps',
@@ -282,7 +284,7 @@ PALPABLE = {
     'msub', 'msubsup', 'msup', 'mtext', 'munder', 'munderover',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
-    'boxed-note', 'column-group', 'column-item',
+    'boxed-note', 'column-group', 'column-item', 'tab-group', 'tab-item',
     # Extensions (phrasing)
     'esc-i', 'extra-bold', 'hi-group', 'inline-math', 'inline-note',
     'margin-note', 'no-break', 'semi-bold', 'small-caps'
@@ -308,7 +310,7 @@ BLOCK = {
     'td', 'tfoot', 'th', 'thead', 'tr', 'ul',
     # Extensions (non-phrasing)
     'block-code', 'block-indent', 'block-math', 'block-note', 'block-quote',
-    'boxed-note', 'column-group', 'column-item',
+    'boxed-note', 'column-group', 'column-item', 'tab-group', 'tab-item',
 }
 
 # The MathML elements are not categorized as block or inline.

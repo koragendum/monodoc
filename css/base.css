@@ -180,6 +180,50 @@ column-item {
   display: block;
 }
 
+tab-group {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+tab-item {
+  display: none;
+  box-sizing: border-box;
+  flex: 0 0 100%;
+  padding: 0 0.5em 0;
+  overflow: auto;
+}
+
+.tab0:checked ~ .page0,
+.tab1:checked ~ .page1,
+.tab2:checked ~ .page2,
+.tab3:checked ~ .page3 {
+  display: block;
+}
+
+input[type="radio"] {
+  display: none;
+}
+
+label {
+  display: block;
+  flex: auto;
+  height: 1lh;
+  padding: 0 0.75em 0;
+}
+
+label::before {
+  /* content: "−"; */
+  display: inline-block;
+  content: "⟩";
+  transform: rotate(90deg);
+  transform-origin: 50% 53.125%;
+}
+
+input[type="radio"]:checked + label::before {
+  /* content: "+"; */
+}
+
 /* Inline elements  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 a {
@@ -283,6 +327,7 @@ inline-note.narrow {
 }
 
 margin-note {
+  /* TODO should box-sizing: border-box? */
   display: inline;
   float: right;
   clear: right;

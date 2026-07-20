@@ -220,7 +220,7 @@ def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'
 
 
 KEYWORD = {
-    'define', 'def', 'fn', 'lambda', 'Λ', 'λ',
+    'define', 'def', 'fn', 'proc', 'lambda', 'Λ', 'λ',
     'let', 'in', 'use', 'with',
     'const', 'mutable', 'mut',
     'public', 'pub', 'raw', 'unsafe',
@@ -229,23 +229,29 @@ KEYWORD = {
 
 FLOW = {
     'end', 'return', 'if', 'then', 'else', 'unless',
-    'break', 'loop', 'for', 'next', 'while', 'until',
+    'yield', 'break', 'loop', 'for', 'next', 'while', 'until',
     'from', 'to', 'case', 'match', 'when', 'otherwise'
 }
 
 FUNCTION = {'and', 'or', 'not', 'xor', 'mod', 'as', 'exists', 'forall'}
 
 CONSTANT = {
-    'NONE', 'None', 'none', 'NULL', 'null', 'nil',
+    'Some',
+    'NONE', 'None', 'none',
+    'NULL', 'null', 'nil',
     'True', 'true', 'False', 'false', 'TAU', 'tau',
     'UNKNOWN', 'unknown', 'UNDEFINED', 'undefined',
     'UNINIT', 'uninit', 'UNINITIALIZED', 'uninitialized',
-    'self', 'Self', 'unit'
+#   'self', 'Self', 'unit', 'Unit'
 }
 
 GENERIC_TYPE = re.compile('[A-Z][a-zA-Z0-9]*')
 
 NUMERIC_TYPE = re.compile('[uif][1-9][0-9]*')
+
+WORD_OPERATOR = {
+    'Σ', 'Π'
+}
 
 OPERATOR = re.compile('[+−×/÷<>≤≥=≠~!*&|←→↑↓∀∃-]*')
 
@@ -288,6 +294,7 @@ def default_parser(tokens):
 
             case 'word':
                 italic = False
+                following = tokens[index+1] if index+1 < length else ('eof', '')
                 if text.startswith('`'):
                     _class = "constant"
                     text = text[1:]
@@ -295,12 +302,14 @@ def default_parser(tokens):
                     _class = "to-do"
                 elif text in KEYWORD:
                     _class = "keyword"
-                elif text in FLOW:
+                elif text in FLOW and following[0] != 'symbol':
                     _class = "flow"
                 elif text in CONSTANT:
                     _class = "constant"
                 elif text in FUNCTION:
                     _class = "function"
+                elif text in WORD_OPERATOR:
+                    _class = "operator"
                 elif NUMERIC_TYPE.fullmatch(text):
                     _class = "type"
                 elif GENERIC_TYPE.fullmatch(text):
@@ -308,7 +317,7 @@ def default_parser(tokens):
                     if ITALIC.fullmatch(text): italic = True
                 else:
                     if ITALIC.fullmatch(text): italic = True
-                    if index+1 < length and tokens[index+1][1] in ('(', '⟨'):
+                    if following[1] in ('(', '⟨'):
                         _class = "function"
                     else:
                         _class = "identifier"

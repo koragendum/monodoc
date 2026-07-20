@@ -53,9 +53,6 @@ class HtmlElement:
         if 'kind' in attrs:
             assert 'class' not in attrs
             attrs['class'] = attrs.pop('kind')
-        if 'name' in attrs:
-            assert 'id' not in attrs
-            attrs['id'] = attrs.pop('name')
         self.attrs = attrs
         self._compact = False
         self._pruned = False

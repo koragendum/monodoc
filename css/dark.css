@@ -3,6 +3,10 @@ html {
   --body-fg:    rgb(224, 224, 224);
   --galley-bg: rgba( 16,  16,  16, 0.5);
   --pre-bg:     rgb( 16,  16,  16); /* rgb(14, 14, 14) */
+  --tab-bg:     rgb( 18,  18,  18);
+  --active-bg:  rgb( 14,  14,  14);
+  --tab-bd-bg:  rgb( 32,  32,  32);
+  --hover-bg:   rgb( 24,  24,  24);
   --table-bd:   rgb( 64,  64,  64);
   --hr-bd:      rgb(224, 224, 224);
   --quote-bg:   rgb( 16,  16,  16);
@@ -78,6 +82,29 @@ margin-note::before {
     margin-left: 0;
     margin-right: 0;
   }
+}
+
+tab-item {
+  background-color: var(--active-bg);
+}
+
+label {
+  border-left: 1px solid var(--tab-bd-bg);
+  background-color: var(--tab-bg);
+  color: var(--tab-bd-bg);
+}
+
+label.tab0 {
+  border-left: none;
+}
+
+input[type="radio"]:checked + label {
+  background-color: var(--active-bg);
+  color: var(--a-fg);
+}
+
+label:hover {
+  background-color: var(--hover-bg);
 }
 
 a {

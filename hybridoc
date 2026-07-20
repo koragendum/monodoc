@@ -1005,7 +1005,33 @@ def _math(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : boo
     output.append('$' + closing)
 
 
-def _cols(output : list[str], items : list[list[str]], gap_a : bool, gap_b : bool):
+TAB_GROUP = 0
+
+def _cols(output : list[str], items : list[list[str]], meta, gap_a : bool, gap_b : bool):
+    global TAB_GROUP
+    if meta == 'tabs':
+        opening, closing = _tagpair('tab-group', gap_a, gap_b)
+        output.append(opening)
+        cardinality = len(items)
+        for index in range(cardinality):
+            group = f'group{TAB_GROUP}'
+            tab = f'tab{index}'
+            fields = [
+                'input', 'type="radio"',
+                f'name="{group}"', f'id="{group}-{tab}"',
+                f'class="{tab}"'
+            ]
+            if index == 0: fields.append('checked')
+            output.append(f'<{" ".join(fields)}>')
+            output.append(f'<label for="{group}-{tab}" class="{tab}"></label>')
+        for index in range(cardinality):
+            output.append(f'<tab-item class="page{index}">')
+            output.extend(_preprocess(items[index]))
+            output.append(f'</tab-item>')
+        output.append(closing)
+        TAB_GROUP += 1
+        return
+
     opening, closing = _tagpair('column-group', gap_a, gap_b)
     output.append(opening)
     # for idx, item in enumerate(items):
@@ -1037,6 +1063,7 @@ SIGIL = {
     '•': 'list',
     '-': 'list',
     '#': 'code',
+    '+': 'cfst',
     '<': 'cfst',
     '|': 'cnxt',
 }
@@ -1302,6 +1329,8 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                     if match:
                         block_meta = match.group(1)
                         content = content[match.end():].lstrip()
+                if char == '+':
+                    block_meta = 'tabs'
                 block_lines.append(content)
                 continue
 
@@ -1375,8 +1404,8 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
         elif kind == 'cnxt':
             if prev_kind != 'cfst':
                 preprocess_error('cannot append new column: column group was not started')
-            if meta != prev_meta:
-                preprocess_error('cannot append new column: column variant does not match')
+            # if meta != prev_meta:
+            #     preprocess_error('cannot append new column: column variant does not match')
             active_group.append(lines)
             gap = False
             continue
@@ -1418,7 +1447,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
             case 'code': _code(output, lines, meta, gap_above, gap_below)
             case 'verb': _code(output, lines, meta, gap_above, gap_below)
             case 'math': _math(output, lines, meta, gap_above, gap_below)
-            case 'cols': _cols(output, lines,       gap_above, gap_below)
+            case 'cols': _cols(output, lines, meta, gap_above, gap_below)
 
     return output
 
@@ -1558,9 +1587,9 @@ if __name__ == '__main__':
     body = HtmlElement('div',
         HtmlElement('div',
             *content,
-            name='chase'
+            **{'id': 'chase'}
         ),
-        name='galley'
+        **{'id': 'galley'}
     )
     for f in FILTERS: f(body)
     body.prune()
