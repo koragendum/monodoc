@@ -158,6 +158,15 @@ block-pre[data-lang="theory"] .cm {
   line-height: 0;
 }
 
+block-pre[data-lang="theory"] .num {
+  font-variant-numeric: lining-nums;
+}
+
+block-pre[data-lang="theory"] .unused {
+  position: relative;
+  bottom: 0.2ex;
+}
+
 block-pre[data-lang="theory"] .rd {
   /* color: rgb(255, 128, 128); */
   color: rgb(224, 128, 128);

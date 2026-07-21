@@ -592,11 +592,16 @@ def default_handler(lang, lines, modifiers=None):
 
 BLANK_LINES = re.compile(r'\n{2,}')
 
-THEORY_WORD    = re.compile(r"([a-z]?'|@)?([a-zA-Z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]+)*)")
-THEORY_GREEK   = re.compile(r"([a-z]?'|@)?([α-ωΑ-Ω])")
+THEORY_WORD    = re.compile(r"([a-z]?'|@|%)?([a-zA-Z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]+)*)")
+THEORY_GREEK   = re.compile(r"([a-z]?')?([α-ωΑ-Ω])")
 THEORY_NUMERIC = re.compile(r'\d+')
 
-DELEGATED_SYMBOLS = {'+', '−', '×', '→', '←', '=', '|', '⟨', '⟩'}
+REPLACEMENT_SYMBOLS = {
+    '*': '\u2B51',  # U+22C6 or U+2B51
+    '_': '<span class="unused">_</span>',
+}
+
+DELEGATED_SYMBOLS = {'+', '−', '×', '*', '→', '←', '=', '|', '⟨', '⟩'}
 
 PUNCTUATION = {
     '=': 'sp-3',
@@ -604,7 +609,7 @@ PUNCTUATION = {
     '.': 'sp-3',
 }
 
-THEORY_DELIMITERS = {
+INK_SPACING = {
     '(': ('sp-6', 'sp-7'),
     '[': ('sp-6', None  ),
     '⟨': (None  , 'sp-7'),
@@ -612,6 +617,8 @@ THEORY_DELIMITERS = {
     ')': (None  , None  ),
     ']': (None  , None  ),
     '⟩': (None  , None  ),
+
+    '*': (None  , 'sp-6'),
 }
 
 THEORY_HIGHLIGHT = {
@@ -651,15 +658,13 @@ def theory_parser(lines):
         if match:
             hi = None
             modifier = match.group(1)
-            if modifier == '@':
-                kind = 'keyword'
-            elif modifier:
+            if modifier:
                 kind = 'var'
                 modifier = modifier.removesuffix("'")
                 if modifier:
                     hi = THEORY_HIGHLIGHT.get(modifier, None)
             else:
-                kind = 'const'
+                kind = None
             letter = (kind, hi, match.group(2))
             tokens.append(('greek', letter))
             offset = match.end()
@@ -670,14 +675,16 @@ def theory_parser(lines):
             hi = None
             modifier = match.group(1)
             if modifier == '@':
-                kind = 'keyword'
+                kind = 'meta'
+            elif modifier == '%':
+                kind = 'smcp'
             elif modifier:
                 kind = 'var'
                 modifier = modifier.removesuffix("'")
                 if modifier:
                     hi = THEORY_HIGHLIGHT.get(modifier, None)
             else:
-                kind = 'const'
+                kind = None
             word = (kind, hi, match.group(2))
             tokens.append(('word', word))
             offset = match.end()
@@ -740,24 +747,30 @@ def theory_parser(lines):
                 else:
                     output.append(' ')
 
+            case 'greek':
+                _, hi, letter = content
+                if hi:
+                    output.append(f'<span class="gk {hi}">{letter}</span>')
+                else:
+                    output.append(f'<span class="gk">{letter}</span>')
+
             case 'word':
                 kind, hi, word = content
-                if kind == 'var':
+                if kind == 'meta':
+                    # output.append(word)
+                    output.append(f'<b>{word}</b>')
+                elif kind == 'smcp':
+                    output.append(f'<small-caps>{word}</small-caps>')
+                elif kind == 'var':
                     if hi:
                         output.append(f'<var class="{hi}">{word}</var>')
                     else:
                         output.append(f'<var>{word}</var>')
-                elif word == 'Type':
-                    output.append('<small-caps>type</small-caps>')
                 else:
                     output.append(word)
 
-            case 'greek':
-                kind, hi, letter = content
-                if kind == 'var' and hi:
-                    output.append(f'<span class="gk {hi}">{letter}</span>')
-                else:
-                    output.append(f'<span class="gk">{letter}</span>')
+            case 'number':
+                output.append(f'<span class="num">{content}</span>')
 
             case 'symbol':
                 leading  = None
@@ -785,11 +798,12 @@ def theory_parser(lines):
                             trailing = 'sp-7'
 
                     case _:
+                        display = REPLACEMENT_SYMBOLS.get(content, content)
                         if content in DELEGATED_SYMBOLS:
-                            display = f'<span class="cm">{content}</span>'
+                            display = f'<span class="cm">{display}</span>'
 
-                if content in THEORY_DELIMITERS:
-                    ld, tr = THEORY_DELIMITERS[content]
+                if content in INK_SPACING:
+                    ld, tr = INK_SPACING[content]
                     if prev_kind in ('word', 'greek', 'symbol', 'entity'):
                         leading = ld
                     if post_kind in ('word', 'greek', 'symbol', 'entity'):
@@ -809,7 +823,7 @@ def theory_parser(lines):
                 else:
                     output.append(content)
 
-            case _:
+            case 'tag':
                 output.append(content)
 
     output = ''.join(output).strip('\n')
