@@ -11,7 +11,7 @@ from css        import parse as parse_css
 from css        import render as render_css
 from html       import HtmlElement, extant, annotate, replace
 from html       import render as render_html
-from hilite     import default_handler
+from hilite     import default_handler, theory_handler
 from mathml     import parse as parse_math
 from svg        import SVG, sample, adaptive_sample, interpolate
 
@@ -40,6 +40,7 @@ HANDLERS = {
     'python':   default_handler,
     'asm':      default_handler,
     'assembly': default_handler,
+    'theory':   theory_handler,
 }
 
 # Functions to call after preprocessing (after #exec blocks have been run)
@@ -59,35 +60,39 @@ MODULES = set()
 
 # Maps module name to a CSS file or None.
 AVAILABLEMODULES = {
-    'base':        (4, 'css/base.css'),
-    'lite':        (5, 'css/lite.css'),
-    'dark':        (5, 'css/dark.css'),
-    'math':        (6, 'css/math.css'),
-    'justify':     (7, 'css/justify.css'),
-    'center':      (8, 'css/center.css'),
-    # fonts
+    # fonts – body
     'alegreya': (0, 'css/fonts/alegreya.css'),
-    'at-name':  (1, 'css/fonts/at-name.css' ),
-    'berkeley': (1, 'css/fonts/berkeley.css'),
-    'bodoni':   (2, 'css/fonts/bodoni.css'  ),
-    'century':  (2, 'css/fonts/century.css' ),
-    'chiaro':   (1, 'css/fonts/chiaro.css'  ),
     'fira':     (0, 'css/fonts/fira.css'    ),
     'ff-meta':  (0, 'css/fonts/ff-meta.css' ),
-    'iosevka':  (1, 'css/fonts/iosevka.css' ),
     'inter':    (0, 'css/fonts/inter.css'   ),
-    'minion':   (2, 'css/fonts/minion.css'  ),
-    'new-cm':   (3, 'css/fonts/new-cm.css'  ),
-    'operator': (1, 'css/fonts/operator.css'),
     'schotis':  (0, 'css/fonts/schotis.css' ),
+    # fonts – fixed-width and decorative
+    'at-name':  (1, 'css/fonts/at-name.css' ),
+    'berkeley': (1, 'css/fonts/berkeley.css'),
+    'chiaro':   (1, 'css/fonts/chiaro.css'  ),
+    'iosevka':  (1, 'css/fonts/iosevka.css' ),
+    'operator': (1, 'css/fonts/operator.css'),
     'sudo':     (1, 'css/fonts/sudo.css'    ),
     'tweak':    (1, 'css/fonts/tweak.css'   ),
     'victor':   (1, 'css/fonts/victor.css'  ),
+    # fonts – mathematical alternatives
+    'bodoni':   (2, 'css/fonts/bodoni.css'  ),
+    'century':  (2, 'css/fonts/century.css' ),
+    'minion':   (2, 'css/fonts/minion.css'  ),
+    # fonts – mathematics
+    'new-cm':   (3, 'css/fonts/new-cm.css'  ),
+    # components
+    'base':    (4, 'css/base.css'),
+    'lite':    (5, 'css/lite.css'),
+    'dark':    (5, 'css/dark.css'),
+    'math':    (6, 'css/math.css'),
+    'justify': (7, 'css/justify.css'),
+    'center':  (8, 'css/center.css'),
     # presets
     'default-lite': None,
     'default-dark': None,
-    'center-lite':  (9, 'css/center-lite.css'),
-    'center-dark':  (9, 'css/center-dark.css'),
+    'center-lite': (9, 'css/center-lite.css'),
+    'center-dark': (9, 'css/center-dark.css'),
 }
 
 DEPENDENCIES = {
@@ -278,7 +283,7 @@ SKIPELEM = {
     '₅': 'sp-5',   '₆': 'sp-6',   '₇': 'sp-7', '₈': 'sp-8',
 }
 
-# https://www.desmos.com/calculator/jirjvadckz
+# https://www.desmos.com/calculator/fmybk0kvzs
 #
 #    name    size   class
 #    ────  ───────  ─────
@@ -984,15 +989,17 @@ def _list(output : list[str], items : list[list[str]], meta, gap_a : bool, gap_b
 
 
 def _code(output : list[str], lines : list[str], meta, gap_a : bool, gap_b : bool):
+    element = None
     if meta:
         lang = meta[0].lower()
         if lang in HANDLERS:
             modifiers = meta[1:] or None
-            lines = HANDLERS[lang](lang, lines, modifiers=modifiers)
+            element, lines = HANDLERS[lang](lang, lines, modifiers=modifiers)
         extra = f'data-lang="{lang}"'
     else:
         extra = None
-    opening, closing = _tagpair('block-code', gap_a, gap_b, extra=extra)
+    element = element or 'block-code'
+    opening, closing = _tagpair(element, gap_a, gap_b, extra=extra)
     output.append(opening + '<pre>')
     output.extend(lines)
     output.append('</pre>' + closing)

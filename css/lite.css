@@ -179,6 +179,14 @@ a.permalink:link {
   text-decoration-line: none;
 }
 
+block-pre {
+  background-color: var(--pre-bg);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
 block-code {
   background-color: var(--pre-bg);
   border-radius: 0.25rem;
@@ -187,7 +195,7 @@ block-code {
   padding-right: 0.75rem;
 }
 
-pre {
+block-code pre {
   font-family: "Berkeley Mono", "Iosevka", monospace;
   font-size: 0.9375em;
   font-weight: 400;
@@ -207,7 +215,7 @@ width(chase) + 2 × padding(galley)  # but not extended-padding
 */
 
 @media (width < PRE-STEP-WIDTH) {
-  pre {
+  block-code pre {
     font-size: 0.8em;
   }
 }
@@ -219,27 +227,27 @@ code {
   font-stretch: condensed;
 }
 
-pre semi-bold, code semi-bold, semi-bold code {
+block-code pre semi-bold, code semi-bold, semi-bold code {
   font-weight: 500;
 }
 
-pre b, code b, b code {
+block-code pre b, code b, b code {
   font-weight: 550;
 }
 
-pre extra-bold, code extra-bold, extra-bold code {
+block-code pre extra-bold, code extra-bold, extra-bold code {
   font-weight: 650;
 }
 
-pre .sb, code .sb, .sb code {
+block-code pre .sb, code .sb, .sb code {
   font-weight: 500;
 }
 
-pre .b, code .b, .b code {
+block-code pre .b, code .b, .b code {
   font-weight: 550;
 }
 
-pre .xb, code .xb, .xb code {
+block-code pre .xb, code .xb, .xb code {
   font-weight: 650;
 }
 

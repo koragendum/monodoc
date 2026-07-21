@@ -457,6 +457,18 @@ h3.gap-bottom {
 
 /* Monospace elements * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+block-pre {
+  display: block;
+  overflow-x: auto;
+  margin: 0;
+  /* margin-left: -0.5em; */
+  border-radius: 0.25em;
+  /* padding: 0em; */
+  /* padding-left: 0.5em; */
+  padding: 0.125em 0.5em 0.125em;
+  /* background-color */
+}
+
 block-code {
   display: block;
   overflow-x: auto;
@@ -469,7 +481,29 @@ block-code {
   /* background-color */
 }
 
-pre {
+block-pre pre {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  overflow-x: auto;
+  margin: 0;
+}
+
+block-pre div.sub-block {
+  margin-top: 0.5lh;
+  margin-bottom: 0.5lh;
+}
+
+block-pre div.sub-block:first-child {
+  margin-top: 0;
+}
+
+block-pre div.sub-block:last-child {
+  margin-bottom: 0;
+}
+
+block-code pre {
   font-family: monospace;
   font-size: 1.0em;
   font-weight: 400;

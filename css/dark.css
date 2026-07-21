@@ -90,6 +90,7 @@ tab-item {
 
 label {
   border-left: 1px solid var(--tab-bd-bg);
+  border-bottom: 1px solid var(--tab-bd-bg);
   background-color: var(--tab-bg);
   color: var(--tab-bd-bg);
 }
@@ -99,6 +100,7 @@ label.tab0 {
 }
 
 input[type="radio"]:checked + label {
+  border-bottom: none;
   background-color: var(--active-bg);
   color: var(--a-fg);
 }
@@ -137,11 +139,59 @@ a.permalink:link {
   font-variant-numeric: lining-nums;
 }
 
+block-pre {
+  background-color: var(--pre-bg);
+}
+
+block-pre[data-lang="theory"] {
+  font-family: "Schotis Text", "Century Schoolbook", "Iosevka";
+}
+
+block-pre[data-lang="theory"] .gk {
+  font-family: "GFS Bodoni";
+}
+
+block-pre[data-lang="theory"] .cm {
+  font-family: "New Computer Modern Math";
+  font-size: 1.125em;
+  font-weight: 500;
+  line-height: 0;
+}
+
+block-pre[data-lang="theory"] .rd {
+  /* color: rgb(255, 128, 128); */
+  color: rgb(224, 128, 128);
+}
+
+block-pre[data-lang="theory"] .gr {
+  /* color: rgb( 64, 184, 112); */
+  /* color: rgb(112, 192, 128); */
+  color: rgb(128, 192, 144);
+}
+
+block-pre[data-lang="theory"] .bl {
+  /* color: rgb(128, 144, 255); */
+  color: rgb(128, 160, 240);
+}
+
+block-pre[data-lang="theory"] .pr {
+  color: rgb(176, 144, 224);
+}
+
+block-pre[data-lang="theory"] .or {
+  /* color: rgb(224, 128, 96); */
+  color: rgb(224, 144, 96);
+}
+
+block-pre[data-lang="theory"] .gy {
+  color: rgb(160, 160, 160);
+}
+
 block-code {
   background-color: var(--pre-bg);
 }
 
-pre {
+block-code pre {
 /*
   font-family: "Victor Mono", monospace;
   font-size: 0.9em;
@@ -172,7 +222,7 @@ width(chase) + 2 × padding(galley)  # but not extended-padding
 */
 
 @media (width < PRE-STEP-WIDTH) {
-  pre {
+  block-code pre {
     font-size: 0.8em;
   }
 }
@@ -195,27 +245,27 @@ code {
   line-height: 1.75em;
 }
 
-pre semi-bold, code semi-bold, semi-bold code {
+block-code pre semi-bold, code semi-bold, semi-bold code {
   font-weight: 600;
 }
 
-pre b, code b, b code {
+block-code pre b, code b, b code {
   font-weight: 650;
 }
 
-pre extra-bold, code extra-bold, extra-bold code {
+block-code pre extra-bold, code extra-bold, extra-bold code {
   font-weight: 750;
 }
 
-pre .sb, code .sb, .sb code {
+block-code pre .sb, code .sb, .sb code {
   font-weight: 600;
 }
 
-pre .b, code .b, .b code {
+block-code pre .b, code .b, .b code {
   font-weight: 650;
 }
 
-pre .xb, code .xb, .xb code {
+block-code pre .xb, code .xb, .xb code {
   font-weight: 750;
 }
 

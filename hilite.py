@@ -75,7 +75,7 @@ def _escape(text):
 
     return ''.join(fragments)
 
-def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'):
+def default_lexer(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'):
     left_quote1, right_quote1  = quote1
     left_quote2, right_quote2  = quote2
 
@@ -144,15 +144,16 @@ def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'
             continue
 
         char = text[offset]
+        pair = text[offset:offset+2]
 
-        if char == '\\' and text[offset+1:offset+2] == '<':
+        if pair == '\\<':
             end = text.find('>', offset+2)
             if end > 0:
                 tokens.append(('tag', text[offset+1:end+1]))
                 offset = end + 1
                 continue
 
-        if char == '<' and text[offset+1:offset+2] == '/':
+        if pair == '</':
             end = text.find('>', offset+2)
             if end > 0:
                 tokens.append(('tag', text[offset:end+1]))
@@ -182,8 +183,6 @@ def lex(lines, quote1, quote2, comment1, comment2, delim_comment, mode='default'
                 tokens.append(('quote2', text[offset:end+1]))
                 offset = end + 1
                 continue
-
-        pair = text[offset:offset+2]
 
         if char == comment1 or pair == comment2:
             end = text.find('\n', offset+1)
@@ -582,10 +581,247 @@ def default_handler(lang, lines, modifiers=None):
         case _:
             mode = 'default'
 
-    tokens = lex(lines, quote1, quote2, comment1, comment2, delimcmt, mode)
+    tokens = default_lexer(lines, quote1, quote2, comment1, comment2, delimcmt, mode)
 
     match lang:
         case 'asm' | 'assembly':
-            return assembly_parser(tokens)
+            return (None, assembly_parser(tokens))
         case _:
-            return default_parser(tokens)
+            return (None, default_parser(tokens))
+
+
+BLANK_LINES = re.compile(r'\n{2,}')
+
+THEORY_WORD    = re.compile(r"([a-z]?'|@)?([a-zA-Z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]+)*)")
+THEORY_GREEK   = re.compile(r"([a-z]?'|@)?([α-ωΑ-Ω])")
+THEORY_NUMERIC = re.compile(r'\d+')
+
+DELEGATED_SYMBOLS = {'+', '−', '×', '→', '←', '=', '|', '⟨', '⟩'}
+
+PUNCTUATION = {
+    '=': 'sp-3',
+    ':': 'sp-3',
+    '.': 'sp-3',
+}
+
+THEORY_DELIMITERS = {
+    '(': ('sp-6', 'sp-7'),
+    '[': ('sp-6', None  ),
+    '⟨': (None  , 'sp-7'),
+
+    ')': (None  , None  ),
+    ']': (None  , None  ),
+    '⟩': (None  , None  ),
+}
+
+THEORY_HIGHLIGHT = {
+    'b': 'bl',
+    'f': 'gy',
+    'g': 'gr',
+    'o': 'or',
+    'p': 'pr',
+    'r': 'rd',
+}
+
+def theory_parser(lines):
+    text = '\n'.join(lines)
+
+    length = len(text)
+    final = length - 1
+    tokens = []
+    offset = 0
+
+    while offset < length:
+        match = WHITESPACE.match(text, offset)
+        if match:
+            span = match.group(0)
+            newlines = span.count('\n')
+            if newlines:
+                for _ in range(newlines):
+                    tokens.append(('newline', None))
+                line_start = span.rindex('\n') + 1
+                span = span[line_start:]
+            if span:
+                distance = span.count(' ') + span.count('\t') * 2
+                tokens.append(('space', distance))
+            offset = match.end()
+            continue
+
+        match = THEORY_GREEK.match(text, offset)
+        if match:
+            hi = None
+            modifier = match.group(1)
+            if modifier == '@':
+                kind = 'keyword'
+            elif modifier:
+                kind = 'var'
+                modifier = modifier.removesuffix("'")
+                if modifier:
+                    hi = THEORY_HIGHLIGHT.get(modifier, None)
+            else:
+                kind = 'const'
+            letter = (kind, hi, match.group(2))
+            tokens.append(('greek', letter))
+            offset = match.end()
+            continue
+
+        match = THEORY_WORD.match(text, offset)
+        if match:
+            hi = None
+            modifier = match.group(1)
+            if modifier == '@':
+                kind = 'keyword'
+            elif modifier:
+                kind = 'var'
+                modifier = modifier.removesuffix("'")
+                if modifier:
+                    hi = THEORY_HIGHLIGHT.get(modifier, None)
+            else:
+                kind = 'const'
+            word = (kind, hi, match.group(2))
+            tokens.append(('word', word))
+            offset = match.end()
+            continue
+
+        match = THEORY_NUMERIC.match(text, offset)
+        if match:
+            tokens.append(('number', match.group(0)))
+            offset = match.end()
+            continue
+
+        match = HTML_ENTITY.match(text, offset)
+        if match:
+            tokens.append(('entity', match.group(0)))
+            offset = match.end()
+            continue
+
+        char = text[offset]
+
+        if char == '<':
+            end = text.find('>', offset+1)
+            if end > 0:
+                tokens.append(('tag', text[offset:end+1]))
+                offset = end + 1
+                continue
+
+        tokens.append(('symbol', char))
+        offset += 1
+
+    length = len(tokens)
+    final = length - 1
+    output = []
+
+    for index, (kind, content) in enumerate(tokens):
+        prev_kind, prev = tokens[index-1] if index > 0     else (None,  None)
+        post_kind, post = tokens[index+1] if index < final else ('eof', None)
+        match kind:
+            case 'newline':
+                output.append('\n')
+
+            case 'space':
+                # start of line
+                if prev_kind == 'newline':
+                    indent = round(content * 0.5, 6)
+                    output.append(f'<span style="display: inline-block; width: {indent}em;"> </span>')
+
+                # before punctuation
+                elif post_kind == 'symbol' and post in PUNCTUATION:
+                    element = PUNCTUATION[post]
+                    output.append(f'<{element}> </{element}>')
+
+                # after punctuation
+                elif prev_kind == 'symbol' and prev in PUNCTUATION:
+                    element = PUNCTUATION[prev]
+                    output.append(f'<{element}> </{element}>')
+
+                elif content > 1:
+                    output.append('<sp-3> </sp-3>')
+
+                else:
+                    output.append(' ')
+
+            case 'word':
+                kind, hi, word = content
+                if kind == 'var':
+                    if hi:
+                        output.append(f'<var class="{hi}">{word}</var>')
+                    else:
+                        output.append(f'<var>{word}</var>')
+                elif word == 'Type':
+                    output.append('<small-caps>type</small-caps>')
+                else:
+                    output.append(word)
+
+            case 'greek':
+                kind, hi, letter = content
+                if kind == 'var' and hi:
+                    output.append(f'<span class="gk {hi}">{letter}</span>')
+                else:
+                    output.append(f'<span class="gk">{letter}</span>')
+
+            case 'symbol':
+                leading  = None
+                display  = content
+                trailing = None
+
+                match content:
+                    case '&':
+                        display ='<i>&amp;</i>'
+                        if post_kind == 'word':
+                            trailing = 'sp-7'
+
+                    case '!':
+                        display = '<i>!</i>'
+                        if prev_kind == 'word' and prev[0] != 'var':
+                            leading = 'sp-7'
+
+                    case '.' | ':':
+                        if content == '.':
+                            if prev_kind == 'space' and post_kind == 'space':
+                                display = '<span class="xb">.</span>'
+                        if prev_kind == 'word' and prev[0] != 'var':
+                            leading = 'sp-7'
+                        if post_kind == 'word':
+                            trailing = 'sp-7'
+
+                    case _:
+                        if content in DELEGATED_SYMBOLS:
+                            display = f'<span class="cm">{content}</span>'
+
+                if content in THEORY_DELIMITERS:
+                    ld, tr = THEORY_DELIMITERS[content]
+                    if prev_kind in ('word', 'greek', 'symbol', 'entity'):
+                        leading = ld
+                    if post_kind in ('word', 'greek', 'symbol', 'entity'):
+                        trailing = tr
+
+                if leading:
+                    output.append(f'<{leading}> </{leading}>')
+
+                output.append(display)
+
+                if trailing:
+                    output.append(f'<{trailing}> </{trailing}>')
+
+            case 'entity':
+                if content in DELEGATED_SYMBOLS:
+                    output.append(f'<span class="cm">{content}</span>')
+                else:
+                    output.append(content)
+
+            case _:
+                output.append(content)
+
+    output = ''.join(output).strip('\n')
+    if '\n\n' in output:
+        opening, closing = '<div class="sub-block">', '</div>'
+        output = BLANK_LINES.sub(f'{closing}{opening}', output)
+        output = f'{opening}{output}{closing}'
+
+    return output.splitlines()
+
+
+def theory_handler(lang, lines, modifiers=None):
+    # The less-than character “<” is not escaped;
+    #   if needed, “&lt;” should be used.
+    return ('block-pre', theory_parser(lines))
