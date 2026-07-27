@@ -656,36 +656,36 @@ def theory_parser(lines):
 
         match = THEORY_GREEK.match(text, offset)
         if match:
-            hi = None
+            hilite = None
             modifier = match.group(1)
             if modifier:
-                kind = 'var'
+                style = 'var'
                 modifier = modifier.removesuffix("'")
                 if modifier:
-                    hi = THEORY_HIGHLIGHT.get(modifier, None)
+                    hilite = THEORY_HIGHLIGHT.get(modifier, None)
             else:
-                kind = None
-            letter = (kind, hi, match.group(2))
+                style = None
+            letter = (style, hilite, 'normal', match.group(2))
             tokens.append(('greek', letter))
             offset = match.end()
             continue
 
         match = THEORY_WORD.match(text, offset)
         if match:
-            hi = None
+            hilite = None
             modifier = match.group(1)
             if modifier == '@':
-                kind = 'meta'
+                style = 'meta'
             elif modifier == '%':
-                kind = 'smcp'
+                style = 'smcp'
             elif modifier:
-                kind = 'var'
+                style = 'var'
                 modifier = modifier.removesuffix("'")
                 if modifier:
-                    hi = THEORY_HIGHLIGHT.get(modifier, None)
+                    hilite = THEORY_HIGHLIGHT.get(modifier, None)
             else:
-                kind = None
-            word = (kind, hi, match.group(2))
+                style = None
+            word = (style, hilite, 'normal', match.group(2))
             tokens.append(('word', word))
             offset = match.end()
             continue
@@ -711,6 +711,12 @@ def theory_parser(lines):
                 offset = end + 1
                 continue
 
+        if char == '#' and tokens and tokens[-1][0] in ('word', 'greek'):
+            kind, (style, hilite, position, word) = tokens[-1]
+            tokens[-1] = (kind, (style, hilite, 'super', word))
+            offset += 1
+            continue
+
         tokens.append(('symbol', char))
         offset += 1
 
@@ -733,13 +739,13 @@ def theory_parser(lines):
 
                 # before punctuation
                 elif post_kind == 'symbol' and post in PUNCTUATION:
-                    element = PUNCTUATION[post]
-                    output.append(f'<{element}> </{element}>')
+                    elem_name = PUNCTUATION[post]
+                    output.append(f'<{elem_name}> </{elem_name}>')
 
                 # after punctuation
                 elif prev_kind == 'symbol' and prev in PUNCTUATION:
-                    element = PUNCTUATION[prev]
-                    output.append(f'<{element}> </{element}>')
+                    elem_name = PUNCTUATION[prev]
+                    output.append(f'<{elem_name}> </{elem_name}>')
 
                 elif content > 1:
                     output.append('<sp-3> </sp-3>')
@@ -748,26 +754,42 @@ def theory_parser(lines):
                     output.append(' ')
 
             case 'greek':
-                _, hi, letter = content
-                if hi:
-                    output.append(f'<span class="gk {hi}">{letter}</span>')
+                _, hilite, position, letter = content
+                if hilite:
+                    element = f'<span class="gk {hilite}">{letter}</span>'
                 else:
-                    output.append(f'<span class="gk">{letter}</span>')
+                    element = f'<span class="gk">{letter}</span>'
+
+                if position == 'super':
+                    element = f'<sup>{element}</sup>'
+
+                output.append(element)
 
             case 'word':
-                kind, hi, word = content
-                if kind == 'meta':
-                    # output.append(word)
-                    output.append(f'<b>{word}</b>')
-                elif kind == 'smcp':
-                    output.append(f'<small-caps>{word}</small-caps>')
-                elif kind == 'var':
-                    if hi:
-                        output.append(f'<var class="{hi}">{word}</var>')
+                style, hilite, position, word = content
+                if style == 'meta':
+                    element = f'<b>{word}</b>'
+                elif style == 'smcp':
+                    element = f'<small-caps>{word}</small-caps>'
+                elif style == 'var':
+                    if hilite:
+                        element = f'<var class="{hilite}">{word}</var>'
                     else:
-                        output.append(f'<var>{word}</var>')
+                        element = f'<var>{word}</var>'
                 else:
-                    output.append(word)
+                    element = word
+
+                trailing = None
+                if position == 'super':
+                    element = f'<sup>{element}</sup>'
+                    if post_kind in ('word', 'greek', 'number', 'entity'):
+                        trailing = 'sp-7' if post[0] == 'var' else 'sp-6'
+                    elif post_kind == 'symbol' and post == '&':
+                        trailing = 'sp-5'
+
+                output.append(element)
+                if trailing:
+                    output.append(f'<{trailing}> </{trailing}>')
 
             case 'number':
                 output.append(f'<span class="num">{content}</span>')
@@ -804,9 +826,9 @@ def theory_parser(lines):
 
                 if content in INK_SPACING:
                     ld, tr = INK_SPACING[content]
-                    if prev_kind in ('word', 'greek', 'symbol', 'entity'):
+                    if prev_kind in ('word', 'greek', 'number', 'symbol', 'entity'):
                         leading = ld
-                    if post_kind in ('word', 'greek', 'symbol', 'entity'):
+                    if post_kind in ('word', 'greek', 'number', 'symbol', 'entity'):
                         trailing = tr
 
                 if leading:
