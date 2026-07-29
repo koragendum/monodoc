@@ -242,6 +242,14 @@ a:link:hover, a:visited:hover {
   text-decoration-style: solid;
 }
 
+u {
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  /* text-decoration-color */
+  text-decoration-thickness: 0.0703125em;
+  text-underline-offset: 0.15625em;
+}
+
 var {
   font-style: italic;
 }

@@ -377,7 +377,7 @@ def default_parser(tokens):
                 esc = _escape(text)
                 output.append(f'<{ELEM} class="comment">{esc}</{ELEM}>')
 
-    return ''.join(output).splitlines()
+    return ''.join(output)
 
 ASM_INSTRUCTION = {
     'ret',
@@ -541,7 +541,7 @@ def assembly_parser(tokens):
 
         index += 1
 
-    return ''.join(output).splitlines()
+    return ''.join(output)
 
 
 def default_handler(lang, lines, modifiers=None):
@@ -585,9 +585,9 @@ def default_handler(lang, lines, modifiers=None):
 
     match lang:
         case 'asm' | 'assembly':
-            return (None, assembly_parser(tokens))
+            return (None, assembly_parser(tokens).splitlines())
         case _:
-            return (None, default_parser(tokens))
+            return (None, default_parser(tokens).splitlines())
 
 
 BLANK_LINES = re.compile(r'\n{2,}')
@@ -596,29 +596,54 @@ THEORY_WORD    = re.compile(r"([a-z]?'|@|%)?([a-zA-Z][a-zA-Z0-9]*(?:-[a-zA-Z0-9]
 THEORY_GREEK   = re.compile(r"([a-z]?')?([α-ωΑ-Ω])")
 THEORY_NUMERIC = re.compile(r'\d+')
 
+THEORY_DIGRAPHS = {
+    '<-': '\u2190',
+    '->': '\u2192',
+    '<=': '\u21D0',
+    '=>': '\u21D2',
+}
+
 REPLACEMENT_SYMBOLS = {
     '*': '\u2B51',  # U+22C6 or U+2B51
     '_': '<span class="unused">_</span>',
 }
 
-DELEGATED_SYMBOLS = {'+', '−', '×', '*', '→', '←', '=', '|', '⟨', '⟩'}
+DELEGATED_SYMBOLS = {
+    '=', '≠',
+    '+', '−', '×',
+    '→', '←', '⇒', '⇐',
+    '(', ')', '[', ']', '⟨', '⟩',
+    '∀', '∃',
+    '|', '*',
+}
 
-PUNCTUATION = {
-    '=': 'sp-3',
-    ':': 'sp-3',
-    '.': 'sp-3',
+PUNCTUATION_LHS = {
+    '=': ('sp-3',        ),
+    ':': ('sp-3', 'en-sp'),
+    '.': ('sp-3',        ),
+}
+
+PUNCTUATION_RHS = {
+    '=': ('sp-3',        ),
+    ':': ('sp-3', 'en-sp'),
+    '.': ('sp-3',        ),
+    ',': ('sp-3',        ),
 }
 
 INK_SPACING = {
-    '(': ('sp-6', 'sp-7'),
-    '[': ('sp-6', None  ),
+    '(': ('sp-6', None  ),
+    '[': ('sp-7', 'sp-6'),
     '⟨': (None  , 'sp-7'),
 
-    ')': (None  , None  ),
-    ']': (None  , None  ),
-    '⟩': (None  , None  ),
+    ')': (None  , 'sp-6'),
+    ']': ('sp-6', 'sp-7'),
+    '⟩': ('sp-7', None  ),
+
+    ':': ('sp-7', 'sp-7'),
+    ',': ('sp-7', None  ),
 
     '*': (None  , 'sp-6'),
+    '/': ('sp-7', 'sp-7'),
 }
 
 THEORY_HIGHLIGHT = {
@@ -702,6 +727,14 @@ def theory_parser(lines):
             offset = match.end()
             continue
 
+        pair = text[offset:offset+2]
+
+        symbol = THEORY_DIGRAPHS.get(pair, None)
+        if symbol:
+            tokens.append(('symbol', symbol))
+            offset += 2
+            continue
+
         char = text[offset]
 
         if char == '<':
@@ -710,6 +743,11 @@ def theory_parser(lines):
                 tokens.append(('tag', text[offset:end+1]))
                 offset = end + 1
                 continue
+
+        if char == '~':
+            tokens.append(('null', None))
+            offset += 1
+            continue
 
         if char == '#' and tokens and tokens[-1][0] in ('word', 'greek'):
             kind, (style, hilite, position, word) = tokens[-1]
@@ -728,6 +766,9 @@ def theory_parser(lines):
         prev_kind, prev = tokens[index-1] if index > 0     else (None,  None)
         post_kind, post = tokens[index+1] if index < final else ('eof', None)
         match kind:
+            case 'null':
+                pass
+
             case 'newline':
                 output.append('\n')
 
@@ -738,13 +779,15 @@ def theory_parser(lines):
                     output.append(f'<span style="display: inline-block; width: {indent}em;"> </span>')
 
                 # before punctuation
-                elif post_kind == 'symbol' and post in PUNCTUATION:
-                    elem_name = PUNCTUATION[post]
+                elif post_kind == 'symbol' and post in PUNCTUATION_LHS:
+                    spacing = PUNCTUATION_LHS[post]
+                    elem_name = spacing[min(content - 1, len(spacing) - 1)]
                     output.append(f'<{elem_name}> </{elem_name}>')
 
                 # after punctuation
-                elif prev_kind == 'symbol' and prev in PUNCTUATION:
-                    elem_name = PUNCTUATION[prev]
+                elif prev_kind == 'symbol' and prev in PUNCTUATION_RHS:
+                    spacing = PUNCTUATION_RHS[prev]
+                    elem_name = spacing[min(content - 1, len(spacing) - 1)]
                     output.append(f'<{elem_name}> </{elem_name}>')
 
                 elif content > 1:
@@ -760,10 +803,17 @@ def theory_parser(lines):
                 else:
                     element = f'<span class="gk">{letter}</span>'
 
+                trailing = None
                 if position == 'super':
                     element = f'<sup>{element}</sup>'
+                    if post_kind in ('word', 'greek', 'number', 'entity'):
+                        trailing = 'sp-7' if post[0] == 'var' else 'sp-6'
+                    elif post_kind == 'symbol' and post == '&':
+                        trailing = 'sp-5'
 
                 output.append(element)
+                if trailing:
+                    output.append(f'<{trailing}> </{trailing}>')
 
             case 'word':
                 style, hilite, position, word = content
@@ -810,20 +860,26 @@ def theory_parser(lines):
                         if prev_kind == 'word' and prev[0] != 'var':
                             leading = 'sp-7'
 
-                    case '.' | ':':
-                        if content == '.':
-                            if prev_kind == 'space' and post_kind == 'space':
-                                display = '<span class="xb">.</span>'
+                    case '.':
+                        if prev_kind == 'space' and post_kind == 'space':
+                            display = '<span class="xb">.</span>'
+                        if prev_kind == 'symbol' and prev == '.':
+                            leading = 'sp-4'
                         if prev_kind == 'word' and prev[0] != 'var':
                             leading = 'sp-7'
-                        if post_kind == 'word':
+                        if post_kind == 'word' or post_kind == 'number':
                             trailing = 'sp-7'
+
+                    case '·':
+                        if prev_kind == 'symbol' and prev == '·':
+                            leading = 'sp-4'
 
                     case _:
                         display = REPLACEMENT_SYMBOLS.get(content, content)
                         if content in DELEGATED_SYMBOLS:
                             display = f'<span class="cm">{display}</span>'
 
+                # TODO don’t put space between consecutive delimiters
                 if content in INK_SPACING:
                     ld, tr = INK_SPACING[content]
                     if prev_kind in ('word', 'greek', 'number', 'symbol', 'entity'):
@@ -848,16 +904,15 @@ def theory_parser(lines):
             case 'tag':
                 output.append(content)
 
-    output = ''.join(output).strip('\n')
-    if '\n\n' in output:
-        opening, closing = '<div class="sub-block">', '</div>'
-        output = BLANK_LINES.sub(f'{closing}{opening}', output)
-        output = f'{opening}{output}{closing}'
-
-    return output.splitlines()
+    return ''.join(output).strip('\n')
 
 
 def theory_handler(lang, lines, modifiers=None):
     # The less-than character “<” is not escaped;
     #   if needed, “&lt;” should be used.
-    return ('block-pre', theory_parser(lines))
+    output = theory_parser(lines)
+    if '\n\n' in output:
+        opening, closing = '<div class="sub-block">', '</div>'
+        output = BLANK_LINES.sub(f'{closing}{opening}', output)
+        output = f'{opening}{output}{closing}'
+    return ('block-pre', output.splitlines())

@@ -117,6 +117,14 @@ a:link, a:visited {
   text-decoration-color: var(--a-dec);
 }
 
+u {
+  text-decoration-color: var(--body-fg);
+}
+
+a u {
+  text-decoration-color: var(--a-fg);
+}
+
 h1 {
   background-image: linear-gradient(to right, oklch(60% 0.16 300deg), oklch(80% 0.16 15deg));
 /*background-image: linear-gradient(to right, oklch(60% 0.20 285deg), oklch(80% 0.20 30deg));*/

@@ -92,6 +92,14 @@ a:link, a:visited {
   text-decoration-color: var(--a-dec);
 }
 
+u {
+  text-decoration-color: var(--a-dec);
+}
+
+a u {
+  text-decoration-color: var(--a-fg);
+}
+
 block-note:not(.small) a, inline-note a {
   color: var(--note-a-fg);
 }
