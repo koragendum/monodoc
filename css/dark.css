@@ -5,7 +5,8 @@ html {
   --pre-bg:     rgb( 16,  16,  16); /* rgb(14, 14, 14) */
   --tab-bg:     rgb( 18,  18,  18);
   --active-bg:  rgb( 14,  14,  14);
-  --tab-bd-bg:  rgb( 48,  48,  48);
+  --tab-bd:     rgb( 48,  48,  48);
+  --active-bd:  rgb( 24,  24,  24);
   --hover-bg:   rgb( 24,  24,  24);
   --table-bd:   rgb( 64,  64,  64);
   --hr-bd:      rgb(224, 224, 224);
@@ -86,13 +87,14 @@ margin-note::before {
 
 tab-item {
   background-color: var(--active-bg);
+  border-bottom: 1px solid var(--tab-bd);
 }
 
 label {
-  border-left: 1px solid var(--tab-bd-bg);
-  border-bottom: 1px solid var(--tab-bd-bg);
+  border-left: 1px solid var(--tab-bd);
+  border-bottom: 1px solid var(--tab-bd);
   background-color: var(--tab-bg);
-  color: var(--tab-bd-bg);
+  color: var(--tab-bd);
 }
 
 label.tab0 {
@@ -100,7 +102,7 @@ label.tab0 {
 }
 
 input[type="radio"]:checked + label {
-  border-bottom: none;
+  border-bottom: 1px solid var(--active-bd);
   background-color: var(--active-bg);
   color: var(--a-fg);
 }

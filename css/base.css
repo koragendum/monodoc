@@ -190,8 +190,17 @@ tab-item {
   display: none;
   box-sizing: border-box;
   flex: 0 0 100%;
-  padding: 0.125em 0.5em 0.125em;
+  /* padding: 0.125em 0.5em 0.125em; */
+  padding: 0.5em 0.75em 0.5em;
   overflow: auto;
+}
+
+tab-item block-pre {
+  padding: 0;
+}
+
+tab-item block-code {
+  padding: 0;
 }
 
 .tab0:checked ~ .page0,
