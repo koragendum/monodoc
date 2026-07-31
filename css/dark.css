@@ -5,7 +5,7 @@ html {
   --pre-bg:     rgb( 16,  16,  16); /* rgb(14, 14, 14) */
   --tab-bg:     rgb( 18,  18,  18);
   --active-bg:  rgb( 14,  14,  14);
-  --tab-bd-bg:  rgb( 32,  32,  32);
+  --tab-bd-bg:  rgb( 48,  48,  48);
   --hover-bg:   rgb( 24,  24,  24);
   --table-bd:   rgb( 64,  64,  64);
   --hr-bd:      rgb(224, 224, 224);
@@ -308,8 +308,8 @@ hi-group.flow {
   color: rgb(255, 192, 160);
 }
 
-hi-group.constant {
-  color: rgb(208, 160, 255);
+hi-group.macro {
+  color: rgb(0, 255, 208);
 }
 
 hi-group.function {
@@ -329,6 +329,10 @@ hi-group.type {
 }
 
 /* hi-group.identifier { } */
+
+hi-group.constant {
+  color: rgb(208, 160, 255);
+}
 
 hi-group.numeric {
   color: rgb(255, 144, 144);

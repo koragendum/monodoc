@@ -278,7 +278,7 @@ DELIM_NAME = {
 
 ELEM = 'hi-group'
 
-def default_parser(tokens):
+def default_parser(tokens, macros=False):
     length = len(tokens)
     output = []
     depth = 0
@@ -292,16 +292,19 @@ def default_parser(tokens):
                 output.append(text)
 
             case 'word':
-                italic = False
-                following = tokens[index+1] if index+1 < length else ('eof', '')
-                if text.startswith('`'):
-                    _class = "constant"
-                    text = text[1:]
-                elif text == 'TODO':
+                _class = "identifier"
+
+                mark = text.startswith('`')
+                if mark: text = text[1:]
+
+                next_kind, next_text = \
+                    tokens[index+1] if index+1 < length else ('eof', '')
+
+                if text == 'TODO':
                     _class = "to-do"
                 elif text in KEYWORD:
                     _class = "keyword"
-                elif text in FLOW and following[0] != 'symbol':
+                elif text in FLOW and next_kind != 'symbol':
                     _class = "flow"
                 elif text in CONSTANT:
                     _class = "constant"
@@ -309,19 +312,21 @@ def default_parser(tokens):
                     _class = "function"
                 elif text in WORD_OPERATOR:
                     _class = "operator"
+                elif macros and text.endswith('!'):
+                    _class = "macro"
                 elif NUMERIC_TYPE.fullmatch(text):
                     _class = "type"
                 elif GENERIC_TYPE.fullmatch(text):
                     _class = "type"
-                    if ITALIC.fullmatch(text): italic = True
-                else:
-                    if ITALIC.fullmatch(text): italic = True
-                    if following[1] in ('(', '⟨'):
-                        _class = "function"
+                elif next_text in ('(', '⟨'):
+                    _class = "function"
+
+                if mark:
+                    if _class == "identifier":
+                        _class = "constant"
                     else:
                         _class = "identifier"
-                # if italic:
-                #     _class = f'{_class} i'
+
                 text = text.replace('!', '<i>!</i>')
                 output.append(f'<{ELEM} class="{_class}">{text}</{ELEM}>')
 
@@ -544,29 +549,37 @@ def assembly_parser(tokens):
     return ''.join(output)
 
 
+ABBREVIATIONS = {
+    'asm': 'assembly',
+    'py':  'python',
+    'rb':  'ruby',
+    'rs':  'rust',
+}
+
 def default_handler(lang, lines, modifiers=None):
     # The less-than character “<” is escaped as “&lt;”
     #   unless it is preceded by “\” or followed by “/”.
+    lang = ABBREVIATIONS.get(lang, lang)
     match lang:
-        case 'rs' | 'rust':
-            comment1 = None
-            comment2 = '//'
-            delimcmt = ('/*', '*/')
-        case 'rb' | 'ruby' | 'py' | 'python':
-            comment1 = '#'
-            comment2 = None
-            delimcmt = None
-        case 'asm' | 'assembly':
+        case 'assembly':
             comment1 = ';'
             comment2 = None
             delimcmt = None
+        case 'python' | 'ruby':
+            comment1 = '#'
+            comment2 = None
+            delimcmt = None
+        case 'rust':
+            comment1 = None
+            comment2 = '//'
+            delimcmt = ('/*', '*/')
         case _:
             comment1 = COMMENT_CHAR
             comment2 = COMMENT_DYAD
             delimcmt = None
 
     match lang:
-        case 'rs' | 'rust' | 'rb' | 'ruby' | 'py' | 'python' | 'asm' | 'assembly':
+        case 'assembly' | 'python' | 'ruby' | 'rust':
             quote1 = ("'", "'")
             quote2 = ('"', '"')
         case _:
@@ -574,10 +587,10 @@ def default_handler(lang, lines, modifiers=None):
             quote2 = QUOTE2
 
     match lang:
-        case 'rs' | 'rust':
-            mode = 'join-numeric-word'
-        case 'asm' | 'assembly':
+        case 'assembly':
             mode = 'sepr-word-numeric'
+        case 'rust':
+            mode = 'join-numeric-word'
         case _:
             mode = 'default'
 
@@ -587,7 +600,8 @@ def default_handler(lang, lines, modifiers=None):
         case 'asm' | 'assembly':
             return (None, assembly_parser(tokens).splitlines())
         case _:
-            return (None, default_parser(tokens).splitlines())
+            macros = lang == 'rust'
+            return (None, default_parser(tokens, macros).splitlines())
 
 
 BLANK_LINES = re.compile(r'\n{2,}')
@@ -612,7 +626,7 @@ DELEGATED_SYMBOLS = {
     '=', '≠',
     '+', '−', '×',
     '→', '←', '⇒', '⇐',
-    '(', ')', '[', ']', '⟨', '⟩',
+    '(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫',
     '∀', '∃',
     '|', '*',
 }
@@ -634,10 +648,12 @@ INK_SPACING = {
     '(': ('sp-6', None  ),
     '[': ('sp-7', 'sp-6'),
     '⟨': (None  , 'sp-7'),
+    '⟪': (None  , 'sp-7'),
 
     ')': (None  , 'sp-6'),
     ']': ('sp-6', 'sp-7'),
     '⟩': ('sp-7', None  ),
+    '⟫': (None  , 'sp-7'),
 
     ':': ('sp-7', 'sp-7'),
     ',': ('sp-7', None  ),
