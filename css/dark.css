@@ -177,6 +177,13 @@ block-pre[data-lang="theory"] .unused {
   bottom: 0.2ex;
 }
 
+block-pre[data-lang="theory"] .vrule {
+  display: inline-block;
+  transform: scaleY(0.675);
+  position: relative;
+  bottom: 0.03125em;
+}
+
 block-pre[data-lang="theory"] .rd {
   /* color: rgb(255, 128, 128); */
   color: rgb(224, 128, 128);
@@ -186,6 +193,10 @@ block-pre[data-lang="theory"] .gr {
   /* color: rgb( 64, 184, 112); */
   /* color: rgb(112, 192, 128); */
   color: rgb(128, 192, 144);
+}
+
+block-pre[data-lang="theory"] .tl {
+  color: rgb(64, 192, 208);
 }
 
 block-pre[data-lang="theory"] .bl {

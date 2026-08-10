@@ -360,6 +360,7 @@ def _parse(
                         if fragment:
                             out.append(''.join(fragment))
                             fragment = []
+                        # TODO use &nbsp; instead of U+0020?
                         out.append(HtmlElement(SKIPELEM[char], ' '))
                     case _:
                         fragment.append(char)

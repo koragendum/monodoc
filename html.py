@@ -41,7 +41,9 @@ SINGLELINE = RESPECTING | {
 COMPACTSP = re.compile(r'[ \t\r\n]+')
 
 def nonphrasing(node):
-    return isinstance(node, HtmlElement) and node.element not in PHRASING
+    return isinstance(node, HtmlElement) and (
+        node.element not in PHRASING or node.element == 'img'
+    )
 
 class HtmlElement:
     def __init__(self, element, *inner, **attrs):

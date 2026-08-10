@@ -615,20 +615,26 @@ THEORY_DIGRAPHS = {
     '->': '\u2192',
     '<=': '\u21D0',
     '=>': '\u21D2',
+    '+|': '\u2E21',
+    '|+': '\u2E20',
 }
 
 REPLACEMENT_SYMBOLS = {
     '*': '\u2B51',  # U+22C6 or U+2B51
     '_': '<span class="unused">_</span>',
+    '|': '<span class="vrule">|</span>',
+    '⸡': '<span style="font-family: \'Iosevka\'; font-size: 1.125em; font-weight: 300; position: relative; bottom: -0.0625em;">⸡</span>',
+    '⸠': '<span style="font-family: \'Iosevka\'; font-size: 1.125em; font-weight: 300; position: relative; bottom: -0.0625em;">⸠</span>',
 }
 
 DELEGATED_SYMBOLS = {
     '=', '≠',
     '+', '−', '×',
     '→', '←', '⇒', '⇐',
-    '(', ')', '[', ']', '⟨', '⟩', '⟪', '⟫',
+    '(', ')', '[', ']', '⟦', '⟧', '⟨', '⟩', '⟪', '⟫',
     '∀', '∃',
     '|', '*',
+    '⊢', '⊣', '⊤', '⊥',
 }
 
 PUNCTUATION_LHS = {
@@ -649,13 +655,15 @@ INK_SPACING = {
     '[': ('sp-7', 'sp-6'),
     '⟨': (None  , 'sp-7'),
     '⟪': (None  , 'sp-7'),
+    '⸡': (None  , 'sp-6'),
 
     ')': (None  , 'sp-6'),
     ']': ('sp-6', 'sp-7'),
     '⟩': ('sp-7', None  ),
     '⟫': (None  , 'sp-7'),
+    '⸠': ('sp-6', None  ),
 
-    ':': ('sp-7', 'sp-7'),
+    ':': (None  , 'sp-7'),
     ',': ('sp-7', None  ),
 
     '*': (None  , 'sp-6'),
@@ -669,6 +677,7 @@ THEORY_HIGHLIGHT = {
     'o': 'or',
     'p': 'pr',
     'r': 'rd',
+    't': 'tl',
 }
 
 def theory_parser(lines):
@@ -878,7 +887,7 @@ def theory_parser(lines):
 
                     case '.':
                         if prev_kind == 'space' and post_kind == 'space':
-                            display = '<span class="xb">.</span>'
+                            display = '<extra-bold>.</extra-bold>'
                         if prev_kind == 'symbol' and prev == '.':
                             leading = 'sp-4'
                         if prev_kind == 'word' and prev[0] != 'var':
