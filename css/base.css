@@ -226,7 +226,8 @@ label::before {
   display: inline-block;
   content: "⟩";
   transform: rotate(90deg);
-  transform-origin: 50% 53.125%;
+  /* transform-origin: 50% 53.125%; */
+  transform-origin: 56.25% 53.125%;
 }
 
 input[type="radio"]:checked + label::before {

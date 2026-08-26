@@ -617,6 +617,9 @@ THEORY_DIGRAPHS = {
     '=>': '\u21D2',
     '+|': '\u2E21',
     '|+': '\u2E20',
+    '|-': '\u2045',
+    '-|': '\u2046',
+    '||': '\u2223',
 }
 
 REPLACEMENT_SYMBOLS = {
@@ -625,16 +628,19 @@ REPLACEMENT_SYMBOLS = {
     '|': '<span class="vrule">|</span>',
     '⸡': '<span style="font-family: \'Iosevka\'; font-size: 1.125em; font-weight: 300; position: relative; bottom: -0.0625em;">⸡</span>',
     '⸠': '<span style="font-family: \'Iosevka\'; font-size: 1.125em; font-weight: 300; position: relative; bottom: -0.0625em;">⸠</span>',
+    '∣': '|',
 }
 
 DELEGATED_SYMBOLS = {
+    '*',
     '=', '≠',
     '+', '−', '×',
     '→', '←', '⇒', '⇐',
-    '(', ')', '[', ']', '⟦', '⟧', '⟨', '⟩', '⟪', '⟫',
+    '(', ')', '[', ']', '⟦', '⟧', '⟨', '⟩', '⟪', '⟫', '⁅', '⁆', '{', '}',
     '∀', '∃',
-    '|', '*',
+    '|', '∣',
     '⊢', '⊣', '⊤', '⊥',
+    '∈', '∪',
 }
 
 PUNCTUATION_LHS = {
@@ -656,12 +662,16 @@ INK_SPACING = {
     '⟨': (None  , 'sp-7'),
     '⟪': (None  , 'sp-7'),
     '⸡': (None  , 'sp-6'),
+    '⁅': (None  , 'sp-4'),
+    '{': (None  , 'sp-6'),
 
     ')': (None  , 'sp-6'),
     ']': ('sp-6', 'sp-7'),
     '⟩': ('sp-7', None  ),
     '⟫': (None  , 'sp-7'),
     '⸠': ('sp-6', None  ),
+    '⁆': ('sp-6', None  ),
+    '}': ('sp-6', None  ),
 
     ':': (None  , 'sp-7'),
     ',': ('sp-7', None  ),

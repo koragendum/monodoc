@@ -1422,7 +1422,7 @@ def _preprocess(src : list[str], enclose : bool = False) -> list[str]:
                 enclose = True
             if gap and filtered:
                 filtered.append('gap')
-            filtered.append(item)
+            filtered.append((kind, lines, meta))
         prev_kind = kind
         prev_meta = meta
         gap = False
