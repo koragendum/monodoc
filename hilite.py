@@ -315,7 +315,7 @@ def default_parser(tokens, macros=False):
                 elif macros and text.endswith('!'):
                     _class = "macro"
                 elif NUMERIC_TYPE.fullmatch(text):
-                    _class = "type"
+                    _class = "numeric type"
                 elif GENERIC_TYPE.fullmatch(text):
                     _class = "type"
                 elif next_text in ('(', '⟨'):
@@ -620,6 +620,8 @@ THEORY_DIGRAPHS = {
     '|-': '\u2045',
     '-|': '\u2046',
     '||': '\u2223',
+    '~=': '\u2245',
+    ':=': '\u2254',
 }
 
 REPLACEMENT_SYMBOLS = {
@@ -633,7 +635,7 @@ REPLACEMENT_SYMBOLS = {
 
 DELEGATED_SYMBOLS = {
     '*',
-    '=', '≠',
+    '=', '≠', '≅', '≔',
     '+', '−', '×',
     '→', '←', '⇒', '⇐',
     '(', ')', '[', ']', '⟦', '⟧', '⟨', '⟩', '⟪', '⟫', '⁅', '⁆', '{', '}',
